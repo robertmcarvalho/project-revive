@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Inbox, LayoutDashboard, Users, Bot, BarChart3, Settings, Search, Command } from "lucide-react";
+import { Inbox, LayoutDashboard, Users, Bot, BarChart3, Settings, Search, Command, Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDot } from "./StatusDot";
 
@@ -9,6 +9,7 @@ const nav = [
   { to: "/contatos", label: "Contatos", icon: Users },
   { to: "/automacoes", label: "Automações", icon: Bot },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
+  { to: "/export", label: "Export Redesign", icon: Code2 },
 ];
 
 export const Sidebar = () => {

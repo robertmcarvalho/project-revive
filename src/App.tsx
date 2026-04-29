@@ -7,6 +7,7 @@ import { AppShell } from "@/components/AppShell";
 import Index from "./pages/Index.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Login from "./pages/Login.tsx";
+import Export from "./pages/Export.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<AppShell><Index /></AppShell>} />
           <Route path="/dashboard" element={<AppShell><Dashboard /></AppShell>} />
+          <Route path="/export" element={<AppShell><Export /></AppShell>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
