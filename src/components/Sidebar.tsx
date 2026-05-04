@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StatusDot } from "./StatusDot";
+import { Logo } from "./Logo";
 
 const nav = [
   { to: "/", label: "Caixa de entrada", icon: Inbox, badge: 12 },
@@ -21,12 +22,10 @@ export const Sidebar = () => {
   return (
     <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       {/* Brand */}
-      <div className="flex h-14 items-center gap-2 px-4 border-b border-sidebar-border">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-primary shadow-glow">
-          <span className="text-sm font-bold text-primary-foreground">A</span>
-        </div>
+      <div className="flex h-14 items-center gap-2.5 px-4 border-b border-sidebar-border">
+        <Logo size={26} />
         <div className="flex flex-col leading-none">
-          <span className="text-sm font-semibold tracking-tight text-foreground">Atende</span>
+          <span className="text-sm font-semibold tracking-tight text-foreground">Aethera</span>
           <span className="text-[10px] text-muted-foreground">Workspace Acme</span>
         </div>
       </div>

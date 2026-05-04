@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 const Login = () => {
   return (
@@ -33,9 +34,11 @@ const Login = () => {
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center">
           <div className="flex items-center gap-2.5">
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
-              <span className="text-base font-bold text-primary-foreground">A</span>
-              <div className="absolute inset-0 rounded-xl bg-gradient-primary blur-md opacity-60 -z-10" />
+            <div className="relative">
+              <Logo size={36} />
+              <div className="absolute inset-0 blur-lg opacity-50 -z-10">
+                <Logo size={36} />
+              </div>
             </div>
             <span className="text-xl font-semibold tracking-tight">Aethera</span>
           </div>
