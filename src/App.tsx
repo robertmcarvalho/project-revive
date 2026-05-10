@@ -16,6 +16,14 @@ import Campanhas from "./pages/Campanhas.tsx";
 import Automacoes from "./pages/Automacoes.tsx";
 import Flows from "./pages/Flows.tsx";
 import FlowEditor from "./pages/FlowEditor.tsx";
+import { LiderShell } from "@/components/LiderShell";
+import LiderDashboard from "./pages/lider/Dashboard.tsx";
+import LiderFarmacias from "./pages/lider/Farmacias.tsx";
+import LiderEntregadores from "./pages/lider/Entregadores.tsx";
+import LiderDiarias from "./pages/lider/Diarias.tsx";
+import LiderFaltas from "./pages/lider/Faltas.tsx";
+import LiderPreCadastro from "./pages/lider/PreCadastro.tsx";
+import LiderChat from "./pages/lider/Chat.tsx";
 import Financeiro from "./pages/Financeiro.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -43,6 +51,16 @@ const App = () => (
           <Route path="/financeiro" element={<AppShell><Financeiro /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
           <Route path="/export" element={<AppShell><Export /></AppShell>} />
+
+          {/* Painel do Líder */}
+          <Route path="/lider" element={<LiderShell><LiderDashboard /></LiderShell>} />
+          <Route path="/lider/farmacias" element={<LiderShell><LiderFarmacias /></LiderShell>} />
+          <Route path="/lider/entregadores" element={<LiderShell><LiderEntregadores /></LiderShell>} />
+          <Route path="/lider/diarias" element={<LiderShell><LiderDiarias /></LiderShell>} />
+          <Route path="/lider/faltas" element={<LiderShell><LiderFaltas /></LiderShell>} />
+          <Route path="/lider/pre-cadastro" element={<LiderShell><LiderPreCadastro /></LiderShell>} />
+          <Route path="/lider/chat" element={<LiderShell><LiderChat /></LiderShell>} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
