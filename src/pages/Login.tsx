@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Crown, Headphones } from "lucide-react";
+import { useState } from "react";
 import { Logo } from "@/components/Logo";
 
 const Login = () => {
+  const [perfil, setPerfil] = useState<"operador" | "lider">("operador");
+  const destino = perfil === "lider" ? "/lider" : "/";
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background flex items-center justify-center px-4 py-12">
       {/* Animated mesh gradient background */}
@@ -57,6 +60,29 @@ const Login = () => {
 
             <form className="mt-6 space-y-4">
               <div>
+                <label className="text-xs font-medium text-muted-foreground">Tipo de acesso</label>
+                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                  {[
+                    { id: "operador", label: "Operador", icon: Headphones },
+                    { id: "lider", label: "Líder", icon: Crown },
+                  ].map((p) => (
+                    <button
+                      type="button"
+                      key={p.id}
+                      onClick={() => setPerfil(p.id as any)}
+                      className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
+                        perfil === p.id
+                          ? "border-primary/60 bg-primary/10 text-primary"
+                          : "border-border bg-background/40 text-muted-foreground hover:bg-surface-hover"
+                      }`}
+                    >
+                      <p.icon className="h-3.5 w-3.5" /> {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
                 <label className="text-xs font-medium text-muted-foreground">E-mail</label>
                 <input
                   type="email"
@@ -80,10 +106,10 @@ const Login = () => {
               </div>
 
               <Link
-                to="/"
+                to={destino}
                 className="group flex w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary-glow transition-all shadow-glow"
               >
-                Entrar
+                Entrar como {perfil === "lider" ? "líder" : "operador"}
                 <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
               </Link>
 
