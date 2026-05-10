@@ -14,6 +14,8 @@ import Entregadores from "./pages/Entregadores.tsx";
 import Lideres from "./pages/Lideres.tsx";
 import Campanhas from "./pages/Campanhas.tsx";
 import Automacoes from "./pages/Automacoes.tsx";
+import Flows from "./pages/Flows.tsx";
+import FlowEditor from "./pages/FlowEditor.tsx";
 import Financeiro from "./pages/Financeiro.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -36,6 +38,8 @@ const App = () => (
           <Route path="/lideres" element={<AppShell><Lideres /></AppShell>} />
           <Route path="/campanhas" element={<AppShell><Campanhas /></AppShell>} />
           <Route path="/automacoes" element={<AppShell><Automacoes /></AppShell>} />
+          <Route path="/flows" element={<AppShell><Flows /></AppShell>} />
+          <Route path="/flows/:id" element={<AppShell><FlowEditor /></AppShell>} />
           <Route path="/financeiro" element={<AppShell><Financeiro /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
           <Route path="/export" element={<AppShell><Export /></AppShell>} />
