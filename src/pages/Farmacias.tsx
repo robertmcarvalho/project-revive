@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Search, MapPin, Phone, Users, Truck, MoreHorizontal, Building2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { cn } from "@/lib/utils";
@@ -25,9 +26,9 @@ const Farmacias = () => {
           title="Farmácias"
           description="Unidades parceiras conectadas à plataforma."
           actions={
-            <button className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+            <Link to="/farmacias/nova" className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
               <Plus className="h-3.5 w-3.5" /> Nova farmácia
-            </button>
+            </Link>
           }
         />
 
