@@ -1,4 +1,5 @@
 import { Plus, Crown, Building2, TrendingUp, MoreHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ const Lideres = () => (
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {leaders.map(l => (
-          <div key={l.id} className="group rounded-xl border border-border bg-surface p-5 hover:bg-surface-elevated transition-colors">
+          <Link key={l.id} to={`/lideres/${l.id}`} className="group rounded-xl border border-border bg-surface p-5 hover:bg-surface-elevated hover:border-primary/40 transition-colors block">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -88,7 +89,7 @@ const Lideres = () => (
                 <div className="text-[10px] text-subtle-foreground">CSAT</div>
               </div>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, Search, Truck, Star, MapPin, MoreHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { cn } from "@/lib/utils";
@@ -35,9 +36,9 @@ const Entregadores = () => {
           title="Entregadores"
           description="Equipe de entrega vinculada às farmácias."
           actions={
-            <button className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+            <Link to="/entregadores/novo" className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
               <Plus className="h-3.5 w-3.5" /> Cadastrar entregador
-            </button>
+            </Link>
           }
         />
 
