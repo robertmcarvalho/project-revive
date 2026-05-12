@@ -1,4 +1,5 @@
 import { Plus, Bot, Zap, Clock, MessageSquare, GitBranch, MoreHorizontal, Play } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
@@ -30,9 +31,12 @@ const Automacoes = () => (
         title="Automações"
         description="Fluxos, bots de triagem e regras de roteamento."
         actions={
-          <button className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+          <Link
+            to="/automacoes/nova"
+            className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors"
+          >
             <Plus className="h-3.5 w-3.5" /> Nova automação
-          </button>
+          </Link>
         }
       />
 

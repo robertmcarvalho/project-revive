@@ -17,6 +17,7 @@ import EntregadorCadastro from "./pages/EntregadorCadastro.tsx";
 import FarmaciaCadastro from "./pages/FarmaciaCadastro.tsx";
 import Campanhas from "./pages/Campanhas.tsx";
 import Automacoes from "./pages/Automacoes.tsx";
+import AutomacaoNova from "./pages/AutomacaoNova.tsx";
 import Flows from "./pages/Flows.tsx";
 import FlowEditor from "./pages/FlowEditor.tsx";
 import { LiderShell } from "@/components/LiderShell";
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/lideres/:id" element={<AppShell><LiderFicha /></AppShell>} />
           <Route path="/campanhas" element={<AppShell><Campanhas /></AppShell>} />
           <Route path="/automacoes" element={<AppShell><Automacoes /></AppShell>} />
+          <Route path="/automacoes/nova" element={<AppShell><AutomacaoNova /></AppShell>} />
           <Route path="/flows" element={<AppShell><Flows /></AppShell>} />
           <Route path="/flows/:id" element={<AppShell><FlowEditor /></AppShell>} />
           <Route path="/financeiro" element={<AppShell><Financeiro /></AppShell>} />
