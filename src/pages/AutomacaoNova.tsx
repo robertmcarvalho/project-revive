@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Bot, Zap, Clock, MessageSquare, GitBranch, Star,
   Play, Plus, Trash2, ChevronRight, Webhook, Mail, Database,
-  Filter, Bell, Sparkles, Check, AlertCircle,
+  Filter, Bell, Sparkles, Check, AlertCircle, Settings2, X, Loader2,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ const actionLib = [
 
 const channels = ["WhatsApp", "Instagram", "Messenger", "Webchat", "E-mail"];
 
-interface ActionItem { id: string; libId: string; label: string; }
+interface ActionItem { id: string; libId: string; label: string; config: Record<string, string>; }
 
 const stepsMeta = [
   { n: 1, title: "Modelo" },
@@ -50,6 +50,20 @@ const stepsMeta = [
   { n: 3, title: "Ações" },
   { n: 4, title: "Detalhes" },
 ];
+
+const defaultConfig = (libId: string): Record<string, string> => {
+  switch (libId) {
+    case "ai-reply": return { modelo: "gpt-4o-mini", tom: "cordial", instrucoes: "Responda de forma educada e objetiva." };
+    case "route": return { fila: "Atendimento Geral", prioridade: "media" };
+    case "send-msg": return { mensagem: "Olá! Em que posso ajudar?", tipo: "texto" };
+    case "tag": return { etiqueta: "Triagem" };
+    case "notify": return { canal: "Slack", destino: "#atendimento", mensagem: "Atenção: novo evento" };
+    case "email": return { destinatario: "", assunto: "", corpo: "" };
+    case "db": return { tabela: "conversas", campo: "status", valor: "em_andamento" };
+    case "wait": return { duracao: "5", unidade: "minutos" };
+    default: return {};
+  }
+};
 
 const AutomacaoNova = () => {
   const navigate = useNavigate();
@@ -66,11 +80,18 @@ const AutomacaoNova = () => {
   const [enabled, setEnabled] = useState(true);
   const [priority, setPriority] = useState<"baixa" | "media" | "alta">("media");
 
+  const [configActionId, setConfigActionId] = useState<string | null>(null);
+  const [testOpen, setTestOpen] = useState(false);
+  const [testRunning, setTestRunning] = useState(false);
+  const [testResult, setTestResult] = useState<{ status: "ok" | "fail"; logs: string[] } | null>(null);
+
   const addAction = (libId: string) => {
     const lib = actionLib.find(a => a.id === libId)!;
-    setActions(prev => [...prev, { id: `${libId}-${Date.now()}`, libId, label: lib.label }]);
+    setActions(prev => [...prev, { id: `${libId}-${Date.now()}`, libId, label: lib.label, config: defaultConfig(libId) }]);
   };
   const removeAction = (id: string) => setActions(prev => prev.filter(a => a.id !== id));
+  const updateActionConfig = (id: string, key: string, value: string) =>
+    setActions(prev => prev.map(a => a.id === id ? { ...a, config: { ...a.config, [key]: value } } : a));
   const toggleChannel = (c: string) =>
     setSelectedChannels(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
@@ -80,10 +101,33 @@ const AutomacaoNova = () => {
     (step === 3 && actions.length > 0) ||
     (step === 4 && name.trim().length >= 3);
 
+  const canTest = !!trigger && actions.length > 0;
+
   const handleSave = () => {
     toast({ title: "Automação criada", description: `${name} foi ${enabled ? "ativada" : "salva como rascunho"}.` });
     navigate("/automacoes");
   };
+
+  const runTest = () => {
+    setTestRunning(true);
+    setTestResult(null);
+    setTimeout(() => {
+      const triggerLabel = triggers.find(t => t.id === trigger)?.label ?? "Evento";
+      const logs = [
+        `[00:00.001] Gatilho disparado: ${triggerLabel}`,
+        ...conditions.filter(c => c.value).map((c, i) => `[00:00.0${10 + i}2] Condição avaliada: ${c.field} ${c.op} "${c.value}" → true`),
+        ...actions.flatMap((a, i) => [
+          `[00:00.${100 + i * 80}] Iniciando ação ${i + 1}/${actions.length}: ${a.label}`,
+          `[00:00.${130 + i * 80}] ✓ Ação concluída em 28ms`,
+        ]),
+        `[00:00.${200 + actions.length * 80}] Fluxo finalizado com sucesso`,
+      ];
+      setTestRunning(false);
+      setTestResult({ status: "ok", logs });
+    }, 900);
+  };
+
+  const configAction = configActionId ? actions.find(a => a.id === configActionId) : null;
 
   return (
     <div className="h-full overflow-y-auto">
@@ -103,6 +147,13 @@ const AutomacaoNova = () => {
                 className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-hover transition-colors"
               >
                 Cancelar
+              </button>
+              <button
+                disabled={!canTest}
+                onClick={() => { setTestOpen(true); setTestResult(null); }}
+                className="flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-hover transition-colors disabled:opacity-50"
+              >
+                <Play className="h-3.5 w-3.5" /> Testar
               </button>
               <button
                 disabled={!name || actions.length === 0 || !trigger}
@@ -310,12 +361,25 @@ const AutomacaoNova = () => {
                       {actions.map((a, i) => {
                         const lib = actionLib.find(l => l.id === a.libId)!;
                         const Icon = lib.icon;
+                        const configured = Object.values(a.config).some(v => v && v.length > 0);
                         return (
                           <div key={a.id} className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-2">
                             <span className="font-mono text-[10px] text-subtle-foreground w-5">{i + 1}</span>
                             <Icon className={cn("h-4 w-4", lib.color)} />
-                            <span className="flex-1 text-sm">{a.label}</span>
-                            <button className="text-xs text-muted-foreground hover:text-foreground">Configurar</button>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-sm">{a.label}</div>
+                              {configured && (
+                                <div className="text-[10px] text-subtle-foreground truncate font-mono">
+                                  {Object.entries(a.config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => `${k}: ${v}`).join(" · ")}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => setConfigActionId(a.id)}
+                              className="flex items-center gap-1 rounded-md border border-border bg-background/40 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:border-border-strong"
+                            >
+                              <Settings2 className="h-3 w-3" /> Configurar
+                            </button>
                             <button onClick={() => removeAction(a.id)} className="text-muted-foreground hover:text-destructive">
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
@@ -498,6 +562,116 @@ const AutomacaoNova = () => {
           </aside>
         </div>
       </div>
+
+      {/* Modal: Configurar ação */}
+      {configAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setConfigActionId(null)}>
+          <div className="w-full max-w-md rounded-xl border border-border bg-surface shadow-elevated" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-5 py-3">
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Configurar ação</div>
+                <div className="text-sm font-semibold">{configAction.label}</div>
+              </div>
+              <button onClick={() => setConfigActionId(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3 px-5 py-4">
+              {Object.entries(configAction.config).map(([key, value]) => (
+                <div key={key}>
+                  <label className="text-xs font-medium text-muted-foreground capitalize">{key}</label>
+                  {key === "instrucoes" || key === "mensagem" || key === "corpo" ? (
+                    <textarea
+                      value={value}
+                      onChange={e => updateActionConfig(configAction.id, key, e.target.value)}
+                      rows={3}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none"
+                    />
+                  ) : (
+                    <input
+                      value={value}
+                      onChange={e => updateActionConfig(configAction.id, key, e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+              <button
+                onClick={() => setConfigActionId(null)}
+                className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-hover"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => { setConfigActionId(null); toast({ title: "Ação configurada" }); }}
+                className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow"
+              >
+                Salvar configuração
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Testar automação */}
+      {testOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setTestOpen(false)}>
+          <div className="w-full max-w-lg rounded-xl border border-border bg-surface shadow-elevated" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-border px-5 py-3">
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Teste em sandbox</div>
+                <div className="text-sm font-semibold">Simular execução do fluxo</div>
+              </div>
+              <button onClick={() => setTestOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              <div className="rounded-lg border border-border bg-background/60 p-3">
+                <div className="text-[10px] uppercase tracking-wider text-subtle-foreground mb-1.5">Payload simulado</div>
+                <pre className="text-[11px] font-mono text-muted-foreground whitespace-pre-wrap">
+{JSON.stringify({
+  evento: triggers.find(t => t.id === trigger)?.id ?? "",
+  canal: selectedChannels[0] ?? "WhatsApp",
+  cliente: { nome: "Cliente Teste", id: "C-9001" },
+  mensagem: "Olá, preciso de ajuda com meu pedido"
+}, null, 2)}
+                </pre>
+              </div>
+
+              {testResult && (
+                <div className="mt-3 rounded-lg border border-border bg-background/60 p-3">
+                  <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-subtle-foreground mb-1.5">
+                    {testResult.status === "ok" ? <Check className="h-3 w-3 text-success" /> : <AlertCircle className="h-3 w-3 text-destructive" />}
+                    Resultado · {testResult.status === "ok" ? "Sucesso" : "Falha"}
+                  </div>
+                  <div className="space-y-0.5 font-mono text-[11px] text-muted-foreground max-h-48 overflow-y-auto">
+                    {testResult.logs.map((l, i) => <div key={i}>{l}</div>)}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+              <button
+                onClick={() => setTestOpen(false)}
+                className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-hover"
+              >
+                Fechar
+              </button>
+              <button
+                onClick={runTest}
+                disabled={testRunning}
+                className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow disabled:opacity-50"
+              >
+                {testRunning ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+                {testRunning ? "Executando…" : testResult ? "Executar novamente" : "Executar teste"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
