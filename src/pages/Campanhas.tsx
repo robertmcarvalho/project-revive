@@ -1,4 +1,5 @@
 import { Plus, Send, Users, CheckCircle2, AlertCircle, Clock, Play, Pause, MoreHorizontal, MessageSquare } from "lucide-react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
@@ -28,9 +29,9 @@ const Campanhas = () => (
         title="Campanhas"
         description="Disparos em massa via WhatsApp com anti-ban e templates aprovados."
         actions={
-          <button className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+          <Link to="/campanhas/nova" className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
             <Plus className="h-3.5 w-3.5" /> Nova campanha
-          </button>
+          </Link>
         }
       />
 
