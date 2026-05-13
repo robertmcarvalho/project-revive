@@ -61,7 +61,7 @@ const Farmacias = () => {
         {/* Cards grid */}
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filtered.map(p => (
-            <div key={p.id} className="group rounded-xl border border-border bg-surface p-5 hover:bg-surface-elevated transition-colors">
+            <Link key={p.id} to={`/farmacias/${p.id}`} className="group rounded-xl border border-border bg-surface p-5 hover:bg-surface-elevated transition-colors block">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-primary text-primary-foreground">
@@ -111,7 +111,7 @@ const Farmacias = () => {
                 </div>
                 <button className="text-[11px] font-medium text-primary hover:underline">Detalhes →</button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

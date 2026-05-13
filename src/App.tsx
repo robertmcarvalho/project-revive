@@ -14,7 +14,9 @@ import Entregadores from "./pages/Entregadores.tsx";
 import Lideres from "./pages/Lideres.tsx";
 import LiderFicha from "./pages/LiderFicha.tsx";
 import EntregadorCadastro from "./pages/EntregadorCadastro.tsx";
+import EntregadorFicha from "./pages/EntregadorFicha.tsx";
 import FarmaciaCadastro from "./pages/FarmaciaCadastro.tsx";
+import FarmaciaFicha from "./pages/FarmaciaFicha.tsx";
 import Campanhas from "./pages/Campanhas.tsx";
 import Automacoes from "./pages/Automacoes.tsx";
 import AutomacaoNova from "./pages/AutomacaoNova.tsx";
@@ -48,8 +50,10 @@ const App = () => (
           <Route path="/contatos" element={<AppShell><Contatos /></AppShell>} />
           <Route path="/farmacias" element={<AppShell><Farmacias /></AppShell>} />
           <Route path="/farmacias/nova" element={<AppShell><FarmaciaCadastro /></AppShell>} />
+          <Route path="/farmacias/:id" element={<AppShell><FarmaciaFicha /></AppShell>} />
           <Route path="/entregadores" element={<AppShell><Entregadores /></AppShell>} />
           <Route path="/entregadores/novo" element={<AppShell><EntregadorCadastro /></AppShell>} />
+          <Route path="/entregadores/:id" element={<AppShell><EntregadorFicha /></AppShell>} />
           <Route path="/lideres" element={<AppShell><Lideres /></AppShell>} />
           <Route path="/lideres/:id" element={<AppShell><LiderFicha /></AppShell>} />
           <Route path="/campanhas" element={<AppShell><Campanhas /></AppShell>} />
