@@ -100,7 +100,7 @@ const Entregadores = () => {
             </thead>
             <tbody>
               {filtered.map(d => (
-                <tr key={d.id} className="border-b border-border/50 last:border-0 hover:bg-surface-hover transition-colors">
+                <tr key={d.id} onClick={() => window.location.assign(`/entregadores/${d.id}`)} className="border-b border-border/50 last:border-0 hover:bg-surface-hover transition-colors cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2.5">
                       <div className="relative">
