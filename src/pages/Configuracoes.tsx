@@ -319,7 +319,9 @@ const ChannelsPanel = () => {
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] text-subtle-foreground">Filas:</span>
                   {w.queues.map(q => (
-                    <span key={q} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">{q}</span>
+                    <span key={q.name} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                      {q.name}{q.setores.length > 0 && <span className="ml-1 text-primary/60">· {q.setores.length} setor{q.setores.length > 1 ? "es" : ""}</span>}
+                    </span>
                   ))}
                 </div>
               </div>
