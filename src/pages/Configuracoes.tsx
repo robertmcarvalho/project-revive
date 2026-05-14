@@ -77,34 +77,20 @@ const Configuracoes = () => {
               </div>
             )}
 
-            {active === "channels" && (
-              <div className="space-y-3">
-                {[
-                  { name: "WhatsApp Business API", desc: "Meta Cloud API · +55 11 4002-8922", connected: true, color: "bg-channel-whatsapp" },
-                  { name: "Instagram Direct", desc: "@acmefarmacias", connected: true, color: "bg-channel-instagram" },
-                  { name: "E-mail (IMAP)", desc: "atendimento@acme.com", connected: true, color: "bg-channel-email" },
-                  { name: "Webchat", desc: "Widget no site institucional", connected: false, color: "bg-channel-webchat" },
-                  { name: "Telegram", desc: "Não configurado", connected: false, color: "bg-channel-telegram" },
-                ].map(c => (
-                  <div key={c.name} className="flex items-center justify-between rounded-xl border border-border bg-surface p-4">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("h-9 w-9 rounded-lg", c.color, "opacity-90")} />
-                      <div>
-                        <div className="text-sm font-medium">{c.name}</div>
-                        <div className="text-[11px] text-muted-foreground">{c.desc}</div>
-                      </div>
-                    </div>
-                    {c.connected ? (
-                      <span className="inline-flex items-center gap-1 rounded bg-success/15 px-2 py-0.5 text-[10px] font-medium text-success">
-                        <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" /> Conectado
-                      </span>
-                    ) : (
-                      <button className="rounded-md bg-primary px-3 py-1 text-[11px] font-medium text-primary-foreground hover:bg-primary-glow">Conectar</button>
-                    )}
-                  </div>
-                ))}
+            {active === "users" && (
+              <div className="rounded-xl border border-border bg-surface p-8 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <Users className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 text-sm font-semibold">Usuários e Perfis</h3>
+                <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">Cadastre administradores, gestores, atendentes e líderes. Configure permissões granulares e filas de WhatsApp por usuário.</p>
+                <Link to="/configuracoes/usuarios" className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
+                  Abrir gestão de usuários <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             )}
+
+            {active === "channels" && <ChannelsPanel />}
 
             {active === "notifications" && (
               <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
