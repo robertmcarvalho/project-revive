@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Building2, User, Bell, Shield, Webhook, MessageSquare, Palette, Key, ChevronRight, Users, Plus, Copy, Trash2, Eye, EyeOff, Edit3, CheckCircle2 } from "lucide-react";
+import { Building2, User, Bell, Shield, Webhook, MessageSquare, Palette, Key, ChevronRight, Users, Plus, Copy, Trash2, Eye, EyeOff, Edit3, CheckCircle2, Instagram, Mail, Send, X } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
@@ -204,16 +204,16 @@ const Toggle = ({ on }: { on: boolean }) => {
   );
 };
 
-// ============== WhatsApp Channels Panel ==============
+// ============== Channels Panel (WhatsApp / Instagram / Email) ==============
 
-type Fila = { name: string; setores: string[] };
+type Fila = { name: string; setores: string[]; notifyEmail?: string };
 
-type WhatsappWebhook = {
+type SocialWebhook = {
   id: string;
   name: string;
-  number: string;
-  phoneId: string;
-  wabaId: string;
+  number: string;            // WhatsApp number / Instagram handle
+  phoneId: string;           // phone_id / ig_user_id
+  wabaId: string;            // waba_id / ig_business_id
   token: string;
   verifyToken: string;
   callbackUrl: string;
@@ -223,9 +223,17 @@ type WhatsappWebhook = {
   queues: Fila[];
 };
 
-const SETORES_DISPONIVEIS = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico", "Comercial"];
+const SETORES_INICIAIS = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico", "Comercial"];
 
-const initialWebhooks: WhatsappWebhook[] = [
+const EMAILS_NOTIFICACAO = [
+  "atendimento@acme.com.br",
+  "financeiro@acme.com.br",
+  "suporte@acme.com.br",
+  "comercial@acme.com.br",
+  "operacional@acme.com.br",
+];
+
+const initialWhatsapp: SocialWebhook[] = [
   {
     id: "wh_01", name: "Atendimento Principal", number: "+55 11 4002-8922",
     phoneId: "1029384756102", wabaId: "9876543210",
@@ -233,8 +241,8 @@ const initialWebhooks: WhatsappWebhook[] = [
     callbackUrl: "https://api.acme.com/wa/webhooks/wh_01",
     status: "ativo", lastMessageAt: "há 12s", msgs24h: 4280,
     queues: [
-      { name: "Geral", setores: ["Atendimento Geral"] },
-      { name: "Suporte", setores: ["Suporte Técnico", "Operacional"] },
+      { name: "Geral", setores: ["Atendimento Geral"], notifyEmail: "atendimento@acme.com.br" },
+      { name: "Suporte", setores: ["Suporte Técnico", "Operacional"], notifyEmail: "suporte@acme.com.br" },
     ],
   },
   {
@@ -243,7 +251,7 @@ const initialWebhooks: WhatsappWebhook[] = [
     token: "EAAG••••••••••••••••91bf", verifyToken: "vt_acme_sales_2c10",
     callbackUrl: "https://api.acme.com/wa/webhooks/wh_02",
     status: "ativo", lastMessageAt: "há 1m", msgs24h: 1210,
-    queues: [{ name: "Comercial", setores: ["Comercial", "Financeiro"] }],
+    queues: [{ name: "Comercial", setores: ["Comercial", "Financeiro"], notifyEmail: "comercial@acme.com.br" }],
   },
   {
     id: "wh_03", name: "Suporte Técnico", number: "+55 11 4002-7710",
@@ -251,33 +259,87 @@ const initialWebhooks: WhatsappWebhook[] = [
     token: "EAAG••••••••••••••••3d7e", verifyToken: "vt_acme_tech_71fa",
     callbackUrl: "https://api.acme.com/wa/webhooks/wh_03",
     status: "erro", lastMessageAt: "há 2h", msgs24h: 0,
-    queues: [{ name: "Suporte Técnico", setores: ["Suporte Técnico"] }],
+    queues: [{ name: "Suporte Técnico", setores: ["Suporte Técnico"], notifyEmail: "suporte@acme.com.br" }],
+  },
+];
+
+const initialInstagram: SocialWebhook[] = [
+  {
+    id: "ig_01", name: "@acmefarmacias", number: "@acmefarmacias",
+    phoneId: "17841400000000001", wabaId: "1789200000000001",
+    token: "IGQ••••••••••••••••f0a2", verifyToken: "vt_acme_ig_main_3d11",
+    callbackUrl: "https://api.acme.com/ig/webhooks/ig_01",
+    status: "ativo", lastMessageAt: "há 4m", msgs24h: 312,
+    queues: [{ name: "DM Instagram", setores: ["Atendimento Geral", "Comercial"], notifyEmail: "atendimento@acme.com.br" }],
   },
 ];
 
 const ChannelsPanel = () => {
-  const [webhooks, setWebhooks] = useState(initialWebhooks);
-  const [editing, setEditing] = useState<WhatsappWebhook | null>(null);
+  const [tab, setTab] = useState<"whatsapp" | "instagram" | "email">("whatsapp");
+  const [setoresGlobais, setSetoresGlobais] = useState<string[]>(SETORES_INICIAIS);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
+        <ChannelTab id="whatsapp" current={tab} onClick={setTab} icon={<MessageSquare className="h-3.5 w-3.5" />} label="WhatsApp" color="text-channel-whatsapp" />
+        <ChannelTab id="instagram" current={tab} onClick={setTab} icon={<Instagram className="h-3.5 w-3.5" />} label="Instagram" color="text-channel-instagram" />
+        <ChannelTab id="email" current={tab} onClick={setTab} icon={<Mail className="h-3.5 w-3.5" />} label="E-mail" color="text-channel-email" />
+      </div>
+
+      {tab === "whatsapp" && (
+        <SocialChannelManager kind="whatsapp" setoresGlobais={setoresGlobais} setSetoresGlobais={setSetoresGlobais} initial={initialWhatsapp} />
+      )}
+      {tab === "instagram" && (
+        <SocialChannelManager kind="instagram" setoresGlobais={setoresGlobais} setSetoresGlobais={setSetoresGlobais} initial={initialInstagram} />
+      )}
+      {tab === "email" && <EmailChannelPanel />}
+    </div>
+  );
+};
+
+const ChannelTab = ({ id, current, onClick, icon, label, color }: any) => (
+  <button
+    onClick={() => onClick(id)}
+    className={cn(
+      "flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition-colors",
+      current === id ? "bg-surface-elevated text-foreground" : "text-muted-foreground hover:bg-surface-hover"
+    )}
+  >
+    <span className={current === id ? color : ""}>{icon}</span> {label}
+  </button>
+);
+
+const SocialChannelManager = ({
+  kind, setoresGlobais, setSetoresGlobais, initial,
+}: {
+  kind: "whatsapp" | "instagram";
+  setoresGlobais: string[];
+  setSetoresGlobais: (s: string[]) => void;
+  initial: SocialWebhook[];
+}) => {
+  const [webhooks, setWebhooks] = useState(initial);
+  const [editing, setEditing] = useState<SocialWebhook | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const statusColor: Record<WhatsappWebhook["status"], string> = {
+  const meta = kind === "whatsapp"
+    ? { title: "WhatsApp Business API", desc: "Gerencie credenciais e webhooks. Suporta múltiplas conexões para escalar o produto.", icon: <MessageSquare className="h-5 w-5 text-channel-whatsapp" />, bg: "bg-channel-whatsapp/15", labels: { id: "Phone Number ID", waba: "WABA ID", token: "Access Token (Meta)", number: "Número" } }
+    : { title: "Instagram Direct API", desc: "Conecte contas do Instagram via Meta Cloud. Cada webhook recebe DMs e menções da conta vinculada.", icon: <Instagram className="h-5 w-5 text-channel-instagram" />, bg: "bg-channel-instagram/15", labels: { id: "Instagram User ID", waba: "Business Account ID", token: "Access Token (Instagram Graph)", number: "Handle" } };
+
+  const statusColor: Record<SocialWebhook["status"], string> = {
     ativo: "bg-success/15 text-success",
     pausado: "bg-muted text-muted-foreground",
     erro: "bg-destructive/15 text-destructive",
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header WhatsApp */}
+    <>
       <div className="rounded-xl border border-border bg-surface p-5">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-channel-whatsapp/15 flex items-center justify-center">
-              <MessageSquare className="h-5 w-5 text-channel-whatsapp" />
-            </div>
+            <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", meta.bg)}>{meta.icon}</div>
             <div>
-              <h3 className="text-sm font-semibold">WhatsApp Business API</h3>
-              <p className="text-[11px] text-muted-foreground">Gerencie credenciais e webhooks. Suporta múltiplas conexões para escalar o produto.</p>
+              <h3 className="text-sm font-semibold">{meta.title}</h3>
+              <p className="text-[11px] text-muted-foreground">{meta.desc}</p>
             </div>
           </div>
           <button onClick={() => setCreating(true)} className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
@@ -286,28 +348,23 @@ const ChannelsPanel = () => {
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3">
-          <div className="rounded-md bg-background/40 p-3">
-            <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Webhooks ativos</div>
-            <div className="mt-1 font-mono text-lg font-semibold text-success">{webhooks.filter(w => w.status === "ativo").length}</div>
-          </div>
-          <div className="rounded-md bg-background/40 p-3">
-            <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Mensagens 24h</div>
-            <div className="mt-1 font-mono text-lg font-semibold">{webhooks.reduce((a, w) => a + w.msgs24h, 0).toLocaleString("pt-BR")}</div>
-          </div>
-          <div className="rounded-md bg-background/40 p-3">
-            <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Com problema</div>
-            <div className="mt-1 font-mono text-lg font-semibold text-destructive">{webhooks.filter(w => w.status === "erro").length}</div>
-          </div>
+          <Stat label="Webhooks ativos" value={webhooks.filter(w => w.status === "ativo").length} tone="success" />
+          <Stat label="Mensagens 24h" value={webhooks.reduce((a, w) => a + w.msgs24h, 0).toLocaleString("pt-BR")} />
+          <Stat label="Com problema" value={webhooks.filter(w => w.status === "erro").length} tone="destructive" />
         </div>
       </div>
 
-      {/* Lista */}
       <div className="space-y-2">
+        {webhooks.length === 0 && (
+          <div className="rounded-xl border border-dashed border-border bg-surface p-6 text-center text-xs text-muted-foreground">
+            Nenhum webhook conectado. Clique em "Novo webhook" para começar.
+          </div>
+        )}
         {webhooks.map(w => (
           <div key={w.id} className="rounded-xl border border-border bg-surface p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm font-semibold">{w.name}</span>
                   <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium", statusColor[w.status])}>
                     {w.status === "ativo" && <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />}
@@ -315,12 +372,13 @@ const ChannelsPanel = () => {
                   </span>
                   <span className="text-[10px] text-subtle-foreground">· última msg {w.lastMessageAt} · {w.msgs24h.toLocaleString("pt-BR")} msgs/24h</span>
                 </div>
-                <div className="mt-1 font-mono text-[11px] text-muted-foreground">{w.number} · phone_id {w.phoneId}</div>
+                <div className="mt-1 font-mono text-[11px] text-muted-foreground">{w.number} · {meta.labels.id} {w.phoneId}</div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <span className="text-[10px] text-subtle-foreground">Filas:</span>
                   {w.queues.map(q => (
                     <span key={q.name} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
                       {q.name}{q.setores.length > 0 && <span className="ml-1 text-primary/60">· {q.setores.length} setor{q.setores.length > 1 ? "es" : ""}</span>}
+                      {q.notifyEmail && <span className="ml-1 text-primary/50">· ✉ {q.notifyEmail}</span>}
                     </span>
                   ))}
                 </div>
@@ -342,33 +400,56 @@ const ChannelsPanel = () => {
 
       {(editing || creating) && (
         <WebhookEditor
+          kind={kind}
+          labels={meta.labels}
           webhook={editing}
+          setoresGlobais={setoresGlobais}
+          setSetoresGlobais={setSetoresGlobais}
           onClose={() => { setEditing(null); setCreating(false); }}
           onSave={(w) => {
             if (editing) setWebhooks(ws => ws.map(x => x.id === w.id ? w : x));
-            else setWebhooks(ws => [...ws, { ...w, id: `wh_${String(ws.length + 1).padStart(2, "0")}` }]);
+            else setWebhooks(ws => [...ws, { ...w, id: `${kind === "whatsapp" ? "wh" : "ig"}_${String(ws.length + 1).padStart(2, "0")}` }]);
             setEditing(null); setCreating(false);
           }}
         />
       )}
-    </div>
+    </>
   );
 };
 
-const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook | null; onClose: () => void; onSave: (w: WhatsappWebhook) => void }) => {
+const Stat = ({ label, value, tone }: { label: string; value: any; tone?: "success" | "destructive" }) => (
+  <div className="rounded-md bg-background/40 p-3">
+    <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">{label}</div>
+    <div className={cn("mt-1 font-mono text-lg font-semibold", tone === "success" && "text-success", tone === "destructive" && "text-destructive")}>{value}</div>
+  </div>
+);
+
+const WebhookEditor = ({
+  kind, labels, webhook, setoresGlobais, setSetoresGlobais, onClose, onSave,
+}: {
+  kind: "whatsapp" | "instagram";
+  labels: { id: string; waba: string; token: string; number: string };
+  webhook: SocialWebhook | null;
+  setoresGlobais: string[];
+  setSetoresGlobais: (s: string[]) => void;
+  onClose: () => void;
+  onSave: (w: SocialWebhook) => void;
+}) => {
   const [showToken, setShowToken] = useState(false);
   const initial = webhook ?? {
     id: "", name: "", number: "", phoneId: "", wabaId: "",
-    token: "", verifyToken: "", callbackUrl: "https://api.acme.com/wa/webhooks/new",
+    token: "", verifyToken: "",
+    callbackUrl: `https://api.acme.com/${kind === "whatsapp" ? "wa" : "ig"}/webhooks/new`,
     status: "ativo" as const, lastMessageAt: "—", msgs24h: 0, queues: [] as Fila[],
   };
   const [filas, setFilas] = useState<Fila[]>(initial.queues);
   const [novaFila, setNovaFila] = useState("");
+  const [novoSetor, setNovoSetor] = useState("");
 
   const addFila = () => {
     const n = novaFila.trim();
     if (!n || filas.some(f => f.name.toLowerCase() === n.toLowerCase())) return;
-    setFilas([...filas, { name: n, setores: [] }]);
+    setFilas([...filas, { name: n, setores: [], notifyEmail: "" }]);
     setNovaFila("");
   };
   const removeFila = (name: string) => setFilas(filas.filter(f => f.name !== name));
@@ -377,23 +458,39 @@ const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook 
       ...f,
       setores: f.setores.includes(setor) ? f.setores.filter(s => s !== setor) : [...f.setores, setor],
     }));
+  const setNotifyEmail = (filaName: string, email: string) =>
+    setFilas(filas.map(f => f.name !== filaName ? f : { ...f, notifyEmail: email }));
+
+  const addSetorGlobal = () => {
+    const s = novoSetor.trim();
+    if (!s || setoresGlobais.some(x => x.toLowerCase() === s.toLowerCase())) return;
+    setSetoresGlobais([...setoresGlobais, s]);
+    setNovoSetor("");
+  };
+  const removeSetorGlobal = (s: string) => {
+    setSetoresGlobais(setoresGlobais.filter(x => x !== s));
+    setFilas(filas.map(f => ({ ...f, setores: f.setores.filter(x => x !== s) })));
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-xl border border-border bg-surface shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="border-b border-border px-6 py-4">
-          <h3 className="text-sm font-semibold">{webhook ? "Editar webhook" : "Novo webhook WhatsApp"}</h3>
-          <p className="mt-0.5 text-[11px] text-muted-foreground">Cole as credenciais da Meta Cloud API. A plataforma usará automaticamente.</p>
+        <div className="flex items-start justify-between border-b border-border px-6 py-4">
+          <div>
+            <h3 className="text-sm font-semibold">{webhook ? "Editar webhook" : `Novo webhook ${kind === "whatsapp" ? "WhatsApp" : "Instagram"}`}</h3>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Cole as credenciais da Meta Cloud API. A plataforma usará automaticamente.</p>
+          </div>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-4 w-4" /></button>
         </div>
         <div className="space-y-4 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Field label="Nome de exibição" value={initial.name} />
-            <Field label="Número" value={initial.number} mono />
-            <Field label="Phone Number ID" value={initial.phoneId} mono />
-            <Field label="WABA ID" value={initial.wabaId} mono />
+            <Field label={labels.number} value={initial.number} mono />
+            <Field label={labels.id} value={initial.phoneId} mono />
+            <Field label={labels.waba} value={initial.wabaId} mono />
           </div>
           <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Access Token (Meta)</label>
+            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">{labels.token}</label>
             <div className="mt-1 flex gap-2">
               <input type={showToken ? "text" : "password"} defaultValue={initial.token} className="flex-1 rounded-md border border-border bg-background/40 px-3 py-2 font-mono text-xs" />
               <button type="button" onClick={() => setShowToken(s => !s)} className="rounded-md border border-border px-3 hover:bg-surface-hover">
@@ -410,13 +507,42 @@ const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook 
             </div>
           </div>
 
-          {/* Filas estruturadas com setores */}
+          {/* Setores globais */}
           <div className="rounded-md border border-border bg-background/40 p-3">
             <div className="flex items-center justify-between">
-              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas e Setores</label>
+              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Setores disponíveis</label>
+              <span className="text-[10px] text-muted-foreground">{setoresGlobais.length} setor{setoresGlobais.length !== 1 ? "es" : ""}</span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Crie setores reutilizáveis para vincular às filas (ex.: Financeiro, Suporte).</p>
+            <div className="mt-3 flex gap-2">
+              <input
+                value={novoSetor}
+                onChange={e => setNovoSetor(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addSetorGlobal())}
+                placeholder="Novo setor (ex.: Pós-venda)"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs"
+              />
+              <button type="button" onClick={addSetorGlobal} className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
+                <Plus className="h-3 w-3" /> Setor
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {setoresGlobais.map(s => (
+                <span key={s} className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[10px] text-foreground">
+                  {s}
+                  <button type="button" onClick={() => removeSetorGlobal(s)} className="text-muted-foreground hover:text-destructive"><X className="h-2.5 w-2.5" /></button>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Filas + setores + email de notificação */}
+          <div className="rounded-md border border-border bg-background/40 p-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas, setores e notificação</label>
               <span className="text-[10px] text-muted-foreground">{filas.length} fila{filas.length !== 1 ? "s" : ""}</span>
             </div>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Cada fila pode conter um ou mais setores. Atendentes serão alocados por fila + setor.</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Cada fila pode conter setores e um e-mail de notificação dedicado.</p>
 
             <div className="mt-3 flex gap-2">
               <input
@@ -447,7 +573,7 @@ const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook 
                     <button type="button" onClick={() => removeFila(f.name)} className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {SETORES_DISPONIVEIS.map(s => {
+                    {setoresGlobais.map(s => {
                       const on = f.setores.includes(s);
                       return (
                         <button
@@ -463,6 +589,18 @@ const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook 
                         </button>
                       );
                     })}
+                  </div>
+                  <div className="mt-3">
+                    <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">E-mail de notificação</label>
+                    <select
+                      value={f.notifyEmail || ""}
+                      onChange={e => setNotifyEmail(f.name, e.target.value)}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-xs"
+                    >
+                      <option value="">— Nenhum —</option>
+                      {EMAILS_NOTIFICACAO.map(em => <option key={em} value={em}>{em}</option>)}
+                    </select>
+                    <p className="mt-1 text-[10px] text-subtle-foreground">Receberá alertas de novas conversas, SLA vencido e relatórios desta fila.</p>
                   </div>
                 </div>
               ))}
@@ -481,5 +619,140 @@ const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook 
   );
 };
 
-export default Configuracoes;
+// ============== Email Channel (SMTP de envio de notificações) ==============
 
+const EmailChannelPanel = () => {
+  const [provider, setProvider] = useState<"smtp" | "sendgrid" | "resend" | "ses">("smtp");
+  const [tls, setTls] = useState(true);
+  const [showPwd, setShowPwd] = useState(false);
+  const [testing, setTesting] = useState<"idle" | "ok" | "err">("idle");
+
+  const handleTest = () => {
+    setTesting("idle");
+    setTimeout(() => setTesting("ok"), 800);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-channel-email/15">
+            <Mail className="h-5 w-5 text-channel-email" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold">E-mail de envio (SMTP)</h3>
+            <p className="text-[11px] text-muted-foreground">Configure o servidor que enviará notificações da plataforma para clientes e equipe.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
+        <div>
+          <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Provedor</label>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {(["smtp", "sendgrid", "resend", "ses"] as const).map(p => (
+              <button
+                key={p}
+                onClick={() => setProvider(p)}
+                className={cn(
+                  "rounded-md border px-3 py-2 text-xs font-medium transition-colors",
+                  provider === p ? "border-primary bg-primary/10 text-primary" : "border-border bg-background/40 text-muted-foreground hover:bg-surface-hover"
+                )}
+              >
+                {p === "smtp" ? "SMTP" : p === "sendgrid" ? "SendGrid" : p === "resend" ? "Resend" : "Amazon SES"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Field label="Nome do remetente" value="Acme Notificações" />
+          <Field label="E-mail remetente" value="no-reply@acme.com.br" mono />
+          <Field label="E-mail de resposta" value="atendimento@acme.com.br" mono />
+          <Field label="Domínio verificado" value="acme.com.br" mono />
+        </div>
+
+        {provider === "smtp" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Field label="Host SMTP" value="smtp.acme.com.br" mono />
+            <Field label="Porta" value="587" mono />
+            <Field label="Usuário" value="notify@acme.com.br" mono />
+            <div>
+              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Senha</label>
+              <div className="mt-1 flex gap-2">
+                <input type={showPwd ? "text" : "password"} defaultValue="••••••••••••" className="flex-1 rounded-md border border-border bg-background/40 px-3 py-2 font-mono text-xs" />
+                <button type="button" onClick={() => setShowPwd(s => !s)} className="rounded-md border border-border px-3 hover:bg-surface-hover">
+                  {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {provider !== "smtp" && (
+          <div>
+            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">API Key</label>
+            <div className="mt-1 flex gap-2">
+              <input type={showPwd ? "text" : "password"} defaultValue="sk_••••••••••••••••42a9" className="flex-1 rounded-md border border-border bg-background/40 px-3 py-2 font-mono text-xs" />
+              <button type="button" onClick={() => setShowPwd(s => !s)} className="rounded-md border border-border px-3 hover:bg-surface-hover">
+                {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2">
+          <div>
+            <div className="text-xs font-medium">TLS / STARTTLS</div>
+            <div className="text-[10px] text-muted-foreground">Recomendado para portas 587/465.</div>
+          </div>
+          <Toggle on={tls} />
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h4 className="text-sm font-semibold">Caixas autorizadas para notificação</h4>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">E-mails liberados para receber alertas das filas/webhooks. Selecione-os ao configurar cada webhook.</p>
+          </div>
+          <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover"><Plus className="h-3 w-3" /> Adicionar</button>
+        </div>
+        <div className="mt-3 space-y-1.5">
+          {EMAILS_NOTIFICACAO.map(em => (
+            <div key={em} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 text-channel-email" />
+                <span className="font-mono text-xs">{em}</span>
+                <span className="rounded bg-success/15 px-1.5 py-0.5 text-[10px] text-success">verificado</span>
+              </div>
+              <button className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h4 className="text-sm font-semibold">Teste de envio</h4>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Envie um e-mail de teste para validar as credenciais.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <input placeholder="seu@email.com" className="rounded-md border border-border bg-background px-3 py-2 text-xs" />
+            <button onClick={handleTest} className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
+              <Send className="h-3 w-3" /> Enviar teste
+            </button>
+          </div>
+        </div>
+        {testing === "ok" && (
+          <div className="mt-3 flex items-center gap-1.5 rounded-md bg-success/10 px-3 py-2 text-[11px] text-success">
+            <CheckCircle2 className="h-3.5 w-3.5" /> E-mail de teste enviado com sucesso.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Configuracoes;
