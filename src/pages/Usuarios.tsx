@@ -258,4 +258,73 @@ const Field = ({ label, value, placeholder, readOnly }: { label: string; value?:
   </div>
 );
 
+const FilasSetoresPicker = ({ perfil }: { perfil: Perfil }) => {
+  const [selecao, setSelecao] = useState<Record<string, string[]>>({});
+
+  const toggleFila = (name: string) =>
+    setSelecao(s => {
+      const next = { ...s };
+      if (name in next) delete next[name];
+      else next[name] = [];
+      return next;
+    });
+
+  const toggleSetor = (fila: string, setor: string) =>
+    setSelecao(s => {
+      const cur = s[fila] ?? [];
+      return { ...s, [fila]: cur.includes(setor) ? cur.filter(x => x !== setor) : [...cur, setor] };
+    });
+
+  return (
+    <div>
+      <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas de WhatsApp e Setores</label>
+      <p className="mt-0.5 text-[10px] text-muted-foreground">
+        {perfil === "gestor"
+          ? "Selecione as filas que este gestor irá supervisionar e os setores dentro de cada fila."
+          : "Selecione as filas e os setores em que este atendente irá atuar."}
+      </p>
+      <div className="mt-2 space-y-2">
+        {webhooks.map(w => {
+          const ativa = w.name in selecao;
+          return (
+            <div key={w.name} className={cn("rounded-md border transition-colors", ativa ? "border-primary/40 bg-primary/5" : "border-border bg-background/40")}>
+              <label className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer">
+                <input type="checkbox" checked={ativa} onChange={() => toggleFila(w.name)} className="h-3.5 w-3.5 rounded border-border" />
+                <span className="font-medium">{w.name}</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">{w.setores.length} setor{w.setores.length !== 1 ? "es" : ""}</span>
+              </label>
+              {ativa && (
+                <div className="border-t border-border/60 px-3 py-2">
+                  <div className="mb-1 flex items-center gap-1 text-[10px] text-muted-foreground"><Info className="h-2.5 w-2.5" /> Setores em que atuará nesta fila</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {w.setores.map(s => {
+                      const on = (selecao[w.name] ?? []).includes(s);
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => toggleSetor(w.name, s)}
+                          className={cn(
+                            "rounded-md border px-2 py-1 text-[10px] transition-colors",
+                            on ? "border-primary bg-primary/15 text-primary" : "border-border bg-background text-muted-foreground hover:bg-surface-hover"
+                          )}
+                        >
+                          {on && "✓ "}{s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {(selecao[w.name] ?? []).length === 0 && (
+                    <div className="mt-1.5 text-[10px] text-warning">Selecione ao menos um setor.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 export default Usuarios;
