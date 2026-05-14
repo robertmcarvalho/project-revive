@@ -445,6 +445,9 @@ const WebhookEditor = ({
   const [filas, setFilas] = useState<Fila[]>(initial.queues);
   const [novaFila, setNovaFila] = useState("");
   const [novoSetor, setNovoSetor] = useState("");
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [testing, setTesting] = useState<"idle" | "loading" | "ok" | "err">("idle");
+  const flash = (msg: string) => { setFeedback(msg); setTimeout(() => setFeedback(null), 1800); };
 
   const addFila = () => {
     const n = novaFila.trim();
