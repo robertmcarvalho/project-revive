@@ -115,7 +115,19 @@ const Usuarios = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="h-4 w-4" /></button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="rounded p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground"><MoreHorizontal className="h-4 w-4" /></button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem asChild><Link to={`/configuracoes/usuarios/${u.id}`} className="flex items-center gap-2"><Eye className="h-3.5 w-3.5" /> Ver ficha</Link></DropdownMenuItem>
+                          <DropdownMenuItem><Key className="h-3.5 w-3.5" /> Editar senha</DropdownMenuItem>
+                          <DropdownMenuItem><RotateCcw className="h-3.5 w-3.5" /> Reenviar acesso</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>{u.status === "ativo" ? <><UserX className="h-3.5 w-3.5" /> Desativar</> : <><UserCog className="h-3.5 w-3.5" /> Ativar</>}</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive"><Trash2 className="h-3.5 w-3.5" /> Excluir usuário</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 );
