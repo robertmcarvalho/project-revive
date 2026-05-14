@@ -768,17 +768,33 @@ const EmailChannelPanel = () => {
             <h4 className="text-sm font-semibold">Caixas autorizadas para notificação</h4>
             <p className="mt-0.5 text-[11px] text-muted-foreground">E-mails liberados para receber alertas das filas/webhooks. Selecione-os ao configurar cada webhook.</p>
           </div>
-          <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover"><Plus className="h-3 w-3" /> Adicionar</button>
+          <button onClick={() => setAdding(a => !a)} className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover">
+            <Plus className="h-3 w-3" /> Adicionar
+          </button>
         </div>
+        {adding && (
+          <div className="mt-3 flex gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 p-2">
+            <input
+              autoFocus
+              value={novaCaixa}
+              onChange={e => setNovaCaixa(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCaixa())}
+              placeholder="novo@dominio.com"
+              className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 font-mono text-xs"
+            />
+            <button type="button" onClick={addCaixa} className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Adicionar</button>
+            <button type="button" onClick={() => { setAdding(false); setNovaCaixa(""); }} className="rounded-md border border-border px-3 py-1 text-xs">Cancelar</button>
+          </div>
+        )}
         <div className="mt-3 space-y-1.5">
-          {EMAILS_NOTIFICACAO.map(em => (
+          {caixas.map(em => (
             <div key={em} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2">
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-channel-email" />
                 <span className="font-mono text-xs">{em}</span>
                 <span className="rounded bg-success/15 px-1.5 py-0.5 text-[10px] text-success">verificado</span>
               </div>
-              <button className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
+              <button onClick={() => removeCaixa(em)} className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
             </div>
           ))}
         </div>
@@ -791,15 +807,21 @@ const EmailChannelPanel = () => {
             <p className="mt-0.5 text-[11px] text-muted-foreground">Envie um e-mail de teste para validar as credenciais.</p>
           </div>
           <div className="flex items-center gap-2">
-            <input placeholder="seu@email.com" className="rounded-md border border-border bg-background px-3 py-2 text-xs" />
+            <input
+              value={testEmail}
+              onChange={e => setTestEmail(e.target.value)}
+              placeholder="seu@email.com"
+              className="rounded-md border border-border bg-background px-3 py-2 text-xs"
+            />
             <button onClick={handleTest} className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
               <Send className="h-3 w-3" /> Enviar teste
             </button>
           </div>
         </div>
+        {testing === "loading" && <div className="mt-3 text-[11px] text-muted-foreground">Enviando…</div>}
         {testing === "ok" && (
           <div className="mt-3 flex items-center gap-1.5 rounded-md bg-success/10 px-3 py-2 text-[11px] text-success">
-            <CheckCircle2 className="h-3.5 w-3.5" /> E-mail de teste enviado com sucesso.
+            <CheckCircle2 className="h-3.5 w-3.5" /> E-mail de teste enviado para {testEmail}.
           </div>
         )}
       </div>
