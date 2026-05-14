@@ -232,7 +232,10 @@ const initialWebhooks: WhatsappWebhook[] = [
     token: "EAAG••••••••••••••••42a9", verifyToken: "vt_acme_main_8f2a",
     callbackUrl: "https://api.acme.com/wa/webhooks/wh_01",
     status: "ativo", lastMessageAt: "há 12s", msgs24h: 4280,
-    queues: ["Geral", "Suporte"],
+    queues: [
+      { name: "Geral", setores: ["Atendimento Geral"] },
+      { name: "Suporte", setores: ["Suporte Técnico", "Operacional"] },
+    ],
   },
   {
     id: "wh_02", name: "Vendas SP", number: "+55 11 4002-3120",
@@ -240,7 +243,7 @@ const initialWebhooks: WhatsappWebhook[] = [
     token: "EAAG••••••••••••••••91bf", verifyToken: "vt_acme_sales_2c10",
     callbackUrl: "https://api.acme.com/wa/webhooks/wh_02",
     status: "ativo", lastMessageAt: "há 1m", msgs24h: 1210,
-    queues: ["Comercial"],
+    queues: [{ name: "Comercial", setores: ["Comercial", "Financeiro"] }],
   },
   {
     id: "wh_03", name: "Suporte Técnico", number: "+55 11 4002-7710",
@@ -248,7 +251,7 @@ const initialWebhooks: WhatsappWebhook[] = [
     token: "EAAG••••••••••••••••3d7e", verifyToken: "vt_acme_tech_71fa",
     callbackUrl: "https://api.acme.com/wa/webhooks/wh_03",
     status: "erro", lastMessageAt: "há 2h", msgs24h: 0,
-    queues: ["Suporte Técnico"],
+    queues: [{ name: "Suporte Técnico", setores: ["Suporte Técnico"] }],
   },
 ];
 
