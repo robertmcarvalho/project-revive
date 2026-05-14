@@ -214,29 +214,26 @@ const NovoUsuarioModal = ({ onClose }: { onClose: () => void }) => {
             </div>
           )}
 
-          {/* Setor (gestor / atendente) */}
-          {(perfil === "gestor" || perfil === "atendente") && (
-            <div>
-              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Setor</label>
-              <select className="mt-1 w-full rounded-md border border-border bg-background/40 px-3 py-2 text-sm">
-                {setores.map(s => <option key={s}>{s}</option>)}
-              </select>
+          {/* Administrador: sem fila/setor — visão global */}
+          {perfil === "administrador" && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-destructive"><Shield className="h-3.5 w-3.5" /> <span className="font-medium">Acesso administrativo total</span></div>
+              <p className="mt-1">Administradores não realizam atendimento. Têm visão global de todos os tickets, conversas, filas e setores da plataforma.</p>
             </div>
           )}
 
-          {/* Filas WhatsApp */}
-          <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas de WhatsApp</label>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">Selecione as filas em que este usuário atuará.</p>
-            <div className="mt-2 space-y-1.5">
-              {webhooks.map(w => (
-                <label key={w} className="flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2 text-xs cursor-pointer hover:bg-surface-elevated">
-                  <input type="checkbox" className="h-3.5 w-3.5 rounded border-border" />
-                  <span>{w}</span>
-                </label>
-              ))}
+          {/* Líder: sem fila/setor — vai gerar usuário do Portal do Líder */}
+          {perfil === "lider" && (
+            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-warning"><Crown className="h-3.5 w-3.5" /> <span className="font-medium">Usuário do Portal do Líder</span></div>
+              <p className="mt-1">Líderes não atuam em filas de atendimento. Este cadastro gera o acesso ao Portal do Líder para gestão de equipe e escalas.</p>
             </div>
-          </div>
+          )}
+
+          {/* Atendente / Gestor: filas + setores por fila */}
+          {(perfil === "atendente" || perfil === "gestor") && (
+            <FilasSetoresPicker perfil={perfil} />
+          )}
 
           {/* Geração de credenciais */}
           <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-[11px] text-muted-foreground">
