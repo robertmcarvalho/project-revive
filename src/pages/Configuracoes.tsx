@@ -357,11 +357,26 @@ const ChannelsPanel = () => {
 
 const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook | null; onClose: () => void; onSave: (w: WhatsappWebhook) => void }) => {
   const [showToken, setShowToken] = useState(false);
-  const w = webhook ?? {
+  const initial = webhook ?? {
     id: "", name: "", number: "", phoneId: "", wabaId: "",
     token: "", verifyToken: "", callbackUrl: "https://api.acme.com/wa/webhooks/new",
-    status: "ativo" as const, lastMessageAt: "—", msgs24h: 0, queues: [],
+    status: "ativo" as const, lastMessageAt: "—", msgs24h: 0, queues: [] as Fila[],
   };
+  const [filas, setFilas] = useState<Fila[]>(initial.queues);
+  const [novaFila, setNovaFila] = useState("");
+
+  const addFila = () => {
+    const n = novaFila.trim();
+    if (!n || filas.some(f => f.name.toLowerCase() === n.toLowerCase())) return;
+    setFilas([...filas, { name: n, setores: [] }]);
+    setNovaFila("");
+  };
+  const removeFila = (name: string) => setFilas(filas.filter(f => f.name !== name));
+  const toggleSetor = (filaName: string, setor: string) =>
+    setFilas(filas.map(f => f.name !== filaName ? f : {
+      ...f,
+      setores: f.setores.includes(setor) ? f.setores.filter(s => s !== setor) : [...f.setores, setor],
+    }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
@@ -372,38 +387,93 @@ const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook 
         </div>
         <div className="space-y-4 p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Field label="Nome de exibição" value={w.name} />
-            <Field label="Número" value={w.number} mono />
-            <Field label="Phone Number ID" value={w.phoneId} mono />
-            <Field label="WABA ID" value={w.wabaId} mono />
+            <Field label="Nome de exibição" value={initial.name} />
+            <Field label="Número" value={initial.number} mono />
+            <Field label="Phone Number ID" value={initial.phoneId} mono />
+            <Field label="WABA ID" value={initial.wabaId} mono />
           </div>
           <div>
             <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Access Token (Meta)</label>
             <div className="mt-1 flex gap-2">
-              <input type={showToken ? "text" : "password"} defaultValue={w.token} className="flex-1 rounded-md border border-border bg-background/40 px-3 py-2 font-mono text-xs" />
+              <input type={showToken ? "text" : "password"} defaultValue={initial.token} className="flex-1 rounded-md border border-border bg-background/40 px-3 py-2 font-mono text-xs" />
               <button type="button" onClick={() => setShowToken(s => !s)} className="rounded-md border border-border px-3 hover:bg-surface-hover">
                 {showToken ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
-          <Field label="Verify Token" value={w.verifyToken} mono />
+          <Field label="Verify Token" value={initial.verifyToken} mono />
           <div>
             <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Callback URL (configure na Meta)</label>
             <div className="mt-1 flex gap-2">
-              <input readOnly value={w.callbackUrl} className="flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs" />
-              <button type="button" onClick={() => navigator.clipboard.writeText(w.callbackUrl)} className="rounded-md border border-border px-3 hover:bg-surface-hover"><Copy className="h-3.5 w-3.5" /></button>
+              <input readOnly value={initial.callbackUrl} className="flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs" />
+              <button type="button" onClick={() => navigator.clipboard.writeText(initial.callbackUrl)} className="rounded-md border border-border px-3 hover:bg-surface-hover"><Copy className="h-3.5 w-3.5" /></button>
             </div>
           </div>
-          <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas vinculadas</label>
-            <input defaultValue={w.queues.join(", ")} placeholder="Geral, Suporte, Comercial" className="mt-1 w-full rounded-md border border-border bg-background/40 px-3 py-2 text-sm" />
+
+          {/* Filas estruturadas com setores */}
+          <div className="rounded-md border border-border bg-background/40 p-3">
+            <div className="flex items-center justify-between">
+              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas e Setores</label>
+              <span className="text-[10px] text-muted-foreground">{filas.length} fila{filas.length !== 1 ? "s" : ""}</span>
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Cada fila pode conter um ou mais setores. Atendentes serão alocados por fila + setor.</p>
+
+            <div className="mt-3 flex gap-2">
+              <input
+                value={novaFila}
+                onChange={e => setNovaFila(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addFila())}
+                placeholder="Nome da fila (ex.: Geral, Vendas, Plantão)"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs"
+              />
+              <button type="button" onClick={addFila} className="flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
+                <Plus className="h-3 w-3" /> Fila
+              </button>
+            </div>
+
+            <div className="mt-3 space-y-2">
+              {filas.length === 0 && (
+                <div className="rounded-md border border-dashed border-border px-3 py-4 text-center text-[11px] text-muted-foreground">
+                  Nenhuma fila. Adicione uma fila acima para vincular setores.
+                </div>
+              )}
+              {filas.map(f => (
+                <div key={f.name} className="rounded-md border border-border bg-surface p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[11px] font-medium text-primary">{f.name}</span>
+                      <span className="text-[10px] text-muted-foreground">{f.setores.length} setor{f.setores.length !== 1 ? "es" : ""}</span>
+                    </div>
+                    <button type="button" onClick={() => removeFila(f.name)} className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {SETORES_DISPONIVEIS.map(s => {
+                      const on = f.setores.includes(s);
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => toggleSetor(f.name, s)}
+                          className={cn(
+                            "rounded-md border px-2 py-1 text-[10px] transition-colors",
+                            on ? "border-primary bg-primary/10 text-primary" : "border-border bg-background/40 text-muted-foreground hover:bg-surface-hover"
+                          )}
+                        >
+                          {on && "✓ "}{s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-between border-t border-border px-6 py-3">
           <button className="text-[11px] text-muted-foreground hover:text-foreground">Testar conexão</button>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="rounded-md border border-border px-3 py-1.5 text-xs">Cancelar</button>
-            <button onClick={() => onSave(w)} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
+            <button onClick={() => onSave({ ...initial, queues: filas })} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
           </div>
         </div>
       </div>
