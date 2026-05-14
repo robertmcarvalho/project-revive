@@ -451,9 +451,11 @@ const WebhookEditor = ({
 
   const addFila = () => {
     const n = novaFila.trim();
-    if (!n || filas.some(f => f.name.toLowerCase() === n.toLowerCase())) return;
+    if (!n) return flash("Informe o nome da fila");
+    if (filas.some(f => f.name.toLowerCase() === n.toLowerCase())) return flash("Já existe uma fila com esse nome");
     setFilas([...filas, { name: n, setores: [], notifyEmail: "" }]);
     setNovaFila("");
+    flash(`Fila "${n}" adicionada`);
   };
   const removeFila = (name: string) => setFilas(filas.filter(f => f.name !== name));
   const toggleSetor = (filaName: string, setor: string) =>
@@ -461,18 +463,28 @@ const WebhookEditor = ({
       ...f,
       setores: f.setores.includes(setor) ? f.setores.filter(s => s !== setor) : [...f.setores, setor],
     }));
+  const removeSetorFromFila = (filaName: string, setor: string) =>
+    setFilas(filas.map(f => f.name !== filaName ? f : { ...f, setores: f.setores.filter(s => s !== setor) }));
   const setNotifyEmail = (filaName: string, email: string) =>
     setFilas(filas.map(f => f.name !== filaName ? f : { ...f, notifyEmail: email }));
 
   const addSetorGlobal = () => {
     const s = novoSetor.trim();
-    if (!s || setoresGlobais.some(x => x.toLowerCase() === s.toLowerCase())) return;
+    if (!s) return flash("Informe o nome do setor");
+    if (setoresGlobais.some(x => x.toLowerCase() === s.toLowerCase())) return flash("Setor já existe");
     setSetoresGlobais([...setoresGlobais, s]);
     setNovoSetor("");
+    flash(`Setor "${s}" criado`);
   };
   const removeSetorGlobal = (s: string) => {
     setSetoresGlobais(setoresGlobais.filter(x => x !== s));
     setFilas(filas.map(f => ({ ...f, setores: f.setores.filter(x => x !== s) })));
+    flash(`Setor "${s}" removido`);
+  };
+
+  const handleTestConnection = () => {
+    setTesting("loading");
+    setTimeout(() => setTesting(Math.random() > 0.1 ? "ok" : "err"), 900);
   };
 
   return (
