@@ -664,12 +664,25 @@ const EmailChannelPanel = () => {
   const [provider, setProvider] = useState<"smtp" | "sendgrid" | "resend" | "ses">("smtp");
   const [tls, setTls] = useState(true);
   const [showPwd, setShowPwd] = useState(false);
-  const [testing, setTesting] = useState<"idle" | "ok" | "err">("idle");
+  const [testing, setTesting] = useState<"idle" | "loading" | "ok" | "err">("idle");
+  const [testEmail, setTestEmail] = useState("");
+  const [caixas, setCaixas] = useState<string[]>(EMAILS_NOTIFICACAO);
+  const [adding, setAdding] = useState(false);
+  const [novaCaixa, setNovaCaixa] = useState("");
 
   const handleTest = () => {
-    setTesting("idle");
+    if (!testEmail.trim()) return;
+    setTesting("loading");
     setTimeout(() => setTesting("ok"), 800);
   };
+  const addCaixa = () => {
+    const e = novaCaixa.trim();
+    if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return;
+    if (caixas.includes(e)) return;
+    setCaixas([...caixas, e]);
+    setNovaCaixa(""); setAdding(false);
+  };
+  const removeCaixa = (e: string) => setCaixas(caixas.filter(x => x !== e));
 
   return (
     <div className="space-y-4">
