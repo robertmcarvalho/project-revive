@@ -19,6 +19,9 @@ import FarmaciaCadastro from "./pages/FarmaciaCadastro.tsx";
 import FarmaciaFicha from "./pages/FarmaciaFicha.tsx";
 import Campanhas from "./pages/Campanhas.tsx";
 import CampanhaNova from "./pages/CampanhaNova.tsx";
+import CampanhaDetalhe from "./pages/CampanhaDetalhe.tsx";
+import Usuarios from "./pages/Usuarios.tsx";
+import UsuarioFicha from "./pages/UsuarioFicha.tsx";
 import Automacoes from "./pages/Automacoes.tsx";
 import AutomacaoNova from "./pages/AutomacaoNova.tsx";
 import AutomacaoDetalhe from "./pages/AutomacaoDetalhe.tsx";
@@ -59,6 +62,9 @@ const App = () => (
           <Route path="/lideres/:id" element={<AppShell><LiderFicha /></AppShell>} />
           <Route path="/campanhas" element={<AppShell><Campanhas /></AppShell>} />
           <Route path="/campanhas/nova" element={<AppShell><CampanhaNova /></AppShell>} />
+          <Route path="/campanhas/:id" element={<AppShell><CampanhaDetalhe /></AppShell>} />
+          <Route path="/configuracoes/usuarios" element={<AppShell><Usuarios /></AppShell>} />
+          <Route path="/configuracoes/usuarios/:id" element={<AppShell><UsuarioFicha /></AppShell>} />
           <Route path="/automacoes" element={<AppShell><Automacoes /></AppShell>} />
           <Route path="/automacoes/nova" element={<AppShell><AutomacaoNova /></AppShell>} />
           <Route path="/automacoes/:id" element={<AppShell><AutomacaoDetalhe /></AppShell>} />
