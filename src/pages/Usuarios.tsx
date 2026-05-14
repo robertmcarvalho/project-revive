@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Plus, Search, Shield, UserCog, Headphones, Crown, Mail, Phone, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Shield, UserCog, Headphones, Crown, Mail, Phone, MoreHorizontal, Eye, Key, RotateCcw, UserX, Trash2, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type Perfil = "administrador" | "gestor" | "atendente" | "lider";
 
