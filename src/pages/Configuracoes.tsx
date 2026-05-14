@@ -445,12 +445,17 @@ const WebhookEditor = ({
   const [filas, setFilas] = useState<Fila[]>(initial.queues);
   const [novaFila, setNovaFila] = useState("");
   const [novoSetor, setNovoSetor] = useState("");
+  const [feedback, setFeedback] = useState<string | null>(null);
+  const [testing, setTesting] = useState<"idle" | "loading" | "ok" | "err">("idle");
+  const flash = (msg: string) => { setFeedback(msg); setTimeout(() => setFeedback(null), 1800); };
 
   const addFila = () => {
     const n = novaFila.trim();
-    if (!n || filas.some(f => f.name.toLowerCase() === n.toLowerCase())) return;
+    if (!n) return flash("Informe o nome da fila");
+    if (filas.some(f => f.name.toLowerCase() === n.toLowerCase())) return flash("Já existe uma fila com esse nome");
     setFilas([...filas, { name: n, setores: [], notifyEmail: "" }]);
     setNovaFila("");
+    flash(`Fila "${n}" adicionada`);
   };
   const removeFila = (name: string) => setFilas(filas.filter(f => f.name !== name));
   const toggleSetor = (filaName: string, setor: string) =>
@@ -458,18 +463,28 @@ const WebhookEditor = ({
       ...f,
       setores: f.setores.includes(setor) ? f.setores.filter(s => s !== setor) : [...f.setores, setor],
     }));
+  const removeSetorFromFila = (filaName: string, setor: string) =>
+    setFilas(filas.map(f => f.name !== filaName ? f : { ...f, setores: f.setores.filter(s => s !== setor) }));
   const setNotifyEmail = (filaName: string, email: string) =>
     setFilas(filas.map(f => f.name !== filaName ? f : { ...f, notifyEmail: email }));
 
   const addSetorGlobal = () => {
     const s = novoSetor.trim();
-    if (!s || setoresGlobais.some(x => x.toLowerCase() === s.toLowerCase())) return;
+    if (!s) return flash("Informe o nome do setor");
+    if (setoresGlobais.some(x => x.toLowerCase() === s.toLowerCase())) return flash("Setor já existe");
     setSetoresGlobais([...setoresGlobais, s]);
     setNovoSetor("");
+    flash(`Setor "${s}" criado`);
   };
   const removeSetorGlobal = (s: string) => {
     setSetoresGlobais(setoresGlobais.filter(x => x !== s));
     setFilas(filas.map(f => ({ ...f, setores: f.setores.filter(x => x !== s) })));
+    flash(`Setor "${s}" removido`);
+  };
+
+  const handleTestConnection = () => {
+    setTesting("loading");
+    setTimeout(() => setTesting(Math.random() > 0.1 ? "ok" : "err"), 900);
   };
 
   return (
@@ -572,6 +587,18 @@ const WebhookEditor = ({
                     </div>
                     <button type="button" onClick={() => removeFila(f.name)} className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
                   </div>
+                  {f.setores.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {f.setores.map(s => (
+                        <span key={s} className="inline-flex items-center gap-1 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
+                          {s}
+                          <button type="button" onClick={() => removeSetorFromFila(f.name, s)} className="hover:text-destructive" title="Remover setor da fila">
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {setoresGlobais.map(s => {
                       const on = f.setores.includes(s);
@@ -608,13 +635,25 @@ const WebhookEditor = ({
           </div>
         </div>
         <div className="flex items-center justify-between border-t border-border px-6 py-3">
-          <button className="text-[11px] text-muted-foreground hover:text-foreground">Testar conexão</button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={handleTestConnection} className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-[11px] hover:bg-surface-hover">
+              <Send className="h-3 w-3" /> Testar conexão
+            </button>
+            {testing === "loading" && <span className="text-[11px] text-muted-foreground">Testando…</span>}
+            {testing === "ok" && <span className="flex items-center gap-1 text-[11px] text-success"><CheckCircle2 className="h-3 w-3" /> Conexão OK</span>}
+            {testing === "err" && <span className="text-[11px] text-destructive">Falha — verifique credenciais</span>}
+          </div>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="rounded-md border border-border px-3 py-1.5 text-xs">Cancelar</button>
-            <button onClick={() => onSave({ ...initial, queues: filas })} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
+            <button onClick={() => { onSave({ ...initial, queues: filas }); }} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
           </div>
         </div>
       </div>
+      {feedback && (
+        <div className="pointer-events-none fixed left-1/2 top-6 z-[60] -translate-x-1/2 rounded-md bg-foreground px-3 py-1.5 text-[11px] font-medium text-background shadow-lg">
+          {feedback}
+        </div>
+      )}
     </div>
   );
 };
@@ -625,12 +664,25 @@ const EmailChannelPanel = () => {
   const [provider, setProvider] = useState<"smtp" | "sendgrid" | "resend" | "ses">("smtp");
   const [tls, setTls] = useState(true);
   const [showPwd, setShowPwd] = useState(false);
-  const [testing, setTesting] = useState<"idle" | "ok" | "err">("idle");
+  const [testing, setTesting] = useState<"idle" | "loading" | "ok" | "err">("idle");
+  const [testEmail, setTestEmail] = useState("");
+  const [caixas, setCaixas] = useState<string[]>(EMAILS_NOTIFICACAO);
+  const [adding, setAdding] = useState(false);
+  const [novaCaixa, setNovaCaixa] = useState("");
 
   const handleTest = () => {
-    setTesting("idle");
+    if (!testEmail.trim()) return;
+    setTesting("loading");
     setTimeout(() => setTesting("ok"), 800);
   };
+  const addCaixa = () => {
+    const e = novaCaixa.trim();
+    if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return;
+    if (caixas.includes(e)) return;
+    setCaixas([...caixas, e]);
+    setNovaCaixa(""); setAdding(false);
+  };
+  const removeCaixa = (e: string) => setCaixas(caixas.filter(x => x !== e));
 
   return (
     <div className="space-y-4">
@@ -716,17 +768,33 @@ const EmailChannelPanel = () => {
             <h4 className="text-sm font-semibold">Caixas autorizadas para notificação</h4>
             <p className="mt-0.5 text-[11px] text-muted-foreground">E-mails liberados para receber alertas das filas/webhooks. Selecione-os ao configurar cada webhook.</p>
           </div>
-          <button className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover"><Plus className="h-3 w-3" /> Adicionar</button>
+          <button onClick={() => setAdding(a => !a)} className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover">
+            <Plus className="h-3 w-3" /> Adicionar
+          </button>
         </div>
+        {adding && (
+          <div className="mt-3 flex gap-2 rounded-md border border-dashed border-primary/40 bg-primary/5 p-2">
+            <input
+              autoFocus
+              value={novaCaixa}
+              onChange={e => setNovaCaixa(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCaixa())}
+              placeholder="novo@dominio.com"
+              className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 font-mono text-xs"
+            />
+            <button type="button" onClick={addCaixa} className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Adicionar</button>
+            <button type="button" onClick={() => { setAdding(false); setNovaCaixa(""); }} className="rounded-md border border-border px-3 py-1 text-xs">Cancelar</button>
+          </div>
+        )}
         <div className="mt-3 space-y-1.5">
-          {EMAILS_NOTIFICACAO.map(em => (
+          {caixas.map(em => (
             <div key={em} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2">
               <div className="flex items-center gap-2">
                 <Mail className="h-3.5 w-3.5 text-channel-email" />
                 <span className="font-mono text-xs">{em}</span>
                 <span className="rounded bg-success/15 px-1.5 py-0.5 text-[10px] text-success">verificado</span>
               </div>
-              <button className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
+              <button onClick={() => removeCaixa(em)} className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
             </div>
           ))}
         </div>
@@ -739,15 +807,21 @@ const EmailChannelPanel = () => {
             <p className="mt-0.5 text-[11px] text-muted-foreground">Envie um e-mail de teste para validar as credenciais.</p>
           </div>
           <div className="flex items-center gap-2">
-            <input placeholder="seu@email.com" className="rounded-md border border-border bg-background px-3 py-2 text-xs" />
+            <input
+              value={testEmail}
+              onChange={e => setTestEmail(e.target.value)}
+              placeholder="seu@email.com"
+              className="rounded-md border border-border bg-background px-3 py-2 text-xs"
+            />
             <button onClick={handleTest} className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
               <Send className="h-3 w-3" /> Enviar teste
             </button>
           </div>
         </div>
+        {testing === "loading" && <div className="mt-3 text-[11px] text-muted-foreground">Enviando…</div>}
         {testing === "ok" && (
           <div className="mt-3 flex items-center gap-1.5 rounded-md bg-success/10 px-3 py-2 text-[11px] text-success">
-            <CheckCircle2 className="h-3.5 w-3.5" /> E-mail de teste enviado com sucesso.
+            <CheckCircle2 className="h-3.5 w-3.5" /> E-mail de teste enviado para {testEmail}.
           </div>
         )}
       </div>
