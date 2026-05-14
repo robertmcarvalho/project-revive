@@ -59,7 +59,7 @@ const Campanhas = () => (
           const meta = statusMeta[c.status];
           const Icon = meta.icon;
           return (
-            <div key={c.id} className="group rounded-xl border border-border bg-surface p-5 hover:bg-surface-elevated transition-colors">
+            <Link to={`/campanhas/${c.id}`} key={c.id} className="block group rounded-xl border border-border bg-surface p-5 hover:bg-surface-elevated transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -117,7 +117,7 @@ const Campanhas = () => (
                   ))}
                 </div>
               )}
-            </div>
+            </Link>
           );
         })}
       </div>
