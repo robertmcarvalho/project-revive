@@ -587,6 +587,18 @@ const WebhookEditor = ({
                     </div>
                     <button type="button" onClick={() => removeFila(f.name)} className="text-destructive hover:text-destructive/80"><Trash2 className="h-3 w-3" /></button>
                   </div>
+                  {f.setores.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {f.setores.map(s => (
+                        <span key={s} className="inline-flex items-center gap-1 rounded bg-primary/15 px-1.5 py-0.5 text-[10px] text-primary">
+                          {s}
+                          <button type="button" onClick={() => removeSetorFromFila(f.name, s)} className="hover:text-destructive" title="Remover setor da fila">
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {setoresGlobais.map(s => {
                       const on = f.setores.includes(s);
