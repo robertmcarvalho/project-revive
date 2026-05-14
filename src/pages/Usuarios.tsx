@@ -149,7 +149,12 @@ const lideresCadastrados = [
 ];
 
 const setores = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico", "Comercial"];
-const webhooks = ["Atendimento Principal", "Vendas SP", "Suporte Técnico", "Plantão 24h"];
+const webhooks: { name: string; setores: string[] }[] = [
+  { name: "Atendimento Principal", setores: ["Atendimento Geral", "Suporte Técnico"] },
+  { name: "Vendas SP", setores: ["Comercial", "Financeiro"] },
+  { name: "Suporte Técnico", setores: ["Suporte Técnico", "Operacional"] },
+  { name: "Plantão 24h", setores: ["Atendimento Geral", "Operacional"] },
+];
 
 const NovoUsuarioModal = ({ onClose }: { onClose: () => void }) => {
   const [perfil, setPerfil] = useState<Perfil>("atendente");
