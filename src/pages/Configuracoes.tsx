@@ -206,6 +206,8 @@ const Toggle = ({ on }: { on: boolean }) => {
 
 // ============== WhatsApp Channels Panel ==============
 
+type Fila = { name: string; setores: string[] };
+
 type WhatsappWebhook = {
   id: string;
   name: string;
@@ -218,8 +220,10 @@ type WhatsappWebhook = {
   status: "ativo" | "pausado" | "erro";
   lastMessageAt: string;
   msgs24h: number;
-  queues: string[];
+  queues: Fila[];
 };
+
+const SETORES_DISPONIVEIS = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico", "Comercial"];
 
 const initialWebhooks: WhatsappWebhook[] = [
   {
