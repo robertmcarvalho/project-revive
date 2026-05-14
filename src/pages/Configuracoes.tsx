@@ -204,4 +204,203 @@ const Toggle = ({ on }: { on: boolean }) => {
   );
 };
 
+// ============== WhatsApp Channels Panel ==============
+
+type WhatsappWebhook = {
+  id: string;
+  name: string;
+  number: string;
+  phoneId: string;
+  wabaId: string;
+  token: string;
+  verifyToken: string;
+  callbackUrl: string;
+  status: "ativo" | "pausado" | "erro";
+  lastMessageAt: string;
+  msgs24h: number;
+  queues: string[];
+};
+
+const initialWebhooks: WhatsappWebhook[] = [
+  {
+    id: "wh_01", name: "Atendimento Principal", number: "+55 11 4002-8922",
+    phoneId: "1029384756102", wabaId: "9876543210",
+    token: "EAAG••••••••••••••••42a9", verifyToken: "vt_acme_main_8f2a",
+    callbackUrl: "https://api.acme.com/wa/webhooks/wh_01",
+    status: "ativo", lastMessageAt: "há 12s", msgs24h: 4280,
+    queues: ["Geral", "Suporte"],
+  },
+  {
+    id: "wh_02", name: "Vendas SP", number: "+55 11 4002-3120",
+    phoneId: "1029384756103", wabaId: "9876543210",
+    token: "EAAG••••••••••••••••91bf", verifyToken: "vt_acme_sales_2c10",
+    callbackUrl: "https://api.acme.com/wa/webhooks/wh_02",
+    status: "ativo", lastMessageAt: "há 1m", msgs24h: 1210,
+    queues: ["Comercial"],
+  },
+  {
+    id: "wh_03", name: "Suporte Técnico", number: "+55 11 4002-7710",
+    phoneId: "1029384756104", wabaId: "9876543210",
+    token: "EAAG••••••••••••••••3d7e", verifyToken: "vt_acme_tech_71fa",
+    callbackUrl: "https://api.acme.com/wa/webhooks/wh_03",
+    status: "erro", lastMessageAt: "há 2h", msgs24h: 0,
+    queues: ["Suporte Técnico"],
+  },
+];
+
+const ChannelsPanel = () => {
+  const [webhooks, setWebhooks] = useState(initialWebhooks);
+  const [editing, setEditing] = useState<WhatsappWebhook | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  const statusColor: Record<WhatsappWebhook["status"], string> = {
+    ativo: "bg-success/15 text-success",
+    pausado: "bg-muted text-muted-foreground",
+    erro: "bg-destructive/15 text-destructive",
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Header WhatsApp */}
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-channel-whatsapp/15 flex items-center justify-center">
+              <MessageSquare className="h-5 w-5 text-channel-whatsapp" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">WhatsApp Business API</h3>
+              <p className="text-[11px] text-muted-foreground">Gerencie credenciais e webhooks. Suporta múltiplas conexões para escalar o produto.</p>
+            </div>
+          </div>
+          <button onClick={() => setCreating(true)} className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">
+            <Plus className="h-3.5 w-3.5" /> Novo webhook
+          </button>
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-3">
+          <div className="rounded-md bg-background/40 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Webhooks ativos</div>
+            <div className="mt-1 font-mono text-lg font-semibold text-success">{webhooks.filter(w => w.status === "ativo").length}</div>
+          </div>
+          <div className="rounded-md bg-background/40 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Mensagens 24h</div>
+            <div className="mt-1 font-mono text-lg font-semibold">{webhooks.reduce((a, w) => a + w.msgs24h, 0).toLocaleString("pt-BR")}</div>
+          </div>
+          <div className="rounded-md bg-background/40 p-3">
+            <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Com problema</div>
+            <div className="mt-1 font-mono text-lg font-semibold text-destructive">{webhooks.filter(w => w.status === "erro").length}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lista */}
+      <div className="space-y-2">
+        {webhooks.map(w => (
+          <div key={w.id} className="rounded-xl border border-border bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">{w.name}</span>
+                  <span className={cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium", statusColor[w.status])}>
+                    {w.status === "ativo" && <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />}
+                    {w.status}
+                  </span>
+                  <span className="text-[10px] text-subtle-foreground">· última msg {w.lastMessageAt} · {w.msgs24h.toLocaleString("pt-BR")} msgs/24h</span>
+                </div>
+                <div className="mt-1 font-mono text-[11px] text-muted-foreground">{w.number} · phone_id {w.phoneId}</div>
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[10px] text-subtle-foreground">Filas:</span>
+                  {w.queues.map(q => (
+                    <span key={q} className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">{q}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setEditing(w)} className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover"><Edit3 className="h-3 w-3" /> Editar</button>
+                <button onClick={() => navigator.clipboard.writeText(w.callbackUrl)} className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-surface-hover"><Copy className="h-3 w-3" /> URL</button>
+                <button onClick={() => setWebhooks(ws => ws.filter(x => x.id !== w.id))} className="rounded-md border border-destructive/30 px-2 py-1 text-destructive hover:bg-destructive/10"><Trash2 className="h-3 w-3" /></button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-[11px] text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> <span className="font-medium">Credenciais centralizadas</span></div>
+        <p className="mt-1">A plataforma consome estas credenciais automaticamente — não é necessário tocar no código. Adicione novos webhooks aqui para escalar o produto.</p>
+      </div>
+
+      {(editing || creating) && (
+        <WebhookEditor
+          webhook={editing}
+          onClose={() => { setEditing(null); setCreating(false); }}
+          onSave={(w) => {
+            if (editing) setWebhooks(ws => ws.map(x => x.id === w.id ? w : x));
+            else setWebhooks(ws => [...ws, { ...w, id: `wh_${String(ws.length + 1).padStart(2, "0")}` }]);
+            setEditing(null); setCreating(false);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const WebhookEditor = ({ webhook, onClose, onSave }: { webhook: WhatsappWebhook | null; onClose: () => void; onSave: (w: WhatsappWebhook) => void }) => {
+  const [showToken, setShowToken] = useState(false);
+  const w = webhook ?? {
+    id: "", name: "", number: "", phoneId: "", wabaId: "",
+    token: "", verifyToken: "", callbackUrl: "https://api.acme.com/wa/webhooks/new",
+    status: "ativo" as const, lastMessageAt: "—", msgs24h: 0, queues: [],
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="w-full max-w-2xl rounded-xl border border-border bg-surface shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="border-b border-border px-6 py-4">
+          <h3 className="text-sm font-semibold">{webhook ? "Editar webhook" : "Novo webhook WhatsApp"}</h3>
+          <p className="mt-0.5 text-[11px] text-muted-foreground">Cole as credenciais da Meta Cloud API. A plataforma usará automaticamente.</p>
+        </div>
+        <div className="space-y-4 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Field label="Nome de exibição" value={w.name} />
+            <Field label="Número" value={w.number} mono />
+            <Field label="Phone Number ID" value={w.phoneId} mono />
+            <Field label="WABA ID" value={w.wabaId} mono />
+          </div>
+          <div>
+            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Access Token (Meta)</label>
+            <div className="mt-1 flex gap-2">
+              <input type={showToken ? "text" : "password"} defaultValue={w.token} className="flex-1 rounded-md border border-border bg-background/40 px-3 py-2 font-mono text-xs" />
+              <button type="button" onClick={() => setShowToken(s => !s)} className="rounded-md border border-border px-3 hover:bg-surface-hover">
+                {showToken ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </div>
+          <Field label="Verify Token" value={w.verifyToken} mono />
+          <div>
+            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Callback URL (configure na Meta)</label>
+            <div className="mt-1 flex gap-2">
+              <input readOnly value={w.callbackUrl} className="flex-1 rounded-md border border-border bg-muted/30 px-3 py-2 font-mono text-xs" />
+              <button type="button" onClick={() => navigator.clipboard.writeText(w.callbackUrl)} className="rounded-md border border-border px-3 hover:bg-surface-hover"><Copy className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+          <div>
+            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas vinculadas</label>
+            <input defaultValue={w.queues.join(", ")} placeholder="Geral, Suporte, Comercial" className="mt-1 w-full rounded-md border border-border bg-background/40 px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between border-t border-border px-6 py-3">
+          <button className="text-[11px] text-muted-foreground hover:text-foreground">Testar conexão</button>
+          <div className="flex items-center gap-2">
+            <button onClick={onClose} className="rounded-md border border-border px-3 py-1.5 text-xs">Cancelar</button>
+            <button onClick={() => onSave(w)} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default Configuracoes;
+
