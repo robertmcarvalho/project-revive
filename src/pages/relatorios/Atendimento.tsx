@@ -20,7 +20,7 @@ import {
 } from "@/lib/relatorios";
 
 // Perfil simulado do usuário logado (integrar com auth real depois)
-const PERFIL_ATUAL: PerfilAtual = "administrador";
+const PERFIL_ATUAL = "administrador" as PerfilAtual;
 const USUARIO_ATUAL_ID = "u4";
 
 type RangePreset = "hoje" | "7d" | "30d" | "mes" | "mes_anterior" | "custom";
