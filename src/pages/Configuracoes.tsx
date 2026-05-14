@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Building2, User, Bell, Shield, Webhook, MessageSquare, Palette, Key, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Building2, User, Bell, Shield, Webhook, MessageSquare, Palette, Key, ChevronRight, Users, Plus, Copy, Trash2, Eye, EyeOff, Edit3, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
 const sections = [
   { id: "workspace", label: "Workspace", icon: Building2, desc: "Nome, logo e identidade da empresa" },
+  { id: "users", label: "Usuários e Perfis", icon: Users, desc: "Cadastro, perfis e permissões" },
   { id: "profile", label: "Perfil", icon: User, desc: "Seus dados pessoais e preferências" },
   { id: "channels", label: "Canais", icon: MessageSquare, desc: "WhatsApp, Instagram, e-mail e webchat" },
   { id: "notifications", label: "Notificações", icon: Bell, desc: "Alertas e e-mails do sistema" },
