@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Plus, Search, Shield, UserCog, Headphones, Crown, Mail, Phone, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Shield, UserCog, Headphones, Crown, Mail, Phone, MoreHorizontal, Eye, Key, RotateCcw, UserX, Trash2, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 type Perfil = "administrador" | "gestor" | "atendente" | "lider";
 
@@ -114,7 +115,19 @@ const Usuarios = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button className="text-muted-foreground hover:text-foreground"><MoreHorizontal className="h-4 w-4" /></button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="rounded p-1 text-muted-foreground hover:bg-surface-hover hover:text-foreground"><MoreHorizontal className="h-4 w-4" /></button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem asChild><Link to={`/configuracoes/usuarios/${u.id}`} className="flex items-center gap-2"><Eye className="h-3.5 w-3.5" /> Ver ficha</Link></DropdownMenuItem>
+                          <DropdownMenuItem><Key className="h-3.5 w-3.5" /> Editar senha</DropdownMenuItem>
+                          <DropdownMenuItem><RotateCcw className="h-3.5 w-3.5" /> Reenviar acesso</DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem>{u.status === "ativo" ? <><UserX className="h-3.5 w-3.5" /> Desativar</> : <><UserCog className="h-3.5 w-3.5" /> Ativar</>}</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive focus:text-destructive"><Trash2 className="h-3.5 w-3.5" /> Excluir usuário</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </td>
                   </tr>
                 );
@@ -136,7 +149,12 @@ const lideresCadastrados = [
 ];
 
 const setores = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico", "Comercial"];
-const webhooks = ["Atendimento Principal", "Vendas SP", "Suporte Técnico", "Plantão 24h"];
+const webhooks: { name: string; setores: string[] }[] = [
+  { name: "Atendimento Principal", setores: ["Atendimento Geral", "Suporte Técnico"] },
+  { name: "Vendas SP", setores: ["Comercial", "Financeiro"] },
+  { name: "Suporte Técnico", setores: ["Suporte Técnico", "Operacional"] },
+  { name: "Plantão 24h", setores: ["Atendimento Geral", "Operacional"] },
+];
 
 const NovoUsuarioModal = ({ onClose }: { onClose: () => void }) => {
   const [perfil, setPerfil] = useState<Perfil>("atendente");
@@ -196,29 +214,26 @@ const NovoUsuarioModal = ({ onClose }: { onClose: () => void }) => {
             </div>
           )}
 
-          {/* Setor (gestor / atendente) */}
-          {(perfil === "gestor" || perfil === "atendente") && (
-            <div>
-              <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Setor</label>
-              <select className="mt-1 w-full rounded-md border border-border bg-background/40 px-3 py-2 text-sm">
-                {setores.map(s => <option key={s}>{s}</option>)}
-              </select>
+          {/* Administrador: sem fila/setor — visão global */}
+          {perfil === "administrador" && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-destructive"><Shield className="h-3.5 w-3.5" /> <span className="font-medium">Acesso administrativo total</span></div>
+              <p className="mt-1">Administradores não realizam atendimento. Têm visão global de todos os tickets, conversas, filas e setores da plataforma.</p>
             </div>
           )}
 
-          {/* Filas WhatsApp */}
-          <div>
-            <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas de WhatsApp</label>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">Selecione as filas em que este usuário atuará.</p>
-            <div className="mt-2 space-y-1.5">
-              {webhooks.map(w => (
-                <label key={w} className="flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2 text-xs cursor-pointer hover:bg-surface-elevated">
-                  <input type="checkbox" className="h-3.5 w-3.5 rounded border-border" />
-                  <span>{w}</span>
-                </label>
-              ))}
+          {/* Líder: sem fila/setor — vai gerar usuário do Portal do Líder */}
+          {perfil === "lider" && (
+            <div className="rounded-md border border-warning/30 bg-warning/5 p-3 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5 text-warning"><Crown className="h-3.5 w-3.5" /> <span className="font-medium">Usuário do Portal do Líder</span></div>
+              <p className="mt-1">Líderes não atuam em filas de atendimento. Este cadastro gera o acesso ao Portal do Líder para gestão de equipe e escalas.</p>
             </div>
-          </div>
+          )}
+
+          {/* Atendente / Gestor: filas + setores por fila */}
+          {(perfil === "atendente" || perfil === "gestor") && (
+            <FilasSetoresPicker perfil={perfil} />
+          )}
 
           {/* Geração de credenciais */}
           <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-[11px] text-muted-foreground">
@@ -242,5 +257,74 @@ const Field = ({ label, value, placeholder, readOnly }: { label: string; value?:
     <input defaultValue={value} placeholder={placeholder} readOnly={readOnly} className={cn("mt-1 w-full rounded-md border border-border px-3 py-2 text-sm outline-none focus:border-primary/60", readOnly ? "bg-muted/30" : "bg-background/40")} />
   </div>
 );
+
+const FilasSetoresPicker = ({ perfil }: { perfil: Perfil }) => {
+  const [selecao, setSelecao] = useState<Record<string, string[]>>({});
+
+  const toggleFila = (name: string) =>
+    setSelecao(s => {
+      const next = { ...s };
+      if (name in next) delete next[name];
+      else next[name] = [];
+      return next;
+    });
+
+  const toggleSetor = (fila: string, setor: string) =>
+    setSelecao(s => {
+      const cur = s[fila] ?? [];
+      return { ...s, [fila]: cur.includes(setor) ? cur.filter(x => x !== setor) : [...cur, setor] };
+    });
+
+  return (
+    <div>
+      <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Filas de WhatsApp e Setores</label>
+      <p className="mt-0.5 text-[10px] text-muted-foreground">
+        {perfil === "gestor"
+          ? "Selecione as filas que este gestor irá supervisionar e os setores dentro de cada fila."
+          : "Selecione as filas e os setores em que este atendente irá atuar."}
+      </p>
+      <div className="mt-2 space-y-2">
+        {webhooks.map(w => {
+          const ativa = w.name in selecao;
+          return (
+            <div key={w.name} className={cn("rounded-md border transition-colors", ativa ? "border-primary/40 bg-primary/5" : "border-border bg-background/40")}>
+              <label className="flex items-center gap-2 px-3 py-2 text-xs cursor-pointer">
+                <input type="checkbox" checked={ativa} onChange={() => toggleFila(w.name)} className="h-3.5 w-3.5 rounded border-border" />
+                <span className="font-medium">{w.name}</span>
+                <span className="ml-auto text-[10px] text-muted-foreground">{w.setores.length} setor{w.setores.length !== 1 ? "es" : ""}</span>
+              </label>
+              {ativa && (
+                <div className="border-t border-border/60 px-3 py-2">
+                  <div className="mb-1 flex items-center gap-1 text-[10px] text-muted-foreground"><Info className="h-2.5 w-2.5" /> Setores em que atuará nesta fila</div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {w.setores.map(s => {
+                      const on = (selecao[w.name] ?? []).includes(s);
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => toggleSetor(w.name, s)}
+                          className={cn(
+                            "rounded-md border px-2 py-1 text-[10px] transition-colors",
+                            on ? "border-primary bg-primary/15 text-primary" : "border-border bg-background text-muted-foreground hover:bg-surface-hover"
+                          )}
+                        >
+                          {on && "✓ "}{s}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {(selecao[w.name] ?? []).length === 0 && (
+                    <div className="mt-1.5 text-[10px] text-warning">Selecione ao menos um setor.</div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default Usuarios;
