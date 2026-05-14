@@ -635,13 +635,25 @@ const WebhookEditor = ({
           </div>
         </div>
         <div className="flex items-center justify-between border-t border-border px-6 py-3">
-          <button className="text-[11px] text-muted-foreground hover:text-foreground">Testar conexão</button>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={handleTestConnection} className="flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-[11px] hover:bg-surface-hover">
+              <Send className="h-3 w-3" /> Testar conexão
+            </button>
+            {testing === "loading" && <span className="text-[11px] text-muted-foreground">Testando…</span>}
+            {testing === "ok" && <span className="flex items-center gap-1 text-[11px] text-success"><CheckCircle2 className="h-3 w-3" /> Conexão OK</span>}
+            {testing === "err" && <span className="text-[11px] text-destructive">Falha — verifique credenciais</span>}
+          </div>
           <div className="flex items-center gap-2">
             <button onClick={onClose} className="rounded-md border border-border px-3 py-1.5 text-xs">Cancelar</button>
-            <button onClick={() => onSave({ ...initial, queues: filas })} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
+            <button onClick={() => { onSave({ ...initial, queues: filas }); }} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow">Salvar credenciais</button>
           </div>
         </div>
       </div>
+      {feedback && (
+        <div className="pointer-events-none fixed left-1/2 top-6 z-[60] -translate-x-1/2 rounded-md bg-foreground px-3 py-1.5 text-[11px] font-medium text-background shadow-lg">
+          {feedback}
+        </div>
+      )}
     </div>
   );
 };
