@@ -84,6 +84,7 @@ const AutomacaoNova = () => {
     { field: "canal", op: "é", value: "WhatsApp" },
   ]);
   const [actions, setActions] = useState<ActionItem[]>([]);
+  const [blocos, setBlocos] = useState<Bloco[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedChannels, setSelectedChannels] = useState<string[]>(["WhatsApp"]);
@@ -105,13 +106,30 @@ const AutomacaoNova = () => {
   const toggleChannel = (c: string) =>
     setSelectedChannels(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
+  // Block (flow) handlers
+  const addBlocoTopo = (tipo: BlocoTipo) => setBlocos(prev => [...prev, novoBloco(tipo)]);
+  const handleBlocoConfig = (id: string, key: string, value: any) =>
+    setBlocos(prev => updateBlocoConfig(prev, id, key, value));
+  const handleBlocoRemove = (id: string) => setBlocos(prev => removeBloco(prev, id));
+  const handleBlocoToggle = (id: string) => setBlocos(prev => toggleCollapse(prev, id));
+  const handleAddToBranch = (parentId: string, ramo: string, tipo: BlocoTipo) =>
+    setBlocos(prev => addBlocoToBranch(prev, parentId, ramo, novoBloco(tipo)));
+
+  const handleTemplate = (id: string) => {
+    setTemplate(id);
+    if (id === "triagem-perfil") setBlocos(buildTriagemPorPerfilTemplate());
+    else if (id === "blank") setBlocos([]);
+  };
+
+  const totalBlocos = countBlocos(blocos);
+
   const canNext =
     (step === 1 && !!template) ||
     (step === 2 && !!trigger) ||
-    (step === 3 && actions.length > 0) ||
+    (step === 3 && totalBlocos > 0) ||
     (step === 4 && name.trim().length >= 3);
 
-  const canTest = !!trigger && actions.length > 0;
+  const canTest = !!trigger && totalBlocos > 0;
 
   const handleSave = () => {
     toast({ title: "Automação criada", description: `${name} foi ${enabled ? "ativada" : "salva como rascunho"}.` });
