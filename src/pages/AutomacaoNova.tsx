@@ -363,65 +363,46 @@ const AutomacaoNova = () => {
 
             {step === 3 && (
               <>
-                <div className="mb-4">
-                  <h2 className="text-sm font-semibold">Quais ações executar?</h2>
-                  <p className="text-xs text-muted-foreground">Combine ações em sequência. Elas rodarão na ordem listada.</p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-                  {actionLib.map(a => {
-                    const Icon = a.icon;
-                    return (
-                      <button
-                        key={a.id}
-                        onClick={() => addAction(a.id)}
-                        className="flex flex-col items-start gap-2 rounded-lg border border-border bg-background/40 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-colors"
-                      >
-                        <Icon className={cn("h-4 w-4", a.color)} />
-                        <span className="text-xs font-medium">{a.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="rounded-lg border border-dashed border-border bg-background/40 p-4 min-h-[140px]">
-                  <div className="mb-3 text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">
-                    Sequência de execução · {actions.length} {actions.length === 1 ? "ação" : "ações"}
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold">Fluxo de atendimento</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Adicione blocos e configure cada um logo abaixo. Blocos com ramos abrem sub-fluxos.
+                    </p>
                   </div>
-                  {actions.length === 0 ? (
-                    <div className="flex items-center justify-center h-20 text-xs text-muted-foreground">
-                      Clique em uma ação acima para adicionar ao fluxo
+                  <PaletaBlocos onAdd={addBlocoTopo} label="Adicionar bloco" />
+                </div>
+
+                <div className="rounded-lg border border-dashed border-border bg-background/40 p-3 min-h-[160px]">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">
+                      {totalBlocos} {totalBlocos === 1 ? "bloco" : "blocos"} no fluxo
+                    </div>
+                    {template === "triagem-perfil" && blocos.length === 0 && (
+                      <button
+                        onClick={() => setBlocos(buildTriagemPorPerfilTemplate())}
+                        className="text-[11px] text-primary hover:text-primary-glow"
+                      >
+                        Carregar template
+                      </button>
+                    )}
+                  </div>
+                  {blocos.length === 0 ? (
+                    <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                      Use “Adicionar bloco” para começar o fluxo, ou escolha um modelo no passo 1.
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {actions.map((a, i) => {
-                        const lib = actionLib.find(l => l.id === a.libId)!;
-                        const Icon = lib.icon;
-                        const configured = Object.values(a.config).some(v => v && v.length > 0);
-                        return (
-                          <div key={a.id} className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-2">
-                            <span className="font-mono text-[10px] text-subtle-foreground w-5">{i + 1}</span>
-                            <Icon className={cn("h-4 w-4", lib.color)} />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm">{a.label}</div>
-                              {configured && (
-                                <div className="text-[10px] text-subtle-foreground truncate font-mono">
-                                  {Object.entries(a.config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => `${k}: ${v}`).join(" · ")}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => setConfigActionId(a.id)}
-                              className="flex items-center gap-1 rounded-md border border-border bg-background/40 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:border-border-strong"
-                            >
-                              <Settings2 className="h-3 w-3" /> Configurar
-                            </button>
-                            <button onClick={() => removeAction(a.id)} className="text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
+                      {blocos.map(b => (
+                        <BlocoCard
+                          key={b.id}
+                          bloco={b}
+                          onConfigChange={handleBlocoConfig}
+                          onRemove={handleBlocoRemove}
+                          onToggle={handleBlocoToggle}
+                          onAddToBranch={handleAddToBranch}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
