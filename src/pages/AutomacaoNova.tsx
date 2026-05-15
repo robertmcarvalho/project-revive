@@ -539,8 +539,8 @@ const AutomacaoNova = () => {
                   <dd className="mt-0.5 font-medium">{triggers.find(t => t.id === trigger)?.label || "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Ações</dt>
-                  <dd className="mt-0.5 font-medium">{actions.length}</dd>
+                  <dt className="text-muted-foreground">Blocos do fluxo</dt>
+                  <dd className="mt-0.5 font-medium">{totalBlocos}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Canais</dt>
