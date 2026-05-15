@@ -1,0 +1,88 @@
+import { type Bloco, novoBloco, addBlocoToBranch } from "@/lib/fluxo";
+
+// Configures defaults for a freshly created block, used by the template builder.
+const make = (
+  tipo: Parameters<typeof novoBloco>[0],
+  configOverrides: Record<string, any> = {}
+): Bloco => {
+  const b = novoBloco(tipo);
+  b.config = { ...b.config, ...configOverrides };
+  b.collapsed = true;
+  return b;
+};
+
+// Builds the "Triagem por perfil" template described by the operator:
+//  - Identify contact -> branch by profile
+//  - Found Entregador / Farmácia / Líder: select setor + demanda + queue
+//  - Not found: greet, ask profile, collect data, pre-register, tag,
+//    notify agent, select setor + demanda, assign queue
+export const buildTriagemPorPerfilTemplate = (): Bloco[] => {
+  let identify = make("identificar", { origem: "telefone" });
+  identify.collapsed = false;
+
+  // Helper to push a sequence of blocks into a branch
+  const seq = (parentId: string, ramo: string, blocos: Bloco[]) => {
+    for (const b of blocos) {
+      identify = addBlocoToBranch([identify], parentId, ramo, b)[0];
+    }
+  };
+
+  // ---- Encontrado · Entregador ----
+  seq(identify.id, "Encontrado · Entregador", [
+    make("selecionar-setor", { modo: "menu", setoresIds: ["operacao", "financeiro", "suporte"] }),
+    make("selecionar-demanda", { perfil: "entregador", demandas: ["Pagamento / Repasse", "Problema na rota", "Suporte ao app"] }),
+    make("atribuir-fila", { dinamica: true }),
+  ]);
+
+  // ---- Encontrado · Farmácia ----
+  seq(identify.id, "Encontrado · Farmácia", [
+    make("selecionar-setor", { modo: "menu", setoresIds: ["comercial", "operacao", "financeiro", "suporte"] }),
+    make("selecionar-demanda", { perfil: "farmacia", demandas: ["Novo pedido", "Status de entrega", "Faturamento / NF"] }),
+    make("atribuir-fila", { dinamica: true }),
+  ]);
+
+  // ---- Encontrado · Líder ----
+  seq(identify.id, "Encontrado · Líder", [
+    make("selecionar-setor", { modo: "menu", setoresIds: ["operacao", "rh"] }),
+    make("atribuir-fila", { dinamica: true }),
+  ]);
+
+  // ---- Não encontrado ----
+  // Greet, then a "menu de perfil" (modeled as Pergunta with options as label)
+  seq(identify.id, "Não encontrado", [
+    make("enviar-mensagem", {
+      texto: "Olá! Não encontrei seu cadastro. Vou te ajudar a abrir um pré-cadastro rapidinho.",
+      delaySeg: 0,
+    }),
+    make("pergunta", { rotulo: "Você é Entregador, Farmácia ou Líder?", variavel: "perfil_inicial", obrigatorio: true }),
+    // Entregador / Líder fluxo
+    make("pergunta", { rotulo: "Qual seu nome completo?", variavel: "nome", obrigatorio: true }),
+    make("pergunta", { rotulo: "Em qual cidade você atua?", variavel: "cidade", obrigatorio: true }),
+    make("menu-farmacias", { variavelCidade: "cidade" }),
+    make("criar-precadastro", { tipo: "entregador", camposExtras: "cnh, placa" }),
+    make("aplicar-tag", { tag: "cadastro pendente" }),
+    make("notificar-atendente", { canal: "painel", mensagem: "Novo pré-cadastro de entregador aguardando validação" }),
+    make("selecionar-setor", { modo: "menu", setoresIds: ["operacao", "suporte"] }),
+    make("selecionar-demanda", { perfil: "entregador", demandas: demandasOf("entregador") }),
+    make("atribuir-fila", { dinamica: true }),
+    // Farmácia fluxo (continua na mesma sequência — operador pode separar depois)
+    make("pergunta", { rotulo: "(Farmácia) Qual a razão social?", variavel: "razao_social", obrigatorio: true }),
+    make("pergunta", { rotulo: "(Farmácia) Qual seu perfil? Gestor / Expedição / Financeiro", variavel: "perfil_farmacia", obrigatorio: true }),
+    make("pergunta", { rotulo: "(Farmácia) Qual seu nome?", variavel: "nome", obrigatorio: true }),
+    make("pergunta", { rotulo: "(Farmácia) Qual seu e-mail?", variavel: "email", obrigatorio: true }),
+    make("criar-precadastro", { tipo: "farmacia", camposExtras: "cnpj, telefone" }),
+    make("aplicar-tag", { tag: "cadastro pendente" }),
+    make("notificar-atendente", { canal: "painel", mensagem: "Novo pré-cadastro de farmácia aguardando validação" }),
+    make("selecionar-setor", { modo: "menu", setoresIds: ["comercial", "operacao", "financeiro"] }),
+    make("selecionar-demanda", { perfil: "farmacia", demandas: demandasOf("farmacia") }),
+    make("atribuir-fila", { dinamica: true }),
+  ]);
+
+  return [identify];
+};
+
+// helper to import demandas without circular dep at module top
+import { demandasPorPerfil, type Perfil } from "@/data/atendimentoCatalog";
+function demandasOf(p: Perfil) {
+  return demandasPorPerfil[p];
+}
