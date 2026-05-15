@@ -4,15 +4,25 @@ import {
   ArrowLeft, Bot, Zap, Clock, MessageSquare, GitBranch, Star,
   Play, Plus, Trash2, ChevronRight, Webhook, Mail, Database,
   Filter, Bell, Sparkles, Check, AlertCircle, Settings2, X, Loader2,
+  Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import {
+  type Bloco, type BlocoTipo,
+  novoBloco, updateBlocoConfig, removeBloco, toggleCollapse,
+  addBlocoToBranch, countBlocos, labelOf,
+} from "@/lib/fluxo";
+import { BlocoCard } from "./automacao/BlocoCard";
+import { PaletaBlocos } from "./automacao/PaletaBlocos";
+import { buildTriagemPorPerfilTemplate } from "./automacao/templates";
 
 type Step = 1 | 2 | 3 | 4;
 
 const templates = [
   { id: "blank", name: "Em branco", desc: "Comece do zero", icon: Sparkles, color: "text-muted-foreground bg-muted" },
+  { id: "triagem-perfil", name: "Triagem por perfil", desc: "Identifica contato, ramifica por perfil e cria pré-cadastro", icon: Users, color: "text-primary bg-primary/15" },
   { id: "triagem", name: "Triagem com bot", desc: "Classifica e roteia conversas via IA", icon: Bot, color: "text-primary bg-primary/15" },
   { id: "rota", name: "Roteamento por palavra-chave", desc: "Distribui para filas com base no texto", icon: GitBranch, color: "text-channel-instagram bg-channel-instagram/15" },
   { id: "fora", name: "Fora do horário", desc: "Auto-resposta noturna e finais de semana", icon: Clock, color: "text-warning bg-warning/15" },
