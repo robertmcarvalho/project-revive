@@ -54,6 +54,14 @@ const channels = ["WhatsApp", "Instagram", "Messenger", "Webchat", "E-mail"];
 
 interface ActionItem { id: string; libId: string; label: string; config: Record<string, string>; }
 
+const flattenBlocos = (list: Bloco[], ramo?: string): { tipo: Bloco["tipo"]; ramo?: string }[] =>
+  list.flatMap(b => [
+    { tipo: b.tipo, ramo },
+    ...(b.ramos
+      ? Object.entries(b.ramos).flatMap(([r, ch]) => flattenBlocos(ch, r))
+      : []),
+  ]);
+
 const stepsMeta = [
   { n: 1, title: "Modelo" },
   { n: 2, title: "Gatilho" },
