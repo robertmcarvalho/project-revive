@@ -4,15 +4,25 @@ import {
   ArrowLeft, Bot, Zap, Clock, MessageSquare, GitBranch, Star,
   Play, Plus, Trash2, ChevronRight, Webhook, Mail, Database,
   Filter, Bell, Sparkles, Check, AlertCircle, Settings2, X, Loader2,
+  Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import {
+  type Bloco, type BlocoTipo,
+  novoBloco, updateBlocoConfig, removeBloco, toggleCollapse,
+  addBlocoToBranch, countBlocos, labelOf,
+} from "@/lib/fluxo";
+import { BlocoCard } from "./automacao/BlocoCard";
+import { PaletaBlocos } from "./automacao/PaletaBlocos";
+import { buildTriagemPorPerfilTemplate } from "./automacao/templates";
 
 type Step = 1 | 2 | 3 | 4;
 
 const templates = [
   { id: "blank", name: "Em branco", desc: "Comece do zero", icon: Sparkles, color: "text-muted-foreground bg-muted" },
+  { id: "triagem-perfil", name: "Triagem por perfil", desc: "Identifica contato, ramifica por perfil e cria pré-cadastro", icon: Users, color: "text-primary bg-primary/15" },
   { id: "triagem", name: "Triagem com bot", desc: "Classifica e roteia conversas via IA", icon: Bot, color: "text-primary bg-primary/15" },
   { id: "rota", name: "Roteamento por palavra-chave", desc: "Distribui para filas com base no texto", icon: GitBranch, color: "text-channel-instagram bg-channel-instagram/15" },
   { id: "fora", name: "Fora do horário", desc: "Auto-resposta noturna e finais de semana", icon: Clock, color: "text-warning bg-warning/15" },
@@ -44,10 +54,18 @@ const channels = ["WhatsApp", "Instagram", "Messenger", "Webchat", "E-mail"];
 
 interface ActionItem { id: string; libId: string; label: string; config: Record<string, string>; }
 
+const flattenBlocos = (list: Bloco[], ramo?: string): { tipo: Bloco["tipo"]; ramo?: string }[] =>
+  list.flatMap(b => [
+    { tipo: b.tipo, ramo },
+    ...(b.ramos
+      ? Object.entries(b.ramos).flatMap(([r, ch]) => flattenBlocos(ch, r))
+      : []),
+  ]);
+
 const stepsMeta = [
   { n: 1, title: "Modelo" },
   { n: 2, title: "Gatilho" },
-  { n: 3, title: "Ações" },
+  { n: 3, title: "Fluxo" },
   { n: 4, title: "Detalhes" },
 ];
 
@@ -74,6 +92,7 @@ const AutomacaoNova = () => {
     { field: "canal", op: "é", value: "WhatsApp" },
   ]);
   const [actions, setActions] = useState<ActionItem[]>([]);
+  const [blocos, setBlocos] = useState<Bloco[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedChannels, setSelectedChannels] = useState<string[]>(["WhatsApp"]);
@@ -95,13 +114,30 @@ const AutomacaoNova = () => {
   const toggleChannel = (c: string) =>
     setSelectedChannels(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
 
+  // Block (flow) handlers
+  const addBlocoTopo = (tipo: BlocoTipo) => setBlocos(prev => [...prev, novoBloco(tipo)]);
+  const handleBlocoConfig = (id: string, key: string, value: any) =>
+    setBlocos(prev => updateBlocoConfig(prev, id, key, value));
+  const handleBlocoRemove = (id: string) => setBlocos(prev => removeBloco(prev, id));
+  const handleBlocoToggle = (id: string) => setBlocos(prev => toggleCollapse(prev, id));
+  const handleAddToBranch = (parentId: string, ramo: string, tipo: BlocoTipo) =>
+    setBlocos(prev => addBlocoToBranch(prev, parentId, ramo, novoBloco(tipo)));
+
+  const handleTemplate = (id: string) => {
+    setTemplate(id);
+    if (id === "triagem-perfil") setBlocos(buildTriagemPorPerfilTemplate());
+    else if (id === "blank") setBlocos([]);
+  };
+
+  const totalBlocos = countBlocos(blocos);
+
   const canNext =
     (step === 1 && !!template) ||
     (step === 2 && !!trigger) ||
-    (step === 3 && actions.length > 0) ||
+    (step === 3 && totalBlocos > 0) ||
     (step === 4 && name.trim().length >= 3);
 
-  const canTest = !!trigger && actions.length > 0;
+  const canTest = !!trigger && totalBlocos > 0;
 
   const handleSave = () => {
     toast({ title: "Automação criada", description: `${name} foi ${enabled ? "ativada" : "salva como rascunho"}.` });
@@ -116,11 +152,11 @@ const AutomacaoNova = () => {
       const logs = [
         `[00:00.001] Gatilho disparado: ${triggerLabel}`,
         ...conditions.filter(c => c.value).map((c, i) => `[00:00.0${10 + i}2] Condição avaliada: ${c.field} ${c.op} "${c.value}" → true`),
-        ...actions.flatMap((a, i) => [
-          `[00:00.${100 + i * 80}] Iniciando ação ${i + 1}/${actions.length}: ${a.label}`,
-          `[00:00.${130 + i * 80}] ✓ Ação concluída em 28ms`,
+        ...flattenBlocos(blocos).flatMap((b, i) => [
+          `[00:00.${100 + i * 60}] Bloco ${i + 1}: ${labelOf(b.tipo)}${b.ramo ? ` · ramo "${b.ramo}"` : ""}`,
+          `[00:00.${130 + i * 60}] ✓ ok`,
         ]),
-        `[00:00.${200 + actions.length * 80}] Fluxo finalizado com sucesso`,
+        `[00:00.${200 + totalBlocos * 60}] Fluxo finalizado com sucesso`,
       ];
       setTestRunning(false);
       setTestResult({ status: "ok", logs });
@@ -156,7 +192,7 @@ const AutomacaoNova = () => {
                 <Play className="h-3.5 w-3.5" /> Testar
               </button>
               <button
-                disabled={!name || actions.length === 0 || !trigger}
+                disabled={!name || totalBlocos === 0 || !trigger}
                 onClick={handleSave}
                 className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors disabled:opacity-50"
               >
@@ -212,7 +248,7 @@ const AutomacaoNova = () => {
                     return (
                       <button
                         key={t.id}
-                        onClick={() => setTemplate(t.id)}
+                        onClick={() => handleTemplate(t.id)}
                         className={cn(
                           "flex items-start gap-3 rounded-lg border p-4 text-left transition-all",
                           sel ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border bg-background/40 hover:border-border-strong"
@@ -327,65 +363,46 @@ const AutomacaoNova = () => {
 
             {step === 3 && (
               <>
-                <div className="mb-4">
-                  <h2 className="text-sm font-semibold">Quais ações executar?</h2>
-                  <p className="text-xs text-muted-foreground">Combine ações em sequência. Elas rodarão na ordem listada.</p>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
-                  {actionLib.map(a => {
-                    const Icon = a.icon;
-                    return (
-                      <button
-                        key={a.id}
-                        onClick={() => addAction(a.id)}
-                        className="flex flex-col items-start gap-2 rounded-lg border border-border bg-background/40 p-3 text-left hover:border-primary/50 hover:bg-primary/5 transition-colors"
-                      >
-                        <Icon className={cn("h-4 w-4", a.color)} />
-                        <span className="text-xs font-medium">{a.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="rounded-lg border border-dashed border-border bg-background/40 p-4 min-h-[140px]">
-                  <div className="mb-3 text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">
-                    Sequência de execução · {actions.length} {actions.length === 1 ? "ação" : "ações"}
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <div>
+                    <h2 className="text-sm font-semibold">Fluxo de atendimento</h2>
+                    <p className="text-xs text-muted-foreground">
+                      Adicione blocos e configure cada um logo abaixo. Blocos com ramos abrem sub-fluxos.
+                    </p>
                   </div>
-                  {actions.length === 0 ? (
-                    <div className="flex items-center justify-center h-20 text-xs text-muted-foreground">
-                      Clique em uma ação acima para adicionar ao fluxo
+                  <PaletaBlocos onAdd={addBlocoTopo} label="Adicionar bloco" />
+                </div>
+
+                <div className="rounded-lg border border-dashed border-border bg-background/40 p-3 min-h-[160px]">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">
+                      {totalBlocos} {totalBlocos === 1 ? "bloco" : "blocos"} no fluxo
+                    </div>
+                    {template === "triagem-perfil" && blocos.length === 0 && (
+                      <button
+                        onClick={() => setBlocos(buildTriagemPorPerfilTemplate())}
+                        className="text-[11px] text-primary hover:text-primary-glow"
+                      >
+                        Carregar template
+                      </button>
+                    )}
+                  </div>
+                  {blocos.length === 0 ? (
+                    <div className="flex items-center justify-center h-24 text-xs text-muted-foreground">
+                      Use “Adicionar bloco” para começar o fluxo, ou escolha um modelo no passo 1.
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      {actions.map((a, i) => {
-                        const lib = actionLib.find(l => l.id === a.libId)!;
-                        const Icon = lib.icon;
-                        const configured = Object.values(a.config).some(v => v && v.length > 0);
-                        return (
-                          <div key={a.id} className="flex items-center gap-3 rounded-md border border-border bg-surface px-3 py-2">
-                            <span className="font-mono text-[10px] text-subtle-foreground w-5">{i + 1}</span>
-                            <Icon className={cn("h-4 w-4", lib.color)} />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-sm">{a.label}</div>
-                              {configured && (
-                                <div className="text-[10px] text-subtle-foreground truncate font-mono">
-                                  {Object.entries(a.config).filter(([, v]) => v).slice(0, 2).map(([k, v]) => `${k}: ${v}`).join(" · ")}
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              onClick={() => setConfigActionId(a.id)}
-                              className="flex items-center gap-1 rounded-md border border-border bg-background/40 px-2 py-1 text-[11px] text-muted-foreground hover:text-foreground hover:border-border-strong"
-                            >
-                              <Settings2 className="h-3 w-3" /> Configurar
-                            </button>
-                            <button onClick={() => removeAction(a.id)} className="text-muted-foreground hover:text-destructive">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        );
-                      })}
+                      {blocos.map(b => (
+                        <BlocoCard
+                          key={b.id}
+                          bloco={b}
+                          onConfigChange={handleBlocoConfig}
+                          onRemove={handleBlocoRemove}
+                          onToggle={handleBlocoToggle}
+                          onAddToBranch={handleAddToBranch}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -499,7 +516,7 @@ const AutomacaoNova = () => {
               ) : (
                 <button
                   onClick={handleSave}
-                  disabled={!canNext || actions.length === 0 || !trigger}
+                  disabled={!canNext || totalBlocos === 0 || !trigger}
                   className="flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors disabled:opacity-50"
                 >
                   <Check className="h-3.5 w-3.5" /> Criar automação
@@ -522,8 +539,8 @@ const AutomacaoNova = () => {
                   <dd className="mt-0.5 font-medium">{triggers.find(t => t.id === trigger)?.label || "—"}</dd>
                 </div>
                 <div>
-                  <dt className="text-muted-foreground">Ações</dt>
-                  <dd className="mt-0.5 font-medium">{actions.length}</dd>
+                  <dt className="text-muted-foreground">Blocos do fluxo</dt>
+                  <dd className="mt-0.5 font-medium">{totalBlocos}</dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Canais</dt>
@@ -552,11 +569,15 @@ const AutomacaoNova = () => {
                   <div key={i} className="pl-3">e <span className="text-warning">{c.field} {c.op} "{c.value}"</span></div>
                 ))}
                 <div>então:</div>
-                {actions.length === 0
-                  ? <div className="pl-3 italic">sem ações</div>
-                  : actions.map((a, i) => (
-                    <div key={a.id} className="pl-3">{i + 1}. <span className="text-success">{a.label}</span></div>
+                {totalBlocos === 0
+                  ? <div className="pl-3 italic">sem blocos</div>
+                  : flattenBlocos(blocos).slice(0, 8).map((b, i) => (
+                    <div key={i} className="pl-3">
+                      {i + 1}. <span className="text-success">{labelOf(b.tipo)}</span>
+                      {b.ramo && <span className="text-warning"> · {b.ramo}</span>}
+                    </div>
                   ))}
+                {totalBlocos > 8 && <div className="pl-3 italic">…+{totalBlocos - 8} blocos</div>}
               </div>
             </div>
           </aside>

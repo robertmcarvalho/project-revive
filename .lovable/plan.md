@@ -1,114 +1,139 @@
-## Objetivo
-Criar uma nova seção **Relatórios** com a primeira sub-página **Atendimento**, entregando um relatório completo de desempenho de atendentes e supervisores, com filtros, KPIs, comparação de períodos, drill-down e exportação.
+# Plano — Wizard linear com configuração progressiva
 
----
+Mantemos o wizard atual de `/automacoes/nova` (Modelo → Gatilho → Ações → Detalhes), **sem canvas visual**. A diferença é que cada item escolhido **expande inline** as próprias opções de configuração (acordeão/cards aninhados). Assim, ao marcar "Identificar contato" o bloco abre os ramos por perfil; ao marcar "Selecionar setor" abre a lista de setores; e por aí adiante — tudo no mesmo passo, scrollando para baixo.
 
-## 1. Navegação e estrutura
+## 1. Estrutura do wizard (mesmos 4 passos)
 
-- Adicionar item **"Relatórios"** no `Sidebar` (ícone `BarChart3`), posicionado entre Campanhas e Financeiro.
-- Sub-rotas (preparadas para crescer):
-  - `/relatorios` → redireciona para `/relatorios/atendimento`
-  - `/relatorios/atendimento` → MVP desta entrega
-  - placeholders desativados visíveis (Campanhas, Operação, Financeiro) com badge "em breve"
+- **Passo 1 · Modelo** — adiciona um novo template **"Triagem por perfil"** já marcado com os blocos do fluxo descrito (pode editar/remover qualquer bloco depois).
+- **Passo 2 · Gatilho** — igual ao atual (canal de entrada, filtros).
+- **Passo 3 · Fluxo de atendimento** (substitui o "Ações" atual) — lista vertical de **blocos**, cada um expansível com sua configuração. É aqui que mora a maior parte da mudança.
+- **Passo 4 · Detalhes** — nome, descrição, canais, prioridade, ativar (igual ao atual).
 
-## 2. Permissões por perfil
+## 2. Passo 3 — Blocos disponíveis (paleta inline)
 
-Mesma tela, comportamento condicionado pelo perfil do usuário logado:
+Botões "+ Adicionar bloco" agrupados por categoria; cada bloco entra como card expandido na sequência:
 
-| Perfil | Escopo de dados | Filtro Atendente | Ranking equipe | Drill-down |
-|---|---|---|---|---|
-| Administrador | Todos | Livre | Sim | Sim |
-| Gestor | Filas/setores que gerencia | Livre dentro do escopo | Sim | Sim |
-| Supervisor | Sua fila/setor | Livre dentro da fila | Sim (da fila) | Sim |
-| Atendente | Apenas a si mesmo | Travado (próprio usuário) | Não | Sim (próprios tickets) |
+- **Identidade**
+  - Identificar contato na base → ao expandir, mostra **3 ramos automáticos** (Encontrado-Entregador, Encontrado-Farmácia, Encontrado-Líder, Não encontrado). Cada ramo é um sub-acordeão com seus próprios sub-blocos.
+- **Menu / Coleta**
+  - Selecionar Setor (multiselect dos setores cadastrados; sub-blocos por setor escolhido se quiser ramificar)
+  - Selecionar Demanda (depende do perfil — lista pré-preenchida com as demandas que você listou para entregador/farmácia/líder; editável)
+  - Pergunta ao cliente (nome, cidade, razão social, email…) — campo + variável de saída
+  - Menu de farmácias por cidade (usa a variável `cidade` coletada antes)
+- **Bot / Mensagem**
+  - Enviar mensagem (texto/template + delay)
+  - Script do bot (sequência de mensagens)
+  - IA · classificar/responder
+- **Atendimento**
+  - Criar pré-cadastro (Entregador / Farmácia, mapa de variáveis → ficha)
+  - Aplicar tag (`cadastro pendente`, etc.)
+  - Notificar atendente (canal + tag)
+  - Atribuir à fila (estática ou dinâmica `{{setor.fila}}`)
+- **SLA / Escalação**
+  - SLA da etapa (tempo + ação ao estourar)
+  - SLA da fila
+  - Escalar para gestor (lookup de gestores cadastrados, canal de aviso)
+- **Pesquisa**
+  - CSAT / NPS pós-atendimento
 
-Mock no frontend lê o perfil atual de uma constante simulada (a integrar com auth real depois).
+Ações por bloco: arrastar para reordenar, duplicar, excluir, expandir/recolher.
 
-## 3. Filtros (barra superior fixa)
+## 3. Como funciona a "expansão progressiva"
 
-- **Período**: date range picker + atalhos (Hoje, 7d, 30d, Mês atual, Mês anterior, Customizado)
-- **Comparar com**: período anterior equivalente (toggle on/off → habilita Δ%)
-- **Atendente** (multi-select, com busca)
-- **Supervisor/Gestor** (multi-select)
-- **Fila** (multi-select)
-- **Setor** (multi-select, dependente da fila)
-- **Canal** (WhatsApp, Instagram, Email)
-- **Status do ticket** (aberto, em andamento, resolvido, reaberto)
-- **Tag/motivo de encerramento** (multi-select)
-- **Granularidade** dos gráficos (dia/semana/mês)
-- Botões: **Limpar filtros**, **Salvar visão**, **Exportar ▾** (CSV / PDF)
-
-## 4. Layout do relatório
+Cada bloco tem um **formulário inline** que aparece ao adicionar/expandir. Exemplo do bloco "Identificar contato":
 
 ```text
-┌─ Header: título + filtros + Exportar ─────────────────────┐
-├─ Linha 1: Cards de KPI (8 cards, grid responsivo) ────────┤
-│  [Tickets] [TMR] [TMA] [TME] [SLA%] [CSAT] [FCR] [Reab.]  │
-│  cada card: valor + Δ% vs período anterior + cor da meta  │
-├─ Linha 2: Gráficos ───────────────────────────────────────┤
-│  • Volume ao longo do tempo (linha, por canal)            │
-│  • Heatmap dia × hora                                     │
-│  • Distribuição por canal (donut) + por fila (barras)     │
-├─ Linha 3: Ranking de atendentes (tabela) ─────────────────┤
-│  Atendente | Tickets | TMR | TMA | SLA% | CSAT | Δ% | ⋯   │
-│  ordenável, paginada, linha clicável → drill-down         │
-├─ Linha 4: Motivos de encerramento (top tags + barras) ────┤
-└───────────────────────────────────────────────────────────┘
+▼ Identificar contato                                    [⋮] [×]
+   Origem: telefone do contato            (select)
+   ─ Se Encontrado · Entregador ───────────────────────  [+]
+       (vazio — adicione blocos para este ramo)
+   ─ Se Encontrado · Farmácia ─────────────────────────  [+]
+       (vazio)
+   ─ Se Encontrado · Líder ────────────────────────────  [+]
+       (vazio)
+   ─ Se Não encontrado ────────────────────────────────  [+]
+       (vazio)
 ```
 
-## 5. KPIs implementados (MVP)
+Clicar `[+]` em um ramo abre o seletor da paleta filtrado por categoria, e o bloco escolhido aparece **dentro** daquele ramo. Mesma lógica vale para o bloco "Selecionar Setor" (cria sub-ramos por setor) e para "Pergunta ao cliente" quando a resposta é usada como condição.
 
-**Volume & Produtividade** — Tickets atendidos, abertos, encerrados, reabertos, mensagens enviadas/recebidas, tickets simultâneos médio, ocupação %.
+Resultado: o usuário consegue montar o fluxo inteiro descrito (busca → perfil → setor → demanda → fila / pré-cadastro) **scrollando** o passo 3, sem canvas e sem sair do wizard.
 
-**Tempo & SLA** — TMR (1ª resposta), TMA (duração total), TME (espera na fila), TMT (entre mensagens), % SLA cumprido.
+## 4. Template "Triagem por perfil" (passo 1)
 
-**Qualidade** — CSAT, NPS, FCR (resolução no 1º contato), taxa de reabertura, taxa de transferência.
+Selecionando esse template, o passo 3 já vem populado com os blocos aninhados representando o fluxo:
 
-**Distribuição & Comparativo** — Volume por canal/fila/setor/horário, ranking de atendentes, Δ% vs período anterior em todos os KPIs.
+```text
+▼ Identificar contato
+   Encontrado · Entregador
+      ▸ Selecionar Setor
+         (por setor) ▸ Selecionar Demanda (entregador) ▸ Atribuir à fila
+   Encontrado · Farmácia
+      ▸ Selecionar Setor
+         (por setor) ▸ Selecionar Demanda (farmácia) ▸ Atribuir à fila
+   Encontrado · Líder
+      ▸ Selecionar Setor ▸ Atribuir à fila
+   Não encontrado
+      ▸ Enviar mensagem ("Olá, não encontrei seu cadastro…")
+      ▸ Menu (Entregador / Farmácia / Líder)
+         Entregador / Líder
+            ▸ Pergunta: nome ▸ Pergunta: cidade
+            ▸ Menu farmácias da cidade
+            ▸ Criar pré-cadastro Entregador
+            ▸ Aplicar tag "cadastro pendente" ▸ Notificar atendente
+            ▸ Selecionar Setor ▸ Selecionar Demanda ▸ Atribuir à fila
+         Farmácia
+            ▸ Pergunta: razão social
+            ▸ Menu perfil (Gestor / Expedição / Financeiro)
+            ▸ Pergunta: nome ▸ Pergunta: email
+            ▸ Criar pré-cadastro Farmácia
+            ▸ Aplicar tag "cadastro pendente" ▸ Notificar atendente
+            ▸ Selecionar Setor ▸ Selecionar Demanda ▸ Atribuir à fila
+```
 
-## 6. Metas/SLA configuráveis
+Tudo editável: pode remover blocos, mudar mensagens, ajustar SLA, trocar fila etc.
 
-- Botão **"Configurar metas"** no header abre Sheet lateral.
-- Para cada KPI: definir meta (ex: TMR ≤ 2min, SLA ≥ 95%, CSAT ≥ 4.5).
-- Cards e células da tabela ganham cor: verde (meta atingida), amarelo (atenção, ±10%), vermelho (abaixo).
-- Persistência em `localStorage` no MVP.
+## 5. SLA e Escalação
 
-## 7. Drill-down ticket a ticket
+Dois jeitos, ambos suportados:
 
-- Clicar em linha do ranking abre Sheet/Drawer lateral com:
-  - Resumo do atendente (avatar, fila/setor, métricas resumidas)
-  - Tabela de tickets do período: ID, contato, canal, abertura, fechamento, TMR, TMA, status, CSAT
-  - Linha do ticket clicável (placeholder para futura integração com Inbox)
+- **SLA por etapa**: bloco específico inserido no fluxo logo após a etapa que deve ser medida (ex.: depois de "Atribuir à fila"). Configura tempo + ação se estourar (escalar / mensagem / mover de fila).
+- **SLA da fila** e **Escalar para gestor**: blocos próprios, geralmente colocados perto do "Atribuir à fila".
 
-## 8. Exportação
+## 6. Origem dos dados (mock)
 
-- **CSV**: gera arquivo com KPIs agregados + tabela de ranking, baseado nos filtros ativos. Implementação client-side (Blob + download).
-- **PDF**: snapshot da página (cards + gráficos + ranking) usando `html2canvas` + `jsPDF` (já comum em projetos Vite). Caso prefira, podemos adiar PDF para uma segunda iteração.
+`src/data/atendimentoCatalog.ts` com:
+- `setores[]`, `filas[]`
+- `demandasPorPerfil = { entregador: [...], farmacia: [...], lider: [...] }` (já com a lista exata que você passou)
+- `perfisFarmacia = ["Gestor", "Expedição", "Financeiro"]`
+- `farmaciasPorCidade` (mock)
+- `gestores[]` (lookup para escalação) — lê dos mocks já existentes em Configurações/Usuários
 
-## 9. Dados (mock)
+Os selects dentro dos blocos consomem esse arquivo. Quando houver backend, troca a fonte sem mudar a UI.
 
-Como ainda não há backend conectado, criar `src/data/relatoriosMock.ts` gerando dados sintéticos determinísticos por seed, baseados nos atendentes/filas existentes em `Usuarios.tsx` e `Configuracoes.tsx`. Isso garante que filtros, gráficos e drill-down funcionem de forma realista. Quando o backend for plugado, basta substituir o mock por uma camada de fetch.
+## 7. Persistência e teste
 
-## 10. Detalhes técnicos
+- Estado do fluxo (`blocos[]` com aninhamento por ramo) em memória + `localStorage` por id.
+- Botão "Testar" do header continua funcionando: a simulação percorre os blocos em ordem (já existe esqueleto em `AutomacaoNova`), mostrando logs por bloco e por ramo escolhido.
 
-- **Arquivos novos**:
-  - `src/pages/relatorios/Atendimento.tsx` (página principal)
-  - `src/pages/relatorios/components/FiltrosBar.tsx`
-  - `src/pages/relatorios/components/KpiCard.tsx`
-  - `src/pages/relatorios/components/RankingTable.tsx`
-  - `src/pages/relatorios/components/DrillDownSheet.tsx`
-  - `src/pages/relatorios/components/MetasSheet.tsx`
-  - `src/data/relatoriosMock.ts`
-  - `src/lib/relatorios.ts` (cálculos agregados, Δ%, exportCSV)
-- **Arquivos editados**:
-  - `src/App.tsx` (rotas)
-  - `src/components/Sidebar.tsx` (novo item)
-- **Bibliotecas**: usar `recharts` (já no projeto via shadcn/ui chart) para gráficos; `date-fns` para períodos; `lucide-react` para ícones. Sem novas dependências para o MVP (PDF via print/`window.print()` estilizado, opcionalmente `jspdf` se desejar arquivo).
-- **Design system**: usar tokens semânticos do `index.css` (sem cores hardcoded). Cards de meta usam `bg-success/10`, `bg-warning/10`, `bg-destructive/10` (criar tokens se ainda não existirem).
+## 8. Arquivos
 
-## 11. Fora do escopo (próximas iterações)
+Criar
+- `src/pages/automacao/blocos/` — um arquivo por tipo de bloco (formulário inline):
+  `IdentificarContato.tsx`, `SelecionarSetor.tsx`, `SelecionarDemanda.tsx`, `Pergunta.tsx`, `MenuFarmacias.tsx`, `EnviarMensagem.tsx`, `ScriptBot.tsx`, `IAResposta.tsx`, `CriarPreCadastro.tsx`, `AplicarTag.tsx`, `NotificarAtendente.tsx`, `AtribuirFila.tsx`, `SlaEtapa.tsx`, `SlaFila.tsx`, `EscalarGestor.tsx`, `Csat.tsx`.
+- `src/pages/automacao/PaletaBlocos.tsx` — botão "+ Adicionar bloco" com seletor agrupado.
+- `src/pages/automacao/templates.ts` — template "Triagem por perfil" pronto.
+- `src/data/atendimentoCatalog.ts` — setores, filas, demandas, farmácias mock.
+- `src/lib/fluxo.ts` — tipos `Bloco`, `BlocoConfig`, helper de aninhamento por ramo, util de simulação.
 
-- Agendamento de envio por email do relatório
-- Relatórios de Campanhas/Operação/Financeiro
-- Persistência de metas/visões salvas no backend
-- Integração real com dados de tickets/CSAT
+Editar
+- `src/pages/AutomacaoNova.tsx` — substitui o passo "Ações" pelo novo passo "Fluxo de atendimento" usando os blocos. Demais passos (Modelo, Gatilho, Detalhes) continuam como estão; só adiciona o novo template no passo 1.
+
+## 9. Fora do escopo
+
+- Backend real e integração com canais.
+- Editor visual em canvas (descartado por sua decisão).
+- CRUD de Setores/Filas/Demandas pelo wizard — esses cadastros continuam em **Configurações** (o wizard apenas seleciona).
+- Editor rico de templates de mensagem (textarea + variáveis simples).
+
+Confirma essa abordagem? Se sim, implemento já com o template "Triagem por perfil" carregado e os principais blocos funcionando.
