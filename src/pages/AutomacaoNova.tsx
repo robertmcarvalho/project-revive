@@ -144,11 +144,11 @@ const AutomacaoNova = () => {
       const logs = [
         `[00:00.001] Gatilho disparado: ${triggerLabel}`,
         ...conditions.filter(c => c.value).map((c, i) => `[00:00.0${10 + i}2] Condição avaliada: ${c.field} ${c.op} "${c.value}" → true`),
-        ...actions.flatMap((a, i) => [
-          `[00:00.${100 + i * 80}] Iniciando ação ${i + 1}/${actions.length}: ${a.label}`,
-          `[00:00.${130 + i * 80}] ✓ Ação concluída em 28ms`,
+        ...flattenBlocos(blocos).flatMap((b, i) => [
+          `[00:00.${100 + i * 60}] Bloco ${i + 1}: ${labelOf(b.tipo)}${b.ramo ? ` · ramo "${b.ramo}"` : ""}`,
+          `[00:00.${130 + i * 60}] ✓ ok`,
         ]),
-        `[00:00.${200 + actions.length * 80}] Fluxo finalizado com sucesso`,
+        `[00:00.${200 + totalBlocos * 60}] Fluxo finalizado com sucesso`,
       ];
       setTestRunning(false);
       setTestResult({ status: "ok", logs });
