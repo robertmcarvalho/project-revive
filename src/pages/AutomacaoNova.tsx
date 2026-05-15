@@ -248,7 +248,7 @@ const AutomacaoNova = () => {
                     return (
                       <button
                         key={t.id}
-                        onClick={() => setTemplate(t.id)}
+                        onClick={() => handleTemplate(t.id)}
                         className={cn(
                           "flex items-start gap-3 rounded-lg border p-4 text-left transition-all",
                           sel ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border bg-background/40 hover:border-border-strong"
