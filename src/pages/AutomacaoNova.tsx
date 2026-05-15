@@ -57,7 +57,7 @@ interface ActionItem { id: string; libId: string; label: string; config: Record<
 const stepsMeta = [
   { n: 1, title: "Modelo" },
   { n: 2, title: "Gatilho" },
-  { n: 3, title: "Ações" },
+  { n: 3, title: "Fluxo" },
   { n: 4, title: "Detalhes" },
 ];
 
