@@ -569,11 +569,15 @@ const AutomacaoNova = () => {
                   <div key={i} className="pl-3">e <span className="text-warning">{c.field} {c.op} "{c.value}"</span></div>
                 ))}
                 <div>então:</div>
-                {actions.length === 0
-                  ? <div className="pl-3 italic">sem ações</div>
-                  : actions.map((a, i) => (
-                    <div key={a.id} className="pl-3">{i + 1}. <span className="text-success">{a.label}</span></div>
+                {totalBlocos === 0
+                  ? <div className="pl-3 italic">sem blocos</div>
+                  : flattenBlocos(blocos).slice(0, 8).map((b, i) => (
+                    <div key={i} className="pl-3">
+                      {i + 1}. <span className="text-success">{labelOf(b.tipo)}</span>
+                      {b.ramo && <span className="text-warning"> · {b.ramo}</span>}
+                    </div>
                   ))}
+                {totalBlocos > 8 && <div className="pl-3 italic">…+{totalBlocos - 8} blocos</div>}
               </div>
             </div>
           </aside>
