@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Building2, User, Bell, Shield, Webhook, MessageSquare, Palette, Key, ChevronRight, Users, Plus, Copy, Trash2, Eye, EyeOff, Edit3, CheckCircle2, Instagram, Mail, Send, X } from "lucide-react";
+import { Building2, User, Bell, Shield, Webhook, MessageSquare, Palette, Key, ChevronRight, Users, Plus, Copy, Trash2, Eye, EyeOff, Edit3, CheckCircle2, Instagram, Mail, Send } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
+import { WebhookEditor, type SocialWebhook, type Fila } from "./configuracoes/WebhookEditor";
 
 const sections = [
   { id: "workspace", label: "Workspace", icon: Building2, desc: "Nome, logo e identidade da empresa" },
