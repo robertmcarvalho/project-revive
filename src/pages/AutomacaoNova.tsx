@@ -16,7 +16,11 @@ import {
 } from "@/lib/fluxo";
 import { BlocoCard } from "./automacao/BlocoCard";
 import { PaletaBlocos } from "./automacao/PaletaBlocos";
-import { buildTriagemPorPerfilTemplate } from "./automacao/templates";
+import {
+  buildTriagemPorPerfilTemplate,
+  buildEscalacaoPorSlaTemplate,
+  buildForaHorarioTemplate,
+} from "./automacao/templates";
 
 type Step = 1 | 2 | 3 | 4;
 
