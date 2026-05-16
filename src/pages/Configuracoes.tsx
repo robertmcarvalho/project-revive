@@ -207,22 +207,7 @@ const Toggle = ({ on }: { on: boolean }) => {
 
 // ============== Channels Panel (WhatsApp / Instagram / Email) ==============
 
-type Fila = { name: string; setores: string[]; notifyEmail?: string };
-
-type SocialWebhook = {
-  id: string;
-  name: string;
-  number: string;            // WhatsApp number / Instagram handle
-  phoneId: string;           // phone_id / ig_user_id
-  wabaId: string;            // waba_id / ig_business_id
-  token: string;
-  verifyToken: string;
-  callbackUrl: string;
-  status: "ativo" | "pausado" | "erro";
-  lastMessageAt: string;
-  msgs24h: number;
-  queues: Fila[];
-};
+// Fila and SocialWebhook types are imported from ./configuracoes/WebhookEditor
 
 const SETORES_INICIAIS = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico", "Comercial"];
 
