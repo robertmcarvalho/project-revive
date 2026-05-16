@@ -476,7 +476,7 @@ export const WebhookEditor = ({
                 <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-[11px] text-muted-foreground">
                   Política de transbordo entre filas é definida individualmente na aba <strong>Setores & Filas</strong> (campo "Transbordo para").
                 </div>
-                <SectionTitle title="Gestores de escalação" desc="Visão consolidada — edite por setor na aba "Setores & Filas"." />
+                <SectionTitle title="Gestores de escalação" desc='Visão consolidada — edite por setor na aba "Setores & Filas".' />
                 <div className="space-y-1.5">
                   {setoresCfg.map(s => (
                     <div key={s.name} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-xs">
