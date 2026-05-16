@@ -86,3 +86,82 @@ import { demandasPorPerfil, type Perfil } from "@/data/atendimentoCatalog";
 function demandasOf(p: Perfil) {
   return demandasPorPerfil[p];
 }
+
+// Builds the "Escalação por SLA" template:
+//  - SLA da etapa dispara em N minutos
+//  - Notifica atendente; se estourar, escala para gestor
+//  - Aplica tag de prioridade e reatribui à fila de supervisão
+export const buildEscalacaoPorSlaTemplate = (): Bloco[] => {
+  const slaEtapa = make("sla-etapa", { tempoMin: 5, acaoEstouro: "notificar" });
+  slaEtapa.collapsed = false;
+
+  const notificar = make("notificar-atendente", {
+    canal: "painel",
+    mensagem: "Atendimento próximo do SLA — verifique imediatamente",
+  });
+
+  const slaFila = make("sla-fila", { tempoMin: 15, acaoEstouro: "escalar" });
+
+  const tag = make("aplicar-tag", { tag: "sla estourado" });
+
+  const escalar = make("escalar-gestor", { gestorId: "", canal: "email" });
+
+  const reatribuir = make("atribuir-fila", { filaId: "supervisao", dinamica: false });
+
+  const mensagemCliente = make("enviar-mensagem", {
+    texto: "Pedimos desculpas pela demora. Sua solicitação foi priorizada e um supervisor já está acompanhando.",
+    delaySeg: 0,
+  });
+
+  return [slaEtapa, notificar, slaFila, tag, escalar, reatribuir, mensagemCliente];
+};
+
+// Builds the "Fora do horário" template:
+//  - Mensagem automática informando indisponibilidade
+//  - Pergunta se é urgente
+//  - Coleta dados de retorno (nome, telefone, descrição)
+//  - Aplica tag, cria pré-cadastro/registro e atribui à fila do próximo turno
+export const buildForaHorarioTemplate = (): Bloco[] => {
+  const aviso = make("enviar-mensagem", {
+    texto:
+      "Olá! Nosso atendimento está fora do horário (seg–sex 08h–18h). Deixe sua mensagem que retornaremos no próximo turno.",
+    delaySeg: 0,
+  });
+  aviso.collapsed = false;
+
+  const urgente = make("pergunta", {
+    rotulo: "É uma urgência? (sim/não)",
+    variavel: "urgente",
+    obrigatorio: true,
+  });
+
+  const nome = make("pergunta", { rotulo: "Qual seu nome?", variavel: "nome", obrigatorio: true });
+  const telefone = make("pergunta", {
+    rotulo: "Qual o melhor telefone para retorno?",
+    variavel: "telefone",
+    obrigatorio: true,
+  });
+  const descricao = make("pergunta", {
+    rotulo: "Descreva brevemente sua solicitação",
+    variavel: "descricao",
+    obrigatorio: true,
+  });
+
+  const tag = make("aplicar-tag", { tag: "fora do horário" });
+
+  const notificarPlantao = make("notificar-atendente", {
+    canal: "email",
+    mensagem: "Mensagem recebida fora do horário — verificar urgência",
+  });
+
+  const escalar = make("escalar-gestor", { gestorId: "", canal: "whatsapp" });
+
+  const fila = make("atribuir-fila", { filaId: "retorno-proximo-turno", dinamica: false });
+
+  const confirmacao = make("enviar-mensagem", {
+    texto: "Obrigado! Registramos seu contato e retornaremos assim que possível.",
+    delaySeg: 0,
+  });
+
+  return [aviso, urgente, nome, telefone, descricao, tag, notificarPlantao, escalar, fila, confirmacao];
+};

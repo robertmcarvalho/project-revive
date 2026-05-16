@@ -16,7 +16,11 @@ import {
 } from "@/lib/fluxo";
 import { BlocoCard } from "./automacao/BlocoCard";
 import { PaletaBlocos } from "./automacao/PaletaBlocos";
-import { buildTriagemPorPerfilTemplate } from "./automacao/templates";
+import {
+  buildTriagemPorPerfilTemplate,
+  buildEscalacaoPorSlaTemplate,
+  buildForaHorarioTemplate,
+} from "./automacao/templates";
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -126,6 +130,8 @@ const AutomacaoNova = () => {
   const handleTemplate = (id: string) => {
     setTemplate(id);
     if (id === "triagem-perfil") setBlocos(buildTriagemPorPerfilTemplate());
+    else if (id === "sla") setBlocos(buildEscalacaoPorSlaTemplate());
+    else if (id === "fora") setBlocos(buildForaHorarioTemplate());
     else if (id === "blank") setBlocos([]);
   };
 
