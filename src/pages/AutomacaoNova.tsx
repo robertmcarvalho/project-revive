@@ -130,6 +130,8 @@ const AutomacaoNova = () => {
   const handleTemplate = (id: string) => {
     setTemplate(id);
     if (id === "triagem-perfil") setBlocos(buildTriagemPorPerfilTemplate());
+    else if (id === "sla") setBlocos(buildEscalacaoPorSlaTemplate());
+    else if (id === "fora") setBlocos(buildForaHorarioTemplate());
     else if (id === "blank") setBlocos([]);
   };
 
