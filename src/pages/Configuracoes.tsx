@@ -391,6 +391,7 @@ const SocialChannelManager = ({
           webhook={editing}
           setoresGlobais={setoresGlobais}
           setSetoresGlobais={setSetoresGlobais}
+          emailsNotificacao={EMAILS_NOTIFICACAO}
           onClose={() => { setEditing(null); setCreating(false); }}
           onSave={(w) => {
             if (editing) setWebhooks(ws => ws.map(x => x.id === w.id ? w : x));
