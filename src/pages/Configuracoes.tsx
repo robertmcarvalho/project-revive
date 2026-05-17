@@ -8,7 +8,7 @@ import { WebhookEditor, type SocialWebhook, type Fila } from "./configuracoes/We
 const sections = [
   { id: "workspace", label: "Workspace", icon: Building2, desc: "Nome, logo e identidade da empresa" },
   { id: "users", label: "Usuários e Perfis", icon: Users, desc: "Cadastro, perfis e permissões" },
-  { id: "profile", label: "Perfil", icon: User, desc: "Seus dados pessoais e preferências" },
+  
   { id: "channels", label: "Canais", icon: MessageSquare, desc: "WhatsApp, Instagram, e-mail e webchat" },
   { id: "notifications", label: "Notificações", icon: Bell, desc: "Alertas e e-mails do sistema" },
   { id: "security", label: "Segurança", icon: Shield, desc: "2FA, sessões e logs de acesso" },
