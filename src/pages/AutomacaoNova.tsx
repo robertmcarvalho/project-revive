@@ -7,6 +7,7 @@ import {
   Users,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { OperationContextBar } from "@/components/OperationContextBar";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -207,6 +208,8 @@ const AutomacaoNova = () => {
             </div>
           }
         />
+
+        <OperationContextBar breadcrumb={["Automações", name || "Nova"]} />
 
         {/* Stepper */}
         <div className="mb-6 flex items-center gap-2 rounded-xl border border-border bg-surface p-3">
