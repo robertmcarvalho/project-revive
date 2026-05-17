@@ -4,6 +4,7 @@ import {
   Key, Layers, ListChecks, Timer, Route, MessageSquare, Tag, ShieldCheck, Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { OperationContextBar } from "@/components/OperationContextBar";
 
 // ============== Types ==============
 
@@ -268,6 +269,7 @@ export const WebhookEditor = ({
           </nav>
 
           <div className="flex-1 overflow-y-auto p-6">
+            <OperationContextBar breadcrumb={[`Webhook ${name || (kind === "whatsapp" ? "WhatsApp" : "Instagram")}`]} />
             {tab === "credenciais" && (
               <div className="space-y-4">
                 <SectionTitle title="Credenciais Meta Cloud" desc="A plataforma usa estas credenciais automaticamente." />
