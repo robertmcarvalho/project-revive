@@ -31,7 +31,7 @@ export interface CurrentUser {
   iniciais: string;
   email: string;
   papel: "Admin" | "Líder" | "Operador";
-  status: "online" | "ausente" | "ocupado" | "offline";
+  status: "online" | "idle" | "busy" | "offline";
   chatsAtivos: number;
 }
 
