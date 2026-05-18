@@ -258,10 +258,13 @@ const Inbox = () => {
         <div className="border-t border-border bg-surface/40 p-4">
           <div className="mx-auto max-w-3xl">
             <div className="flex items-center gap-1.5 mb-2">
-              <button className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                to="/copiloto"
+                className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Sparkles className="h-3 w-3 text-primary" />
                 Sugerir resposta
-              </button>
+              </Link>
               <button className="rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Respostas prontas
               </button>
