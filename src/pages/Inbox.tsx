@@ -373,6 +373,16 @@ const Inbox = () => {
           </div>
         </div>
       </div>
+
+      {/* Coluna 5 — Copiloto IA */}
+      {copilotoOpen && (
+        <CopilotoPanel
+          collapsed={copilotoCollapsed}
+          onCollapse={() => setCopilotoCollapsed(true)}
+          onExpand={() => setCopilotoCollapsed(false)}
+          onClose={() => setCopilotoOpen(false)}
+        />
+      )}
     </div>
   );
 };
