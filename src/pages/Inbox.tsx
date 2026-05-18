@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
 import { Filter, Star, Paperclip, Smile, Send, Phone, Video, MoreHorizontal, CheckCheck, Tag, ChevronRight, Sparkles, Clock } from "lucide-react";
