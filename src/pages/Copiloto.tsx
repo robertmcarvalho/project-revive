@@ -159,7 +159,7 @@ const Copiloto = () => {
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
-      <OperationContextBar context="Conversa › Marina Costa › Webhook B2B Farmácias" />
+      <OperationContextBar breadcrumb={["Webhook B2B Farmácias", "Conversa › Marina Costa"]} />
 
       <PageHeader
         eyebrow="IA — Sugestões"
