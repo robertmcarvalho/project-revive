@@ -299,7 +299,7 @@ const Inbox = () => {
       </div>
 
       {/* Coluna 4 — painel cliente */}
-      <div className="hidden xl:flex w-72 shrink-0 flex-col border-l border-border bg-surface overflow-y-auto">
+      <div className={cn("hidden flex-col border-l border-border bg-surface overflow-y-auto", copilotoOpen ? "hidden" : "xl:flex w-72 shrink-0")}>
         <div className="flex h-14 items-center justify-between border-b border-border px-4">
           <h3 className="text-sm font-semibold tracking-tight">Detalhes</h3>
           <button className="text-muted-foreground hover:text-foreground"><ChevronRight className="h-4 w-4" /></button>
