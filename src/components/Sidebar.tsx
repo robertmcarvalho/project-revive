@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3 } from "lucide-react";
+import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { UserMenu } from "./UserMenu";
