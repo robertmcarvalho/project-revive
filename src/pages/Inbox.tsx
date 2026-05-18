@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
 import { Filter, Star, Paperclip, Smile, Send, Phone, Video, MoreHorizontal, CheckCheck, Tag, ChevronRight, Sparkles, Clock } from "lucide-react";
@@ -198,6 +199,14 @@ const Inbox = () => {
             <button className="rounded-md p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground"><Video className="h-4 w-4" /></button>
             <button className="rounded-md p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-foreground"><Star className="h-4 w-4" /></button>
             <div className="mx-1 h-5 w-px bg-border" />
+            <Link
+              to="/copiloto"
+              title="Abrir Copiloto de Atendimento"
+              className="inline-flex items-center gap-1.5 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/15 transition-colors"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Copiloto
+            </Link>
             <button className="rounded-md border border-border bg-surface px-2.5 py-1 text-xs font-medium hover:bg-surface-hover transition-colors">
               Resolver
             </button>
@@ -249,10 +258,13 @@ const Inbox = () => {
         <div className="border-t border-border bg-surface/40 p-4">
           <div className="mx-auto max-w-3xl">
             <div className="flex items-center gap-1.5 mb-2">
-              <button className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">
+              <Link
+                to="/copiloto"
+                className="flex items-center gap-1 rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
                 <Sparkles className="h-3 w-3 text-primary" />
                 Sugerir resposta
-              </button>
+              </Link>
               <button className="rounded-md border border-border bg-surface px-2 py-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">
                 Respostas prontas
               </button>
