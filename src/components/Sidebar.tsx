@@ -13,6 +13,7 @@ const nav = [
   { to: "/lideres", label: "Líderes", icon: Crown },
   { to: "/campanhas", label: "Campanhas", icon: Megaphone },
   { to: "/automacoes", label: "Automações", icon: Bot },
+  { to: "/copiloto", label: "IA — Sugestões", icon: Sparkles },
   { to: "/flows", label: "Flows", icon: Workflow },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
