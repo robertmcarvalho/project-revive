@@ -37,6 +37,7 @@ import LiderPreCadastro from "./pages/lider/PreCadastro.tsx";
 import LiderChat from "./pages/lider/Chat.tsx";
 import Financeiro from "./pages/Financeiro.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
+import Copiloto from "./pages/Copiloto.tsx";
 import MinhaConta from "./pages/MinhaConta.tsx";
 import RelatorioAtendimento from "./pages/relatorios/Atendimento.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -76,6 +77,7 @@ const App = () => (
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
+          <Route path="/copiloto" element={<AppShell><Copiloto /></AppShell>} />
           <Route path="/conta" element={<AppShell><MinhaConta /></AppShell>} />
           <Route path="/export" element={<AppShell><Export /></AppShell>} />
 

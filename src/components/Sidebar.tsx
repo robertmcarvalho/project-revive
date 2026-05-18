@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3 } from "lucide-react";
+import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { UserMenu } from "./UserMenu";
@@ -13,6 +13,7 @@ const nav = [
   { to: "/lideres", label: "Líderes", icon: Crown },
   { to: "/campanhas", label: "Campanhas", icon: Megaphone },
   { to: "/automacoes", label: "Automações", icon: Bot },
+  { to: "/copiloto", label: "IA — Sugestões", icon: Sparkles },
   { to: "/flows", label: "Flows", icon: Workflow },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
