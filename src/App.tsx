@@ -77,6 +77,7 @@ const App = () => (
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
+          <Route path="/copiloto" element={<AppShell><Copiloto /></AppShell>} />
           <Route path="/conta" element={<AppShell><MinhaConta /></AppShell>} />
           <Route path="/export" element={<AppShell><Export /></AppShell>} />
 
