@@ -31,6 +31,25 @@ const FARMACIAS_DB: Record<string, any> = {
       geral: "Marina Souza", financeiro: "Lucas Andrade",
       operacional: "Carla Mendes", suporte: "Rafael Pinto",
     },
+    condicoes: {
+      taxaEntrega: 850,
+      taxaEntregaRepasse: 620,
+      minGarantido: 1200,
+      minGarantidoRepasse: 900,
+    },
+    horarioDelivery: {
+      Seg: { ativo: true, ini: "08:00", fim: "22:00" },
+      Ter: { ativo: true, ini: "08:00", fim: "22:00" },
+      Qua: { ativo: true, ini: "08:00", fim: "22:00" },
+      Qui: { ativo: true, ini: "08:00", fim: "22:00" },
+      Sex: { ativo: true, ini: "08:00", fim: "23:00" },
+      Sáb: { ativo: true, ini: "09:00", fim: "20:00" },
+      Dom: { ativo: false, ini: "10:00", fim: "16:00" },
+    },
+    feriadosDelivery: [
+      { data: "2026-12-25", descricao: "Natal", abre: false, ini: "10:00", fim: "16:00" },
+      { data: "2026-01-01", descricao: "Ano Novo", abre: false, ini: "10:00", fim: "16:00" },
+    ],
     metricas: {
       entregadores: 12, ativos: 9, slaMedio: 98, conversasAbertas: 47,
       entregasMes: 842, ticketMedio: "R$ 87,40",
