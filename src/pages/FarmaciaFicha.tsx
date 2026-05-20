@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
   ChevronRight, Edit3, FileText, Clock, MessageSquare, Headphones, Wallet, Wrench,
+  DollarSign, CalendarDays,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
