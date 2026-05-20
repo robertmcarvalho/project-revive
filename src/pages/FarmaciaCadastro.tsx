@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Building2, FileText, MapPin, Phone, Mail, User, Users,
-  Crown, Headphones, Plus, X, Save, Search, Truck, Calendar,
+  Crown, Headphones, Plus, X, Save, Search, Truck, Calendar, DollarSign, Clock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,34 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 const LIDERES = ["Marina Souza", "Lucas Andrade", "Carla Mendes", "Rafael Pinto", "Beatriz Lima"];
 const ATENDENTES = ["Ana Costa", "Bruno Lima", "Camila Reis", "Diego Alves", "Elis Mota", "Felipe Tavares"];
 const SETORES = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico"] as const;
 const PERFIS_CONTATO = ["Expedição", "Financeiro", "Gestor"] as const;
+const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const;
+
+// Formata número em centavos para BRL "R$ 0,00"
+const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const CurrencyInput = ({
+  value,
+  onChange,
+  placeholder = "R$ 0,00",
+}: { value: number; onChange: (v: number) => void; placeholder?: string }) => (
+  <Input
+    inputMode="numeric"
+    placeholder={placeholder}
+    value={value ? formatBRL(value) : ""}
+    onChange={(e) => {
+      const digits = e.target.value.replace(/\D/g, "");
+      onChange(digits ? parseInt(digits, 10) : 0);
+    }}
+  />
+);
 
 const ENTREGADORES_VINC = [
   { nome: "João Silva", iniciais: "JS", escala: "Seg–Sex · 08–18", status: "Disponível" },
@@ -57,6 +79,20 @@ const FarmaciaCadastro = () => {
   const [opSetor, setOpSetor] = useState<Record<string, string>>(
     Object.fromEntries(SETORES.map(s => [s, ""]))
   );
+
+  // Condições comerciais (valores em centavos)
+  const [taxaEntrega, setTaxaEntrega] = useState(0);
+  const [taxaEntregaRepasse, setTaxaEntregaRepasse] = useState(0);
+  const [minGarantido, setMinGarantido] = useState(0);
+  const [minGarantidoRepasse, setMinGarantidoRepasse] = useState(0);
+
+  // Horário de funcionamento do delivery
+  const [horario, setHorario] = useState<Record<string, { ativo: boolean; ini: string; fim: string }>>(
+    Object.fromEntries(DIAS.map(d => [d, { ativo: !["Dom"].includes(d), ini: "08:00", fim: "22:00" }]))
+  );
+  const [feriadosDelivery, setFeriadosDelivery] = useState<{ data: string; descricao: string; abre: boolean; ini: string; fim: string }[]>([
+    { data: "2026-12-25", descricao: "Natal", abre: false, ini: "10:00", fim: "16:00" },
+  ]);
 
   const buscarCep = async () => {
     const clean = cep.replace(/\D/g, "");
@@ -222,6 +258,112 @@ const FarmaciaCadastro = () => {
               </div>
             </div>
           </Section>
+
+          <Section
+            title="Condições comerciais"
+            desc="Valores cobrados da farmácia e repasse ao entregador por entrega."
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field icon={DollarSign} label="Taxa de entrega" required>
+                <CurrencyInput value={taxaEntrega} onChange={setTaxaEntrega} />
+              </Field>
+              <Field icon={Truck} label="Taxa de entrega repassada ao entregador" required>
+                <CurrencyInput value={taxaEntregaRepasse} onChange={setTaxaEntregaRepasse} />
+              </Field>
+              <Field icon={DollarSign} label="Mínimo garantido">
+                <CurrencyInput value={minGarantido} onChange={setMinGarantido} />
+              </Field>
+              <Field icon={Truck} label="Mínimo garantido repassado ao entregador">
+                <CurrencyInput value={minGarantidoRepasse} onChange={setMinGarantidoRepasse} />
+              </Field>
+            </div>
+            <div className="rounded-md border border-dashed border-border bg-background/40 p-3 text-[11px] text-muted-foreground">
+              Valores em reais (BRL). O repasse ao entregador não pode exceder o valor cobrado da farmácia.
+            </div>
+          </Section>
+
+          <Section
+            title="Horário de funcionamento do delivery"
+            desc="Defina os turnos por dia da semana e exceções em feriados."
+          >
+            <div className="overflow-hidden rounded-md border border-border">
+              <table className="w-full text-xs">
+                <thead className="bg-background">
+                  <tr className="text-left text-[10px] uppercase tracking-wider text-subtle-foreground">
+                    <th className="px-3 py-2">Dia</th>
+                    <th className="px-3 py-2">Abre</th>
+                    <th className="px-3 py-2"><Clock className="inline h-3 w-3" /> Início</th>
+                    <th className="px-3 py-2"><Clock className="inline h-3 w-3" /> Fim</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {DIAS.map(d => {
+                    const v = horario[d];
+                    return (
+                      <tr key={d} className="border-t border-border/60">
+                        <td className="px-3 py-2 font-medium">{d}</td>
+                        <td className="px-3 py-2">
+                          <Switch checked={v.ativo} onCheckedChange={(c) => setHorario({ ...horario, [d]: { ...v, ativo: c } })} />
+                        </td>
+                        <td className="px-3 py-2">
+                          <Input type="time" disabled={!v.ativo} value={v.ini}
+                            onChange={(e) => setHorario({ ...horario, [d]: { ...v, ini: e.target.value } })}
+                            className="h-8 w-28" />
+                        </td>
+                        <td className="px-3 py-2">
+                          <Input type="time" disabled={!v.ativo} value={v.fim}
+                            onChange={(e) => setHorario({ ...horario, [d]: { ...v, fim: e.target.value } })}
+                            className="h-8 w-28" />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-subtle-foreground">Feriados</h3>
+                <Button type="button" variant="outline" size="sm" className="h-7 gap-1"
+                  onClick={() => setFeriadosDelivery([...feriadosDelivery, { data: "", descricao: "", abre: false, ini: "10:00", fim: "16:00" }])}>
+                  <Plus className="h-3 w-3" /> Adicionar feriado
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {feriadosDelivery.map((f, i) => (
+                  <div key={i} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background p-2">
+                    <Input type="date" value={f.data} onChange={(e) => {
+                      const n = [...feriadosDelivery]; n[i].data = e.target.value; setFeriadosDelivery(n);
+                    }} className="h-8 w-40" />
+                    <Input placeholder="Descrição" value={f.descricao} onChange={(e) => {
+                      const n = [...feriadosDelivery]; n[i].descricao = e.target.value; setFeriadosDelivery(n);
+                    }} className="h-8 min-w-[180px] flex-1" />
+                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Checkbox checked={f.abre} onCheckedChange={(c) => {
+                        const n = [...feriadosDelivery]; n[i].abre = !!c; setFeriadosDelivery(n);
+                      }} />
+                      Abre
+                    </label>
+                    <Input type="time" disabled={!f.abre} value={f.ini} onChange={(e) => {
+                      const n = [...feriadosDelivery]; n[i].ini = e.target.value; setFeriadosDelivery(n);
+                    }} className="h-8 w-28" />
+                    <Input type="time" disabled={!f.abre} value={f.fim} onChange={(e) => {
+                      const n = [...feriadosDelivery]; n[i].fim = e.target.value; setFeriadosDelivery(n);
+                    }} className="h-8 w-28" />
+                    <button onClick={() => setFeriadosDelivery(feriadosDelivery.filter((_, x) => x !== i))} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {feriadosDelivery.length === 0 && (
+                  <div className="text-center text-xs text-subtle-foreground py-2">Nenhum feriado adicionado.</div>
+                )}
+              </div>
+            </div>
+          </Section>
+
+
 
           <Section title="Entregadores vinculados" desc="Visualize a escala de cada entregador da unidade.">
             <div className="overflow-hidden rounded-md border border-border">
