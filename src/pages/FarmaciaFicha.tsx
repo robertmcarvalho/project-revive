@@ -9,6 +9,9 @@ import { StatusDot } from "@/components/StatusDot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 type Status = "online" | "busy" | "offline";
 type EntStatus = "online" | "busy" | "idle" | "offline";
 
