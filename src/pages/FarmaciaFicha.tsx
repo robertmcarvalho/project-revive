@@ -2,11 +2,15 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
   ChevronRight, Edit3, FileText, Clock, MessageSquare, Headphones, Wallet, Wrench,
+  DollarSign, CalendarDays,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 type Status = "online" | "busy" | "offline";
 type EntStatus = "online" | "busy" | "idle" | "offline";
@@ -30,6 +34,25 @@ const FARMACIAS_DB: Record<string, any> = {
       geral: "Marina Souza", financeiro: "Lucas Andrade",
       operacional: "Carla Mendes", suporte: "Rafael Pinto",
     },
+    condicoes: {
+      taxaEntrega: 850,
+      taxaEntregaRepasse: 620,
+      minGarantido: 1200,
+      minGarantidoRepasse: 900,
+    },
+    horarioDelivery: {
+      Seg: { ativo: true, ini: "08:00", fim: "22:00" },
+      Ter: { ativo: true, ini: "08:00", fim: "22:00" },
+      Qua: { ativo: true, ini: "08:00", fim: "22:00" },
+      Qui: { ativo: true, ini: "08:00", fim: "22:00" },
+      Sex: { ativo: true, ini: "08:00", fim: "23:00" },
+      Sáb: { ativo: true, ini: "09:00", fim: "20:00" },
+      Dom: { ativo: false, ini: "10:00", fim: "16:00" },
+    },
+    feriadosDelivery: [
+      { data: "2026-12-25", descricao: "Natal", abre: false, ini: "10:00", fim: "16:00" },
+      { data: "2026-01-01", descricao: "Ano Novo", abre: false, ini: "10:00", fim: "16:00" },
+    ],
     metricas: {
       entregadores: 12, ativos: 9, slaMedio: 98, conversasAbertas: 47,
       entregasMes: 842, ticketMedio: "R$ 87,40",
@@ -179,6 +202,93 @@ const FarmaciaFicha = () => {
                   );
                 })}
               </div>
+            </section>
+
+            {/* Condições comerciais */}
+            <section className="rounded-xl border border-border bg-surface p-5">
+              <h3 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold">
+                <DollarSign className="h-3.5 w-3.5" /> Condições comerciais
+              </h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa de entrega</div>
+                  <div className="mt-1 font-mono text-sm font-medium">{formatBRL(f.condicoes.taxaEntrega)}</div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa repassada ao entregador</div>
+                  <div className="mt-1 font-mono text-sm font-medium">{formatBRL(f.condicoes.taxaEntregaRepasse)}</div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Mínimo garantido</div>
+                  <div className="mt-1 font-mono text-sm font-medium">{formatBRL(f.condicoes.minGarantido)}</div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Mínimo garantido repassado</div>
+                  <div className="mt-1 font-mono text-sm font-medium">{formatBRL(f.condicoes.minGarantidoRepasse)}</div>
+                </div>
+              </div>
+              <div className="mt-3 rounded-md border border-dashed border-border bg-background/40 p-3 text-[11px] text-muted-foreground">
+                Valores em reais (BRL). O repasse ao entregador não pode exceder o valor cobrado da farmácia.
+              </div>
+            </section>
+
+            {/* Horário de funcionamento do delivery */}
+            <section className="rounded-xl border border-border bg-surface p-5">
+              <h3 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold">
+                <CalendarDays className="h-3.5 w-3.5" /> Horário de funcionamento do delivery
+              </h3>
+              <div className="overflow-hidden rounded-md border border-border">
+                <table className="w-full text-xs">
+                  <thead className="bg-background">
+                    <tr className="text-left text-[10px] uppercase tracking-wider text-subtle-foreground">
+                      <th className="px-3 py-2">Dia</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Início</th>
+                      <th className="px-3 py-2">Fim</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(f.horarioDelivery).map(([dia, v]: [string, any]) => (
+                      <tr key={dia} className="border-t border-border/60">
+                        <td className="px-3 py-2 font-medium">{dia}</td>
+                        <td className="px-3 py-2">
+                          <span className={cn(
+                            "rounded px-2 py-0.5 text-[10px] font-medium",
+                            v.ativo ? "bg-success/15 text-success" : "bg-muted/50 text-subtle-foreground"
+                          )}>
+                            {v.ativo ? "Aberto" : "Fechado"}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 font-mono text-muted-foreground">{v.ini}</td>
+                        <td className="px-3 py-2 font-mono text-muted-foreground">{v.fim}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {f.feriadosDelivery.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">Feriados</h4>
+                  <div className="space-y-2">
+                    {f.feriadosDelivery.map((fer: any, i: number) => (
+                      <div key={i} className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-background p-2.5 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <CalendarDays className="h-3 w-3 text-muted-foreground" />
+                          <span className="font-mono">{fer.data}</span>
+                        </div>
+                        <span className="font-medium">{fer.descricao}</span>
+                        <span className={cn(
+                          "rounded px-2 py-0.5 text-[10px] font-medium",
+                          fer.abre ? "bg-success/15 text-success" : "bg-muted/50 text-subtle-foreground"
+                        )}>
+                          {fer.abre ? `Aberto ${fer.ini}–${fer.fim}` : "Fechado"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
 
             {/* Entregadores vinculados + escala */}
