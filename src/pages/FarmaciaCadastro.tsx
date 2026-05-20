@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Building2, FileText, MapPin, Phone, Mail, User, Users,
-  Crown, Headphones, Plus, X, Save, Search, Truck, Calendar,
+  Crown, Headphones, Plus, X, Save, Search, Truck, Calendar, DollarSign, Clock,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,34 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
 const LIDERES = ["Marina Souza", "Lucas Andrade", "Carla Mendes", "Rafael Pinto", "Beatriz Lima"];
 const ATENDENTES = ["Ana Costa", "Bruno Lima", "Camila Reis", "Diego Alves", "Elis Mota", "Felipe Tavares"];
 const SETORES = ["Atendimento Geral", "Financeiro", "Operacional", "Suporte Técnico"] as const;
 const PERFIS_CONTATO = ["Expedição", "Financeiro", "Gestor"] as const;
+const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const;
+
+// Formata número em centavos para BRL "R$ 0,00"
+const formatBRL = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const CurrencyInput = ({
+  value,
+  onChange,
+  placeholder = "R$ 0,00",
+}: { value: number; onChange: (v: number) => void; placeholder?: string }) => (
+  <Input
+    inputMode="numeric"
+    placeholder={placeholder}
+    value={value ? formatBRL(value) : ""}
+    onChange={(e) => {
+      const digits = e.target.value.replace(/\D/g, "");
+      onChange(digits ? parseInt(digits, 10) : 0);
+    }}
+  />
+);
 
 const ENTREGADORES_VINC = [
   { nome: "João Silva", iniciais: "JS", escala: "Seg–Sex · 08–18", status: "Disponível" },
@@ -57,6 +79,20 @@ const FarmaciaCadastro = () => {
   const [opSetor, setOpSetor] = useState<Record<string, string>>(
     Object.fromEntries(SETORES.map(s => [s, ""]))
   );
+
+  // Condições comerciais (valores em centavos)
+  const [taxaEntrega, setTaxaEntrega] = useState(0);
+  const [taxaEntregaRepasse, setTaxaEntregaRepasse] = useState(0);
+  const [minGarantido, setMinGarantido] = useState(0);
+  const [minGarantidoRepasse, setMinGarantidoRepasse] = useState(0);
+
+  // Horário de funcionamento do delivery
+  const [horario, setHorario] = useState<Record<string, { ativo: boolean; ini: string; fim: string }>>(
+    Object.fromEntries(DIAS.map(d => [d, { ativo: !["Dom"].includes(d), ini: "08:00", fim: "22:00" }]))
+  );
+  const [feriadosDelivery, setFeriadosDelivery] = useState<{ data: string; descricao: string; abre: boolean; ini: string; fim: string }[]>([
+    { data: "2026-12-25", descricao: "Natal", abre: false, ini: "10:00", fim: "16:00" },
+  ]);
 
   const buscarCep = async () => {
     const clean = cep.replace(/\D/g, "");
