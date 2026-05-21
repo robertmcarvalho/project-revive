@@ -31,7 +31,7 @@ const Entregadores = () => {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-7xl px-8 py-8">
-        <PageHeader
+        <PageHeader live
           eyebrow="Operação"
           title="Entregadores"
           description="Equipe de entrega vinculada às farmácias."

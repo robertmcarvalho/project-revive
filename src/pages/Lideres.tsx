@@ -15,7 +15,7 @@ const leaders = [
 const Lideres = () => (
   <div className="h-full overflow-y-auto">
     <div className="mx-auto max-w-7xl px-8 py-8">
-      <PageHeader
+      <PageHeader live
         eyebrow="Pessoas"
         title="Líderes"
         description="Gestores responsáveis por farmácias e equipes."

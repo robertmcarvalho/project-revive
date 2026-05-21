@@ -30,7 +30,7 @@ const Contatos = () => {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-7xl px-8 py-8">
-        <PageHeader
+        <PageHeader live
           eyebrow="CRM"
           title="Contatos"
           description="Base unificada de clientes e leads do WhatsApp."

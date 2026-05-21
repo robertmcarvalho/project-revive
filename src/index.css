@@ -26,16 +26,16 @@
     --popover: 240 5% 9%;
     --popover-foreground: 0 0% 98%;
 
-    /* Brand */
-    --primary: 220 100% 62%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 220 100% 70%;
+    /* Brand — Aethera cyan/teal */
+    --primary: 190 90% 55%;
+    --primary-foreground: 220 30% 6%;
+    --primary-glow: 175 80% 55%;
 
     --secondary: 240 5% 12%;
     --secondary-foreground: 0 0% 95%;
 
-    --accent: 240 5% 14%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 190 80% 14%;
+    --accent-foreground: 190 90% 75%;
 
     /* Status */
     --success: 145 70% 50%;
@@ -54,28 +54,28 @@
 
     /* Lines & inputs */
     --border: 240 5% 14%;
-    --border-strong: 240 5% 20%;
+    --border-strong: 190 40% 22%;
     --input: 240 5% 12%;
-    --ring: 220 100% 62%;
+    --ring: 190 90% 55%;
 
     --radius: 0.625rem;
 
-    /* Gradients & shadows */
-    --gradient-primary: linear-gradient(135deg, hsl(220 100% 62%), hsl(260 90% 65%));
-    --gradient-glow: radial-gradient(600px circle at 50% 0%, hsl(220 100% 62% / 0.15), transparent 60%);
+    /* Gradients & shadows — Aethera */
+    --gradient-primary: linear-gradient(135deg, hsl(190 90% 55%), hsl(175 80% 50%));
+    --gradient-glow: radial-gradient(800px circle at 20% 0%, hsl(190 90% 55% / 0.12), transparent 60%);
     --shadow-elevated: 0 8px 24px -8px hsl(0 0% 0% / 0.6), 0 2px 4px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 0 0 1px hsl(220 100% 62% / 0.3), 0 8px 32px -8px hsl(220 100% 62% / 0.5);
+    --shadow-glow: 0 0 0 1px hsl(190 90% 55% / 0.3), 0 8px 32px -8px hsl(190 90% 55% / 0.45);
 
     --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
-    --sidebar-background: 240 6% 5%;
+    --sidebar-background: 220 30% 5%;
     --sidebar-foreground: 240 5% 70%;
-    --sidebar-primary: 220 100% 62%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 10%;
-    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-primary: 190 90% 55%;
+    --sidebar-primary-foreground: 220 30% 6%;
+    --sidebar-accent: 190 40% 12%;
+    --sidebar-accent-foreground: 190 90% 75%;
     --sidebar-border: 240 5% 12%;
-    --sidebar-ring: 220 100% 62%;
+    --sidebar-ring: 190 90% 55%;
   }
 }
 
