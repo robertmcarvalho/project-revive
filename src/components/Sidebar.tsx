@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles } from "lucide-react";
+import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { UserMenu } from "./UserMenu";
@@ -7,6 +7,7 @@ import { UserMenu } from "./UserMenu";
 const nav = [
   { to: "/", label: "Caixa de entrada", icon: Inbox, badge: 12 },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/aethera", label: "Aethera · Comando", icon: Radio },
   { to: "/contatos", label: "Contatos", icon: Users },
   { to: "/farmacias", label: "Farmácias", icon: Building2 },
   { to: "/entregadores", label: "Entregadores", icon: Truck },
