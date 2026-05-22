@@ -23,7 +23,7 @@ export const Logo = ({ className, size = 28 }: LogoProps) => {
       <defs>
         <linearGradient id="aethera-gradient" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="hsl(var(--primary))" />
-          <stop offset="100%" stopColor="hsl(var(--channel-instagram))" />
+          <stop offset="100%" stopColor="hsl(var(--primary-glow))" />
         </linearGradient>
       </defs>
 
