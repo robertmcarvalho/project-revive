@@ -48,22 +48,34 @@ export const Sidebar = () => {
             end={item.to === "/"}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+                "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-accent-foreground"
                   : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
               )
             }
           >
-            <item.icon className="h-4 w-4" strokeWidth={2} />
-            <span className="flex-1">{item.label}</span>
-            {item.badge && (
-              <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-primary">
-                {item.badge}
-              </span>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span
+                    aria-hidden
+                    className="absolute left-0 top-1/2 h-[18px] w-[2px] -translate-y-1/2 rounded-r bg-primary"
+                    style={{ boxShadow: "0 0 8px hsl(var(--primary) / 0.6)" }}
+                  />
+                )}
+                <item.icon className="h-4 w-4" strokeWidth={2} />
+                <span className="flex-1">{item.label}</span>
+                {item.badge && (
+                  <span className="rounded bg-primary/15 px-1.5 py-0.5 font-mono text-[10px] font-medium text-primary">
+                    {item.badge}
+                  </span>
+                )}
+              </>
             )}
           </NavLink>
         ))}
+
       </nav>
 
       {/* User */}
