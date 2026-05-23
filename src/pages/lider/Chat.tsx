@@ -86,6 +86,12 @@ function NovaConversaModal({
   const [demanda, setDemanda] = useState<string>("");
   const [q, setQ] = useState("");
 
+  // demandas por perfil — quando há entregador, usa demandas do entregador; sem entregador, usa de farmácia.
+  const demandasDisponiveis = useMemo(() => {
+    const perfil = entregador ? "entregador" : "farmacia";
+    return demandasPorPerfil[perfil];
+  }, [entregador]);
+
   if (!open) return null;
 
   const reset = () => {
@@ -104,12 +110,6 @@ function NovaConversaModal({
   const stepIcons: Record<Step, any> = {
     farmacia: Building2, entregador: Bike, setor: Layers, demanda: ListTodo,
   };
-
-  // demandas por perfil — quando há entregador, usa demandas do entregador; sem entregador, usa de farmácia.
-  const demandasDisponiveis = useMemo(() => {
-    const perfil = entregador ? "entregador" : "farmacia";
-    return demandasPorPerfil[perfil];
-  }, [entregador]);
 
   const entregadoresFiltrados = farmacia ? entregadoresPorFarmacia[farmacia.id] ?? [] : [];
 
