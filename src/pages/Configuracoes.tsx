@@ -589,3 +589,135 @@ const EmailChannelPanel = () => {
 };
 
 export default Configuracoes;
+
+// ============== Templates Panel (WhatsApp / Meta) ==============
+
+type TemplateStatus = "Aprovado" | "Pendente" | "Rejeitado";
+type TemplateRow = {
+  id: string;
+  name: string;
+  category: "operational" | "leader" | "marketing" | "utility";
+  status: TemplateStatus;
+  language?: string;
+  updatedAt?: string;
+};
+
+const TEMPLATES_INICIAIS: TemplateRow[] = [
+  { id: "t1", name: "Aethera Envio Matricula", category: "operational", status: "Aprovado", language: "pt_BR", updatedAt: "há 2d" },
+  { id: "t2", name: "Aethera Leader Otp", category: "leader", status: "Aprovado", language: "pt_BR", updatedAt: "há 5d" },
+  { id: "t3", name: "Hello World", category: "operational", status: "Aprovado", language: "en_US", updatedAt: "há 12d" },
+];
+
+const statusStyles: Record<TemplateStatus, string> = {
+  Aprovado: "bg-success/15 text-success ring-1 ring-success/30",
+  Pendente: "bg-warning/15 text-warning ring-1 ring-warning/30",
+  Rejeitado: "bg-destructive/15 text-destructive ring-1 ring-destructive/30",
+};
+
+const TemplatesPanel = () => {
+  const [rows, setRows] = useState<TemplateRow[]>(TEMPLATES_INICIAIS);
+  const [query, setQuery] = useState("");
+  const [syncing, setSyncing] = useState<"idle" | "loading" | "ok">("idle");
+
+  const filtered = rows.filter(r =>
+    r.name.toLowerCase().includes(query.toLowerCase()) ||
+    r.category.toLowerCase().includes(query.toLowerCase())
+  );
+  const aprovados = rows.filter(r => r.status === "Aprovado").length;
+
+  const handleSync = () => {
+    setSyncing("loading");
+    setTimeout(() => {
+      setSyncing("ok");
+      setTimeout(() => setSyncing("idle"), 1800);
+    }, 1000);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15 text-primary">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-semibold tracking-tight">Templates</h3>
+            <p className="text-[11px] text-muted-foreground">
+              Modelos de mensagem aprovados na Meta (WABA) usados em automações e envios oficiais.
+            </p>
+          </div>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle-foreground" />
+            <input
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Buscar template…"
+              className="w-56 rounded-md border border-border bg-background/40 py-1.5 pl-8 pr-3 text-xs outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+        <div className="border-b border-border px-5 py-3 text-sm font-semibold">Templates</div>
+        <table className="w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border bg-background/30 text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">
+              <th className="px-5 py-3">Template</th>
+              <th className="px-5 py-3">Categoria</th>
+              <th className="px-5 py-3 text-right pr-6">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(r => (
+              <tr key={r.id} className="border-b border-border/60 last:border-0 hover:bg-surface-hover">
+                <td className="px-5 py-3.5">
+                  <div className="font-medium">{r.name}</div>
+                  {r.language && (
+                    <div className="mt-0.5 font-mono text-[10px] text-subtle-foreground">{r.language} · atualizado {r.updatedAt}</div>
+                  )}
+                </td>
+                <td className="px-5 py-3.5 font-mono text-xs text-muted-foreground">{r.category}</td>
+                <td className="px-5 py-3.5 pr-6 text-right">
+                  <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium", statusStyles[r.status])}>
+                    {r.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+            {filtered.length === 0 && (
+              <tr>
+                <td colSpan={3} className="px-5 py-8 text-center text-xs text-muted-foreground">
+                  Nenhum template encontrado.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <div className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Ações</div>
+        <button
+          onClick={handleSync}
+          disabled={syncing === "loading"}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-glow transition hover:bg-primary-glow disabled:opacity-70"
+        >
+          <RefreshCw className={cn("h-4 w-4", syncing === "loading" && "animate-spin")} />
+          {syncing === "loading" ? "Sincronizando…" : syncing === "ok" ? "Sincronizado!" : "Sincronizar da Meta"}
+        </button>
+        <p className="mt-2 text-[11px] text-muted-foreground">
+          Importa templates da conta WhatsApp (WABA). Requer canal configurado em Canais com token e Phone Number ID.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <div className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Recorte</div>
+        <div className="mt-1 text-sm font-semibold">
+          <span className="font-mono">{aprovados}</span> aprovados / <span className="font-mono">{rows.length}</span> total
+        </div>
+      </div>
+    </div>
+  );
+};
+
