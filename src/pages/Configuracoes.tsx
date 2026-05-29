@@ -94,6 +94,8 @@ const Configuracoes = () => {
 
             {active === "channels" && <ChannelsPanel />}
 
+            {active === "templates" && <TemplatesPanel />}
+
             {active === "notifications" && (
               <div className="rounded-xl border border-border bg-surface p-6 space-y-4">
                 <h3 className="text-sm font-semibold tracking-tight">Preferências de notificação</h3>
