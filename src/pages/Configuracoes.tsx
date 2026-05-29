@@ -706,4 +706,72 @@ const TemplatesPanel = () => {
   );
 };
 
+const ServicePanel = () => {
+  const [signatureOn, setSignatureOn] = useState(true);
+  const [signatureText, setSignatureText] = useState("— {{atendente.nome}} · Acme Farmácias");
+  const [autoGreeting, setAutoGreeting] = useState(true);
+  const [quickReplies, setQuickReplies] = useState(true);
+  const [readReceipts, setReadReceipts] = useState(false);
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold tracking-tight">Assinatura de atendente</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Default global da assinatura no composer. Aplica-se a todas as conversas, podendo ser desativada por atendente.</p>
+          </div>
+          <Toggle on={signatureOn} />
+        </div>
+
+        <div className="mt-5">
+          <label className="text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">Texto da assinatura</label>
+          <div className="mt-1 flex items-center gap-2 rounded-md border border-border bg-background/40 px-3 py-2 focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/20">
+            <PenLine className="h-3.5 w-3.5 text-subtle-foreground" />
+            <input
+              value={signatureText}
+              onChange={(e) => setSignatureText(e.target.value)}
+              disabled={!signatureOn}
+              className="w-full bg-transparent text-sm outline-none disabled:opacity-50"
+            />
+          </div>
+          <p className="mt-1.5 text-[10px] text-subtle-foreground">Variáveis: <code className="font-mono">{`{{atendente.nome}}`}</code>, <code className="font-mono">{`{{workspace.nome}}`}</code>, <code className="font-mono">{`{{atendente.cargo}}`}</code>.</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <h3 className="text-sm font-semibold tracking-tight">Preferências do chat</h3>
+        <p className="mt-1 text-xs text-muted-foreground">Comportamento padrão da janela de atendimento.</p>
+        <div className="mt-4 space-y-2">
+          {[
+            { label: "Saudação automática", desc: "Envia mensagem de boas-vindas ao abrir uma nova conversa.", on: autoGreeting, set: setAutoGreeting },
+            { label: "Respostas rápidas", desc: "Habilita atalho “/” no composer para inserir templates internos.", on: quickReplies, set: setQuickReplies },
+            { label: "Confirmação de leitura", desc: "Mostra ao cliente quando o atendente leu a mensagem.", on: readReceipts, set: setReadReceipts },
+          ].map((p) => (
+            <div key={p.label} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2.5">
+              <div>
+                <div className="text-xs font-medium">{p.label}</div>
+                <div className="text-[11px] text-muted-foreground">{p.desc}</div>
+              </div>
+              <Toggle on={p.on} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface p-6">
+        <h3 className="text-sm font-semibold tracking-tight">Última alteração</h3>
+        <div className="mt-3 flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2">
+          <div>
+            <div className="text-xs font-medium">Assinatura (default) · Ativa</div>
+            <div className="text-[10px] text-subtle-foreground">por Ana Souza · há 2 dias</div>
+          </div>
+          <span className="rounded bg-success/15 px-1.5 py-0.5 text-[9px] font-medium text-success">aplicada</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 
