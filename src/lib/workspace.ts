@@ -10,7 +10,12 @@ export interface Workspace {
   agentesLimite: number;
   fuso: string;
   idioma: string;
+  features?: { commercial_crm_enabled?: boolean };
 }
+
+export const isFeatureEnabled = (key: "commercial_crm_enabled") => {
+  return currentWorkspace.features?.[key] ?? true;
+};
 
 export const currentWorkspace: Workspace = {
   id: "ws_acme",
@@ -21,6 +26,7 @@ export const currentWorkspace: Workspace = {
   agentesLimite: 15,
   fuso: "America/Sao_Paulo",
   idioma: "pt-BR",
+  features: { commercial_crm_enabled: true },
 };
 
 export const useWorkspace = () => currentWorkspace;

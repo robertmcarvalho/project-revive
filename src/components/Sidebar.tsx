@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles, Radio } from "lucide-react";
+import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles, Radio, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { UserMenu } from "./UserMenu";
+import { isFeatureEnabled } from "@/lib/workspace";
 
-const nav = [
+const baseNav = [
   { to: "/", label: "Caixa de entrada", icon: Inbox, badge: 12 },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/aethera", label: "Aethera · Comando", icon: Radio },
@@ -21,6 +22,15 @@ const nav = [
   { to: "/configuracoes", label: "Configurações", icon: Settings },
   { to: "/export", label: "Export Redesign", icon: Code2 },
 ];
+
+const commercialNav = [
+  { to: "/comercial", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/comercial/pipeline", label: "Pipeline", icon: Workflow },
+  { to: "/comercial/leads", label: "Leads", icon: Users },
+  { to: "/comercial/configuracoes", label: "Configurações", icon: Settings },
+];
+
+const nav = baseNav;
 
 export const Sidebar = () => {
   return (
@@ -75,6 +85,39 @@ export const Sidebar = () => {
             )}
           </NavLink>
         ))}
+
+        {isFeatureEnabled("commercial_crm_enabled") && (
+          <div className="pt-4">
+            <div className="mb-1 flex items-center gap-1.5 px-2.5 text-[10px] font-medium uppercase tracking-wider text-subtle-foreground">
+              <Briefcase className="h-3 w-3" /> Comercial
+            </div>
+            {commercialNav.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/comercial"}
+                className={({ isActive }) =>
+                  cn(
+                    "group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+                  )
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <span aria-hidden className="absolute left-0 top-1/2 h-[18px] w-[2px] -translate-y-1/2 rounded-r bg-primary" style={{ boxShadow: "0 0 8px hsl(var(--primary) / 0.6)" }} />
+                    )}
+                    <item.icon className="h-4 w-4" strokeWidth={2} />
+                    <span className="flex-1">{item.label}</span>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
+        )}
 
       </nav>
 

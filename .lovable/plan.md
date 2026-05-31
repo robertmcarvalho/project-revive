@@ -1,119 +1,77 @@
-# Identificação do workspace no painel
+## Módulo CRM Comercial — Plano de implementação
 
-Cenário escolhido: **cliente único** (1 empresa = 1 workspace), sem white-label, com **duas rotas distintas** para configurações do workspace × conta pessoal.
+Vou implementar o módulo CRM Comercial seguindo a especificação, adaptado ao stack atual (React + Vite + React Router, sem Next.js — então rotas em `src/pages/comercial/*`, não `apps/web/app/`). Backend ainda não existe → todos os dados começam **mockados** em `src/data/comercialMock.ts`, com `commercialApi.ts` pronto para trocar por fetch real depois.
 
-A solução é enxuta de propósito: como não há troca de workspace nem múltiplas marcas, não vamos construir switcher, dropdown de workspaces, nem cor customizada. O foco é deixar **claro em qual empresa o usuário está operando** e **separar o que é da empresa do que é pessoal**.
+### Escopo desta entrega (P1)
 
-## 1. Topo da Sidebar — cartão da empresa (read-only)
+Telas, navegação e fluxo completos com mocks. Sem backend, sem DnD library nova (uso HTML5 drag nativo), sem geração de PDF.
 
-Substitui o cabeçalho atual da `Sidebar` por um cartão compacto com identidade da empresa-cliente:
+### 1. Navegação e guard
 
-```text
-┌──────────────────────────────┐
-│ [A] Acme Saúde               │
-│     Plano Pro                │
-├──────────────────────────────┤
-│ 📊 Dashboard                 │
-│ 💬 Inbox                     │
-│ ...                          │
-```
+- Adicionar grupo **Comercial** na `Sidebar.tsx` (ícone `Briefcase`) com itens: Dashboard, Pipeline, Leads, Configurações.
+- Feature flag local `commercial_crm_enabled` em `src/lib/workspace.ts` (default `true` para desenvolvimento). Se off → grupo oculto.
+- Rotas registradas em `App.tsx` sob `/comercial/*` dentro de `<AppShell>`.
 
-- **Avatar quadrado** com inicial da empresa (fallback) ou logo enviado pelo admin nas configurações.
-- **Nome da empresa** em destaque (sem chevron, sem dropdown — não há o que trocar).
-- **Linha secundária** com plano atual (`Plano Pro`, `Trial · 7 dias`, `Plano Free`). Quando faltar pouco para o limite, vira link `Plano Pro · 14/15 agentes →` apontando para billing.
-- Marca Aethera continua presente como rodapé discreto (`Powered by Aethera`) na sidebar, garantindo identidade do produto sem competir com a empresa-cliente.
-
-## 2. Rodapé da Sidebar — usuário (com menu)
-
-Mantém o usuário separado da empresa, deixando claro "quem está logado":
+### 2. Estrutura de arquivos
 
 ```text
-├──────────────────────────────┤
-│ [JS] João Silva       ▾      │
-│      Admin                   │
-└──────────────────────────────┘
+src/pages/comercial/
+├── Dashboard.tsx        # /comercial
+├── Pipeline.tsx         # /comercial/pipeline
+├── Leads.tsx            # /comercial/leads (master-detail)
+├── LeadNovo.tsx         # /comercial/leads/novo
+├── LeadFicha.tsx        # /comercial/leads/:id
+└── Configuracoes.tsx    # /comercial/configuracoes
+
+src/components/comercial/
+├── PipelineBoard.tsx
+├── LeadCard.tsx
+├── LeadForm.tsx
+├── LeadTimeline.tsx
+├── LeadChatPanel.tsx
+├── ConvertWizard.tsx
+└── LossModal.tsx
+
+src/data/comercialMock.ts     # estágios, leads, motivos perda, campos custom
+src/lib/comercialApi.ts       # wrapper async sobre o mock (fácil trocar)
 ```
 
-Clicar abre menu com:
-- Minha conta
-- Notificações
-- Trocar de tema
-- Sair
+### 3. Telas
 
-## 3. Faixa de contexto operacional (telas sensíveis)
+**Dashboard** — KPIs (leads novos, qualificação, propostas, ganhos, perdidos, taxa conversão) + funil (recharts) + série temporal. Filtros período/owner/origem.
 
-Em telas onde existe risco de configurar a operação errada (Configurações de webhook, Automações, edição de SLA, Mensagens), adicionar uma faixa fina logo abaixo do `PageHeader`:
+**Pipeline Kanban** — colunas vindas de `pipelineStages`, scroll horizontal, drag-and-drop HTML5 nativo entre estágios, card com nome, cidade, owner, dias no estágio, badge origem. Filtros: busca, owner, origem. Clique → navega para ficha.
 
-```text
-🟢 Operando em: Acme Saúde › Webhook B2B Farmácias
-```
+**Lista de leads** — padrão master-detail (igual `Farmacias`), busca + filtros estágio/owner/origem, painel direito com resumo + atalhos (WhatsApp, mover estágio, ganho/perdido).
 
-Não aparece em telas neutras (Dashboard, Inbox geral, Relatórios) para não poluir. Renderizada por uma helper `OperationContextBar` que recebe `workspaceName` + `breadcrumb` opcional.
+**Novo lead** — form com seções: Identificação, Contato, Operação (estimativas), Comercial, Campos custom dinâmicos. Sem campos operacionais (líder, taxa delivery etc). Submit → ficha.
 
-## 4. Separação de rotas — workspace × conta
+**Ficha do lead** — `PageHeader` com badges (estágio/origem/owner) e actions (Abrir WhatsApp, Gerar proposta, Marcar ganho, Marcar perdido, Editar). Tabs: Resumo, Conversa (painel embutido), Atividades (timeline), Proposta (placeholder P2), Viabilidade (cards read-only mock), Arquivos (placeholder P3).
 
-Duas áreas distintas no app:
+- **Ganho** → `ConvertWizard` 2 passos, no fim mostra toast "farmácia X criada" + link mock para `/farmacias/:id`.
+- **Perdido** → `LossModal` com select de motivo + notas.
 
-### `/configuracoes` — Configurações da empresa (workspace)
-Já existe. Conteúdo passa a ser tudo que é da operação:
-- Dados da empresa (nome exibido, logo, fuso horário, idioma)
-- Webhooks (Meta, setores, filas, SLAs, demandas, mensagens — já implementado)
-- Equipe (atendentes, líderes, papéis)
-- Plano e billing
-- Tags da operação
-- Integrações futuras
+**Configurações comerciais** — layout estilo `Configuracoes.tsx` (menu lateral + cards `bg-surface`):
+- Pipeline: CRUD estágios (nome, cor, probabilidade, flags), reordenar.
+- Campos customizados: tabela CRUD (slug, label, tipo, obrigatório, ordem).
+- Motivos de perda: lista editável.
+- Catálogo de preços: placeholder P2.
+- Integrações: cards read-only (Instagram, Flux).
 
-### `/conta` — Minha conta (pessoal, nova rota)
-Conteúdo pessoal do usuário logado, isolado da empresa:
-- Perfil (nome, avatar, e-mail, senha)
-- Preferências (idioma da interface, tema, fuso pessoal)
-- Notificações (canais, frequência, mute por horário)
-- Sessões ativas / dispositivos
-- Sair de todos os dispositivos
+### 4. Design system
 
-Acesso: menu do avatar no rodapé da sidebar → "Minha conta".
+Tudo em tokens semânticos Aethera: `bg-surface`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-primary` com glow, badges com `bg-success/15 text-success` etc. Border radius máx `rounded-xl`. Sem cores hardcoded. Densidade compacta. Scrollbar 4px nos containers com overflow.
 
-## 5. Dados da empresa — onde virá
+### 5. Estados obrigatórios
 
-Mock no MVP via constante em `src/lib/workspace.ts`:
+Skeleton em lista/kanban/ficha; empty states com CTA; erro API com mensagem amigável; 403 (placeholder, não plugado em auth real ainda); flag off → grupo oculto + redirect de `/comercial` para `/`.
 
-```ts
-export const currentWorkspace = {
-  id: "ws_acme",
-  nome: "Acme Saúde",
-  inicial: "A",
-  plano: "Pro",
-  agentesUsados: 12,
-  agentesLimite: 15,
-};
-```
+### 6. Fora deste plano (P2/P3)
 
-Hook `useWorkspace()` para consumir nas telas. Quando Cloud entrar, vira fetch de uma tabela `workspaces`.
+- Geração real de PDF de proposta
+- Editor de fluxo SDR (já existe `/flows`, só documentado)
+- Upload de arquivos
+- Integração real com backend (todos os endpoints estão mockados via `comercialApi.ts`)
+- Inbox comercial separada — uso painel embutido na ficha
 
----
-
-## Resumo técnico
-
-**Arquivos a criar**
-- `src/lib/workspace.ts` — mock + hook `useWorkspace`
-- `src/components/WorkspaceCard.tsx` — cartão do topo da sidebar
-- `src/components/UserMenu.tsx` — rodapé da sidebar com dropdown
-- `src/components/OperationContextBar.tsx` — faixa de contexto
-- `src/pages/MinhaConta.tsx` — nova rota `/conta` com abas (Perfil, Preferências, Notificações, Sessões)
-
-**Arquivos a editar**
-- `src/components/Sidebar.tsx` — adicionar `WorkspaceCard` no topo e `UserMenu` no rodapé
-- `src/App.tsx` — registrar rota `/conta`
-- `src/pages/configuracoes/WebhookEditor.tsx` e `src/pages/AutomacaoNova.tsx` — usar `OperationContextBar` no topo
-- `src/pages/Configuracoes.tsx` — adicionar aba "Dados da empresa" como primeira aba
-
-**Tokens / design system**
-- Tudo via semantic tokens já existentes (`bg-surface`, `border-border`, `text-muted-foreground`).
-- Inicial da empresa em `bg-primary/10 text-primary` para o quadradinho do avatar.
-- Faixa de contexto: `bg-primary/5 border-primary/20 text-primary` com bolinha animada (`bg-emerald-500`).
-
-**Não escopado agora** (decisões futuras)
-- Switcher multi-workspace (não há cenário)
-- Logo/cor por workspace (sem white-label)
-- Convite de membros externos ao workspace (vai junto com "Equipe")
-- Auth real (segue mock do Login)
+Após aprovação eu implemento tudo de uma vez.

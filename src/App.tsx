@@ -41,6 +41,12 @@ import Copiloto from "./pages/Copiloto.tsx";
 import Aethera from "./pages/Aethera.tsx";
 import MinhaConta from "./pages/MinhaConta.tsx";
 import RelatorioAtendimento from "./pages/relatorios/Atendimento.tsx";
+import ComercialDashboard from "./pages/comercial/Dashboard.tsx";
+import ComercialPipeline from "./pages/comercial/Pipeline.tsx";
+import ComercialLeads from "./pages/comercial/Leads.tsx";
+import ComercialLeadNovo from "./pages/comercial/LeadNovo.tsx";
+import ComercialLeadFicha from "./pages/comercial/LeadFicha.tsx";
+import ComercialConfiguracoes from "./pages/comercial/Configuracoes.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -82,6 +88,14 @@ const App = () => (
           <Route path="/aethera" element={<AppShell><Aethera /></AppShell>} />
           <Route path="/conta" element={<AppShell><MinhaConta /></AppShell>} />
           <Route path="/export" element={<AppShell><Export /></AppShell>} />
+
+          {/* CRM Comercial */}
+          <Route path="/comercial" element={<AppShell><ComercialDashboard /></AppShell>} />
+          <Route path="/comercial/pipeline" element={<AppShell><ComercialPipeline /></AppShell>} />
+          <Route path="/comercial/leads" element={<AppShell><ComercialLeads /></AppShell>} />
+          <Route path="/comercial/leads/novo" element={<AppShell><ComercialLeadNovo /></AppShell>} />
+          <Route path="/comercial/leads/:id" element={<AppShell><ComercialLeadFicha /></AppShell>} />
+          <Route path="/comercial/configuracoes" element={<AppShell><ComercialConfiguracoes /></AppShell>} />
 
           {/* Painel do Líder */}
           <Route path="/lider" element={<LiderShell><LiderDashboard /></LiderShell>} />
