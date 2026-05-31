@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles, Radio } from "lucide-react";
+import { Inbox, LayoutDashboard, Users, Bot, Settings, Search, Command, Code2, Building2, Truck, Crown, Megaphone, Wallet, Workflow, BarChart3, Sparkles, Radio, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WorkspaceCard } from "./WorkspaceCard";
 import { UserMenu } from "./UserMenu";
+import { isFeatureEnabled } from "@/lib/workspace";
 
-const nav = [
+const baseNav = [
   { to: "/", label: "Caixa de entrada", icon: Inbox, badge: 12 },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/aethera", label: "Aethera · Comando", icon: Radio },
@@ -21,6 +22,15 @@ const nav = [
   { to: "/configuracoes", label: "Configurações", icon: Settings },
   { to: "/export", label: "Export Redesign", icon: Code2 },
 ];
+
+const commercialNav = [
+  { to: "/comercial", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/comercial/pipeline", label: "Pipeline", icon: Workflow },
+  { to: "/comercial/leads", label: "Leads", icon: Users },
+  { to: "/comercial/configuracoes", label: "Configurações", icon: Settings },
+];
+
+const nav = baseNav;
 
 export const Sidebar = () => {
   return (
