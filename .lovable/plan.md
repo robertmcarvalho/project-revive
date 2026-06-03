@@ -1,77 +1,113 @@
-## Módulo CRM Comercial — Plano de implementação
 
-Vou implementar o módulo CRM Comercial seguindo a especificação, adaptado ao stack atual (React + Vite + React Router, sem Next.js — então rotas em `src/pages/comercial/*`, não `apps/web/app/`). Backend ainda não existe → todos os dados começam **mockados** em `src/data/comercialMock.ts`, com `commercialApi.ts` pronto para trocar por fetch real depois.
+# Tela "Operação" — Painel do Analista Operacional
 
-### Escopo desta entrega (P1)
+Hub diário do Analista Operacional (atendente vinculado a farmácias) para acompanhar líderes, entregadores e saúde operacional das farmácias sob sua responsabilidade. Inspirado em `lider/Dashboard.tsx`, `Lideres.tsx` e `Aethera.tsx`, reaproveitando `PageHeader`, `StatusDot`, `OperationContextBar`, badges e cards do design system Aethera.
 
-Telas, navegação e fluxo completos com mocks. Sem backend, sem DnD library nova (uso HTML5 drag nativo), sem geração de PDF.
+## Rota e navegação
 
-### 1. Navegação e guard
+- Rota nova: `/operacao` em `src/App.tsx` dentro de `<AppShell>`.
+- Item no `Sidebar.tsx` (logo após "Líderes"): label **Operação**, ícone `Radar` ou `Activity`, badge dinâmico com nº de alertas abertos.
+- Acessível ao papel "Operador"/"Analista Operacional" (gate visual; backend valida depois).
 
-- Adicionar grupo **Comercial** na `Sidebar.tsx` (ícone `Briefcase`) com itens: Dashboard, Pipeline, Leads, Configurações.
-- Feature flag local `commercial_crm_enabled` em `src/lib/workspace.ts` (default `true` para desenvolvimento). Se off → grupo oculto.
-- Rotas registradas em `App.tsx` sob `/comercial/*` dentro de `<AppShell>`.
-
-### 2. Estrutura de arquivos
+## Layout (3 zonas, single page com scroll)
 
 ```text
-src/pages/comercial/
-├── Dashboard.tsx        # /comercial
-├── Pipeline.tsx         # /comercial/pipeline
-├── Leads.tsx            # /comercial/leads (master-detail)
-├── LeadNovo.tsx         # /comercial/leads/novo
-├── LeadFicha.tsx        # /comercial/leads/:id
-└── Configuracoes.tsx    # /comercial/configuracoes
-
-src/components/comercial/
-├── PipelineBoard.tsx
-├── LeadCard.tsx
-├── LeadForm.tsx
-├── LeadTimeline.tsx
-├── LeadChatPanel.tsx
-├── ConvertWizard.tsx
-└── LossModal.tsx
-
-src/data/comercialMock.ts     # estágios, leads, motivos perda, campos custom
-src/lib/comercialApi.ts       # wrapper async sobre o mock (fácil trocar)
+┌──────────────────────────────────────────────────────────────┐
+│ PageHeader · Operação                       [Período ▾] [⟳] │
+│ OperationContextBar · Acme Saúde › 4 farmácias · turno tarde │
+├──────────────────────────────────────────────────────────────┤
+│ Faixa de KPIs (6 cards compactos)                            │
+├──────────────────────────────────────────────────────────────┤
+│ [ Coluna A: Farmácias sob responsabilidade ]  [ Coluna B ]  │
+│  - cards de farmácia c/ líder, fila, SLA       Alertas/Hoje │
+│                                                Ações rápidas │
+├──────────────────────────────────────────────────────────────┤
+│ Linha 2: Líderes (tabela compacta)  |  Entregadores (mapa de │
+│ status + lista filtrável)                                    │
+├──────────────────────────────────────────────────────────────┤
+│ Linha 3: Gráficos — Volume por hora · SLA por farmácia ·     │
+│ Faltas/Diárias da semana (recharts)                          │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-### 3. Telas
+## Conteúdo por bloco
 
-**Dashboard** — KPIs (leads novos, qualificação, propostas, ganhos, perdidos, taxa conversão) + funil (recharts) + série temporal. Filtros período/owner/origem.
+### 1. Filtros de topo
+- Seletor de período: Hoje / 7d / 30d / Custom.
+- Seletor multi de farmácias (default: todas as do analista).
+- Botão "Atualizar" + timestamp da última sincronização.
 
-**Pipeline Kanban** — colunas vindas de `pipelineStages`, scroll horizontal, drag-and-drop HTML5 nativo entre estágios, card com nome, cidade, owner, dias no estágio, badge origem. Filtros: busca, owner, origem. Clique → navega para ficha.
+### 2. Faixa de KPIs (6 cards)
+Cada card: valor grande mono + label + delta vs período anterior + sparkline mini.
+- Farmácias ativas (X/Y)
+- Líderes online (com pulse verde)
+- Entregadores em rota / disponíveis / offline
+- SLA médio operacional (%)
+- Pedidos em atraso (alerta se > limiar)
+- Faltas no turno
 
-**Lista de leads** — padrão master-detail (igual `Farmacias`), busca + filtros estágio/owner/origem, painel direito com resumo + atalhos (WhatsApp, mover estágio, ganho/perdido).
+### 3. Coluna A — Farmácias sob responsabilidade
+Lista de cards (reaproveitar visual de `Lideres.tsx`):
+- Nome da farmácia + cidade
+- Líder responsável (avatar + StatusDot)
+- Entregadores ativos / total
+- Fila atual (chats abertos, pedidos pendentes)
+- SLA da farmácia (badge success/warning/danger)
+- CTA: "Abrir painel do líder" → `/lideres/:id`
 
-**Novo lead** — form com seções: Identificação, Contato, Operação (estimativas), Comercial, Campos custom dinâmicos. Sem campos operacionais (líder, taxa delivery etc). Submit → ficha.
+### 4. Coluna B — Alertas e ações rápidas
+- Stack de alertas: SLA estourado, líder offline > 15min, entregador sem check-in, fila > N.
+- Cada alerta: ícone, descrição, farmácia, timestamp, botão "Resolver" / "Abrir chat".
+- Bloco "Ações rápidas": Abrir chat operacional, Criar diária, Registrar falta, Pré-cadastro entregador (links para rotas `/lider/*` existentes adaptadas).
 
-**Ficha do lead** — `PageHeader` com badges (estágio/origem/owner) e actions (Abrir WhatsApp, Gerar proposta, Marcar ganho, Marcar perdido, Editar). Tabs: Resumo, Conversa (painel embutido), Atividades (timeline), Proposta (placeholder P2), Viabilidade (cards read-only mock), Arquivos (placeholder P3).
+### 5. Líderes (tabela compacta)
+Colunas: Líder · Farmácia · Status · Equipe · SLA · CSAT · Última atividade · Ação.
+Filtros: status, farmácia. Linha clicável → ficha do líder.
 
-- **Ganho** → `ConvertWizard` 2 passos, no fim mostra toast "farmácia X criada" + link mock para `/farmacias/:id`.
-- **Perdido** → `LossModal` com select de motivo + notas.
+### 6. Entregadores (split view)
+- Esquerda: contadores por status (Em rota, Disponível, Pausa, Offline) com chips filtráveis.
+- Direita: lista virtualizada com avatar, nome, farmácia, status, último ping, pedidos hoje.
+- Sem mapa real nesta versão (placeholder card "Mapa em breve").
 
-**Configurações comerciais** — layout estilo `Configuracoes.tsx` (menu lateral + cards `bg-surface`):
-- Pipeline: CRUD estágios (nome, cor, probabilidade, flags), reordenar.
-- Campos customizados: tabela CRUD (slug, label, tipo, obrigatório, ordem).
-- Motivos de perda: lista editável.
-- Catálogo de preços: placeholder P2.
-- Integrações: cards read-only (Instagram, Flux).
+### 7. Gráficos (recharts)
+- Volume de pedidos por hora (linha).
+- SLA por farmácia (barras horizontais).
+- Faltas vs Diárias na semana (barras agrupadas).
 
-### 4. Design system
+## Dados (mock primeiro)
 
-Tudo em tokens semânticos Aethera: `bg-surface`, `border-border`, `text-foreground`, `text-muted-foreground`, `bg-primary` com glow, badges com `bg-success/15 text-success` etc. Border radius máx `rounded-xl`. Sem cores hardcoded. Densidade compacta. Scrollbar 4px nos containers com overflow.
+Criar `src/data/operacaoMock.ts` derivando de mocks existentes (`Lideres.tsx`, lider/* pages) com tipos:
+- `FarmaciaOperacional`, `LiderResumo`, `EntregadorStatus`, `AlertaOperacional`, `KpiOperacional`.
 
-### 5. Estados obrigatórios
+Criar `src/lib/operacaoApi.ts` (async wrapper) pronto para troca por backend depois — mesmo padrão usado em `comercialApi.ts`.
 
-Skeleton em lista/kanban/ficha; empty states com CTA; erro API com mensagem amigável; 403 (placeholder, não plugado em auth real ainda); flag off → grupo oculto + redirect de `/comercial` para `/`.
+## Estados de UI obrigatórios
+- Loading: skeletons em KPIs, listas e gráficos.
+- Empty: "Nenhuma farmácia vinculada ao seu usuário" com CTA contato admin.
+- Erro: card de erro reusável com retry.
+- Sem permissão: bloco 403 placeholder.
 
-### 6. Fora deste plano (P2/P3)
+## Design system
+Tokens Aethera: `bg-surface`, `border-border`, `text-foreground`, `bg-primary/15 text-primary`, `bg-success/15 text-success`, `bg-warning/15 text-warning`, `bg-destructive/15 text-destructive`. Cards `rounded-xl border border-border bg-surface p-5`. Scrollbars 4px. Sem cores hardcoded.
 
-- Geração real de PDF de proposta
-- Editor de fluxo SDR (já existe `/flows`, só documentado)
-- Upload de arquivos
-- Integração real com backend (todos os endpoints estão mockados via `comercialApi.ts`)
-- Inbox comercial separada — uso painel embutido na ficha
+## Arquivos a criar / editar
+- criar `src/pages/Operacao.tsx`
+- criar `src/components/operacao/KpiStrip.tsx`
+- criar `src/components/operacao/FarmaciaCard.tsx`
+- criar `src/components/operacao/AlertaList.tsx`
+- criar `src/components/operacao/LideresTable.tsx`
+- criar `src/components/operacao/EntregadoresPanel.tsx`
+- criar `src/components/operacao/OperacaoCharts.tsx`
+- criar `src/data/operacaoMock.ts`
+- criar `src/lib/operacaoApi.ts`
+- editar `src/App.tsx` (rota `/operacao`)
+- editar `src/components/Sidebar.tsx` (item de menu)
 
-Após aprovação eu implemento tudo de uma vez.
+## Fora de escopo (próximas iterações)
+- Mapa real de entregadores (Mapbox).
+- Edição inline de escala/diária.
+- Notificações push de alertas.
+- Permissionamento real backend.
+
+## Pergunta antes de implementar
+Quer que o painel use **mocks novos dedicados** (recomendado, isolado) ou tente **reaproveitar os mocks de `lider/*`** já existentes para refletir os mesmos dados?

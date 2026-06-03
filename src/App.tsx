@@ -37,6 +37,7 @@ import LiderPreCadastro from "./pages/lider/PreCadastro.tsx";
 import LiderChat from "./pages/lider/Chat.tsx";
 import Financeiro from "./pages/Financeiro.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
+import Operacao from "./pages/Operacao.tsx";
 import Copiloto from "./pages/Copiloto.tsx";
 import Aethera from "./pages/Aethera.tsx";
 import MinhaConta from "./pages/MinhaConta.tsx";
@@ -84,6 +85,7 @@ const App = () => (
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
+          <Route path="/operacao" element={<AppShell><Operacao /></AppShell>} />
           <Route path="/copiloto" element={<AppShell><Copiloto /></AppShell>} />
           <Route path="/aethera" element={<AppShell><Aethera /></AppShell>} />
           <Route path="/conta" element={<AppShell><MinhaConta /></AppShell>} />
