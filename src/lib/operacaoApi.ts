@@ -2,6 +2,7 @@
 import {
   farmaciasMock, lideresMock, entregadoresMock, alertasMock, kpisMock,
   volumePorHora, slaPorFarmacia, faltasVsDiarias,
+  complianceMock, tarefasAtendimentoMock, notificacoesPendenciaMock,
 } from "@/data/operacaoMock";
 
 const wait = <T,>(value: T, ms = 100): Promise<T> => new Promise((r) => setTimeout(() => r(value), ms));
@@ -13,4 +14,7 @@ export const operacaoApi = {
   listEntregadores: () => wait(entregadoresMock),
   listAlertas: () => wait(alertasMock),
   charts: () => wait({ volumePorHora, slaPorFarmacia, faltasVsDiarias }),
+  listCompliance: () => wait(complianceMock),
+  listTarefas: () => wait(tarefasAtendimentoMock),
+  listNotificacoes: () => wait(notificacoesPendenciaMock),
 };
