@@ -14,7 +14,7 @@ export interface FarmaciaOperacional {
   entregadoresTotal: number;
   filaChats: number;
   pedidosPendentes: number;
-  sla: number; // 0-100
+  sla: number;
 }
 
 export interface LiderResumo {
@@ -57,6 +57,49 @@ export interface KpiOperacional {
   alerta?: boolean;
 }
 
+// === Compliance documental ===
+export interface ComplianceEntregador {
+  id: string;
+  nome: string;
+  iniciais: string;
+  farmacia: string;
+  certificadoDigital: boolean;
+  mei: boolean;
+  matricula: boolean;
+}
+
+// === Tarefas geradas para a fila "Atendimento Geral" ===
+export type TarefaTipo = "finalizar_cadastro" | "gerar_matricula" | "gerar_termo_desligamento";
+export type TarefaStatus = "em_andamento" | "atrasada" | "concluida" | "aguardando";
+
+export interface ChecklistItem { label: string; done: boolean }
+
+export interface TarefaAtendimento {
+  id: string;
+  tipo: TarefaTipo;
+  entregadorNome: string;
+  entregadorIniciais: string;
+  farmacia: string;
+  atendenteNome: string;
+  atendenteIniciais: string;
+  checklist: ChecklistItem[];
+  slaMinutos: number;          // SLA alvo
+  decorridoMinutos: number;    // tempo decorrido
+  prazo: string;               // ex: "Hoje 17:00"
+  status: TarefaStatus;
+}
+
+// === Notificações de pendências de assinatura ===
+export interface NotificacaoPendencia {
+  id: string;
+  tipo: "termo_desligamento" | "matricula";
+  entregadorNome: string;
+  entregadorIniciais: string;
+  farmacia: string;
+  diasPendente: number;
+  prazoDias: number;
+}
+
 export const farmaciasMock: FarmaciaOperacional[] = [
   { id: "f1", nome: "Farmácia Central", cidade: "São Paulo · SP", liderId: "1", liderNome: "Marina Souza", liderIniciais: "MS", liderStatus: "online", entregadoresAtivos: 6, entregadoresTotal: 8, filaChats: 3, pedidosPendentes: 12, sla: 96.4 },
   { id: "f2", nome: "Drogasil Moema", cidade: "São Paulo · SP", liderId: "1", liderNome: "Marina Souza", liderIniciais: "MS", liderStatus: "online", entregadoresAtivos: 4, entregadoresTotal: 5, filaChats: 1, pedidosPendentes: 5, sla: 92.1 },
@@ -91,12 +134,93 @@ export const alertasMock: AlertaOperacional[] = [
 ];
 
 export const kpisMock: KpiOperacional[] = [
-  { label: "Farmácias ativas", valor: "4/4", delta: "100%", deltaTipo: "neutral", spark: [4, 4, 4, 3, 4, 4, 4] },
-  { label: "Líderes online", valor: "3", delta: "1 ocupado", deltaTipo: "neutral", spark: [2, 3, 3, 3, 4, 3, 3] },
+  { label: "Diárias confirmadas", valor: "32/36", delta: "89%", deltaTipo: "up", spark: [28, 30, 31, 31, 32, 32, 32] },
+  { label: "Faltas no turno", valor: "2", delta: "-1 vs ontem", deltaTipo: "up", spark: [4, 5, 3, 3, 2, 2, 2] },
   { label: "Entregadores em rota", valor: "17", delta: "+3 vs ontem", deltaTipo: "up", spark: [12, 14, 13, 15, 16, 16, 17] },
   { label: "SLA médio", valor: "90.4%", delta: "-1.2 pp", deltaTipo: "down", spark: [93, 92, 91, 92, 91, 90, 90] },
   { label: "Pedidos em atraso", valor: "11", delta: "+4", deltaTipo: "down", spark: [4, 5, 6, 8, 9, 10, 11], alerta: true },
-  { label: "Faltas no turno", valor: "2", delta: "-1 vs ontem", deltaTipo: "up", spark: [4, 5, 3, 3, 2, 2, 2] },
+  { label: "Tarefas abertas", valor: "9", delta: "3 atrasadas", deltaTipo: "down", spark: [5, 6, 7, 8, 8, 9, 9], alerta: true },
+];
+
+export const complianceMock: ComplianceEntregador[] = [
+  { id: "e1", nome: "João Pereira", iniciais: "JP", farmacia: "Farmácia Central", certificadoDigital: true, mei: true, matricula: true },
+  { id: "e2", nome: "Ana Lima", iniciais: "AL", farmacia: "Farmácia Central", certificadoDigital: true, mei: true, matricula: false },
+  { id: "e3", nome: "Bruno Dias", iniciais: "BD", farmacia: "Drogasil Moema", certificadoDigital: false, mei: true, matricula: true },
+  { id: "e4", nome: "Clara Souza", iniciais: "CS", farmacia: "Farmácia Popular Centro", certificadoDigital: true, mei: false, matricula: true },
+  { id: "e5", nome: "Diego Alves", iniciais: "DA", farmacia: "Farmácia Popular Centro", certificadoDigital: false, mei: false, matricula: false },
+  { id: "e6", nome: "Elisa Rocha", iniciais: "ER", farmacia: "Drogasil Pinheiros", certificadoDigital: true, mei: true, matricula: true },
+  { id: "e7", nome: "Fábio Neto", iniciais: "FN", farmacia: "Drogasil Pinheiros", certificadoDigital: false, mei: true, matricula: false },
+  { id: "e8", nome: "Gisele Mota", iniciais: "GM", farmacia: "Farmácia Central", certificadoDigital: true, mei: true, matricula: true },
+];
+
+export const tarefasAtendimentoMock: TarefaAtendimento[] = [
+  {
+    id: "t1", tipo: "gerar_matricula",
+    entregadorNome: "Ana Lima", entregadorIniciais: "AL", farmacia: "Farmácia Central",
+    atendenteNome: "Paula Reis", atendenteIniciais: "PR",
+    checklist: [
+      { label: "Documentos recebidos", done: true },
+      { label: "Validar CNH e ASO", done: true },
+      { label: "Gerar nº de matrícula", done: false },
+      { label: "Enviar para assinatura", done: false },
+    ],
+    slaMinutos: 240, decorridoMinutos: 90, prazo: "Hoje 17:00", status: "em_andamento",
+  },
+  {
+    id: "t2", tipo: "finalizar_cadastro",
+    entregadorNome: "Diego Alves", entregadorIniciais: "DA", farmacia: "Farmácia Popular Centro",
+    atendenteNome: "Lucas Vieira", atendenteIniciais: "LV",
+    checklist: [
+      { label: "Foto de perfil", done: true },
+      { label: "Dados bancários", done: true },
+      { label: "Comprovante de residência", done: false },
+      { label: "Conferência final", done: false },
+    ],
+    slaMinutos: 180, decorridoMinutos: 200, prazo: "Hoje 12:30", status: "atrasada",
+  },
+  {
+    id: "t3", tipo: "gerar_termo_desligamento",
+    entregadorNome: "Elisa Rocha", entregadorIniciais: "ER", farmacia: "Drogasil Pinheiros",
+    atendenteNome: "Paula Reis", atendenteIniciais: "PR",
+    checklist: [
+      { label: "Motivo registrado", done: true },
+      { label: "Calcular pendências", done: false },
+      { label: "Gerar termo PDF", done: false },
+      { label: "Encaminhar p/ assinatura", done: false },
+    ],
+    slaMinutos: 360, decorridoMinutos: 120, prazo: "Amanhã 09:00", status: "em_andamento",
+  },
+  {
+    id: "t4", tipo: "gerar_matricula",
+    entregadorNome: "Fábio Neto", entregadorIniciais: "FN", farmacia: "Drogasil Pinheiros",
+    atendenteNome: "Lucas Vieira", atendenteIniciais: "LV",
+    checklist: [
+      { label: "Documentos recebidos", done: true },
+      { label: "Validar CNH e ASO", done: true },
+      { label: "Gerar nº de matrícula", done: true },
+      { label: "Enviar para assinatura", done: true },
+    ],
+    slaMinutos: 240, decorridoMinutos: 150, prazo: "Concluída", status: "concluida",
+  },
+  {
+    id: "t5", tipo: "finalizar_cadastro",
+    entregadorNome: "Bruno Dias", entregadorIniciais: "BD", farmacia: "Drogasil Moema",
+    atendenteNome: "—", atendenteIniciais: "??",
+    checklist: [
+      { label: "Foto de perfil", done: false },
+      { label: "Dados bancários", done: false },
+      { label: "Comprovante de residência", done: false },
+      { label: "Conferência final", done: false },
+    ],
+    slaMinutos: 180, decorridoMinutos: 30, prazo: "Hoje 15:00", status: "aguardando",
+  },
+];
+
+export const notificacoesPendenciaMock: NotificacaoPendencia[] = [
+  { id: "n1", tipo: "matricula", entregadorNome: "Ana Lima", entregadorIniciais: "AL", farmacia: "Farmácia Central", diasPendente: 1, prazoDias: 3 },
+  { id: "n2", tipo: "matricula", entregadorNome: "Fábio Neto", entregadorIniciais: "FN", farmacia: "Drogasil Pinheiros", diasPendente: 2, prazoDias: 3 },
+  { id: "n3", tipo: "termo_desligamento", entregadorNome: "Elisa Rocha", entregadorIniciais: "ER", farmacia: "Drogasil Pinheiros", diasPendente: 4, prazoDias: 5 },
+  { id: "n4", tipo: "termo_desligamento", entregadorNome: "Roberto Lemos", entregadorIniciais: "RL", farmacia: "Farmácia Popular Centro", diasPendente: 6, prazoDias: 5 },
 ];
 
 export const volumePorHora = Array.from({ length: 12 }).map((_, i) => ({
