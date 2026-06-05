@@ -35,6 +35,7 @@ import LiderDiarias from "./pages/lider/Diarias.tsx";
 import LiderFaltas from "./pages/lider/Faltas.tsx";
 import LiderPreCadastro from "./pages/lider/PreCadastro.tsx";
 import LiderChat from "./pages/lider/Chat.tsx";
+import LiderObrigacoes from "./pages/lider/Obrigacoes.tsx";
 import Financeiro from "./pages/Financeiro.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
 import Operacao from "./pages/Operacao.tsx";
@@ -101,6 +102,8 @@ const App = () => (
 
           {/* Painel do Líder */}
           <Route path="/lider" element={<LiderShell><LiderDashboard /></LiderShell>} />
+          <Route path="/lider/obrigacoes" element={<LiderShell><LiderObrigacoes /></LiderShell>} />
+
           <Route path="/lider/farmacias" element={<LiderShell><LiderFarmacias /></LiderShell>} />
           <Route path="/lider/entregadores" element={<LiderShell><LiderEntregadores /></LiderShell>} />
           <Route path="/lider/diarias" element={<LiderShell><LiderDiarias /></LiderShell>} />
