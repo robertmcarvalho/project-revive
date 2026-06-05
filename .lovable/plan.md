@@ -1,113 +1,136 @@
+# Plano — Operação multi-perfil, fluxo de notificações e ícones premium
 
-# Tela "Operação" — Painel do Analista Operacional
+Trabalho 100% no frontend (mocks + UI). Backend será integrado depois.
 
-Hub diário do Analista Operacional (atendente vinculado a farmácias) para acompanhar líderes, entregadores e saúde operacional das farmácias sob sua responsabilidade. Inspirado em `lider/Dashboard.tsx`, `Lideres.tsx` e `Aethera.tsx`, reaproveitando `PageHeader`, `StatusDot`, `OperationContextBar`, badges e cards do design system Aethera.
+## 1. Modelo de dados (src/data/operacaoMock.ts)
 
-## Rota e navegação
+Estender com:
 
-- Rota nova: `/operacao` em `src/App.tsx` dentro de `<AppShell>`.
-- Item no `Sidebar.tsx` (logo após "Líderes"): label **Operação**, ícone `Radar` ou `Activity`, badge dinâmico com nº de alertas abertos.
-- Acessível ao papel "Operador"/"Analista Operacional" (gate visual; backend valida depois).
+- `PerfilOperacao = "analista_operacional" | "atendente_geral" | "atendente_financeiro" | "gestor_financeiro" | "lider"`
+- `TarefaTipo` expandido: `finalizar_cadastro`, `gerar_matricula`, `gerar_termo_desligamento`, `acerto_desligamento`, `lancamento_cotas`, `autorizar_adiantamento`
+- `TarefaAtendimento` ganha: `setor` ("atendimento_geral"|"financeiro"), `comentarios: Comentario[]`, `anotacoes: string`, `escaladaPara?`, `concluidaEm?`, `prioridade`
+- `Comentario`: `{ id, autor, iniciais, texto, mencoes: string[], timestamp }`
+- `EventoCiclo`: `{ id, tipo: "entrada"|"desligamento", entregador, farmacia, lider, atendente, data, status }`
+- `NotificacaoOperacional` (já existe pendência; expandir): vincula `tarefaId` para deep-link da Inbox
+- `RegraOperacional`: `{ id, titulo, descricao, prazo, categoria }`
+- `OrganogramaItem`: árvore simples (Gestor → Líder → Entregadores)
 
-## Layout (3 zonas, single page com scroll)
+Seeds para cada perfil: tarefas, eventos do ciclo, regras, organograma.
+
+## 2. API mock (src/lib/operacaoApi.ts)
+
+Adicionar:
+- `listTarefasPorPerfil(perfil)` (filtra por setor/tipo)
+- `listEventosCiclo({from,to})`
+- `listRegrasOperacionais()`
+- `getOrganograma()`
+- `updateTarefa(id, patch)` (checklist, anotações, comentários, status)
+- `transferirTarefa(id, atendenteId)`
+- `escalarTarefa(id)`
+- `finalizarTarefa(id)`
+
+## 3. Tela Operação (src/pages/Operacao.tsx) — multi-perfil
+
+Switcher de perfil no topo (mock — em produção virá do contexto do usuário). Cada perfil renderiza um layout diferente:
+
+### 3.1 Analista Operacional (atual, ajustado)
+- Remover KPIs "Entregas", "Login", "Roteiro" (e similares de roteirização)
+- Manter: diárias, faltas, entregadores em rota, SLA, pedidos atraso, tarefas
+- Manter compliance + notificações + tarefas + gráficos
+- Adicionar lista de **Entradas/Desligamentos do ciclo** com filtro de período
+
+### 3.2 Atendente Geral
+- KPIs do setor (tarefas abertas, atrasadas, SLA médio do setor, finalizadas hoje)
+- Grid de **TaskCards** (checklist, barra de progresso, SLA, prazo, prioridade)
+- Tipos: finalizar_cadastro, gerar_matricula, gerar_termo_desligamento
+- Filtros: Em execução / Finalizadas (finalizadas só com filtro ativo)
+- Painel lateral: alertas + pendências + notificações
+- Click no card → `TaskExecutionDialog`
+
+### 3.3 Atendente Financeiro
+- KPIs financeiros (acertos pendentes, cotas a lançar, adiantamentos)
+- Grid de TaskCards: acerto_desligamento, lancamento_cotas
+- Lista de **Entradas/Desligamentos do ciclo** (nome, data, farmácia, líder, atendente)
+- Filtros Em execução/Finalizadas + filtro de período
+
+### 3.4 Gestor Financeiro
+- Indicadores amplos do setor (tarefas por status, SLA, volume financeiro)
+- Alertas + pendências consolidados
+- Suas próprias tarefas (autorizar_adiantamento + escaladas)
+- Tabela de desempenho dos atendentes financeiros
+
+## 4. Componentes novos (src/components/operacao/)
+
+- `IconTile.tsx` (extrair do Operacao.tsx) — usado em todo o app
+- `TaskCard.tsx` — checklist visível, barra SLA, badge de prazo, ações
+- `TaskExecutionDialog.tsx` — modal completo:
+  - Checklist editável
+  - Anotações (textarea)
+  - Comentários com `@menções` (input simples, parse de @nome)
+  - Botões: Transferir, Escalar para gestor, Finalizar
+- `CycleEventsTable.tsx` — entradas/desligamentos
+- `TaskFilters.tsx` — toggle Em execução/Finalizadas + busca
+- `ProfileSwitcher.tsx` — alternar perfil (mock)
+- `Spark.tsx` — extrair sparkline
+
+## 5. Painel do Líder
+
+Nova rota/seção em `src/pages/lider/Dashboard.tsx` (ajustar) **+ nova página `src/pages/lider/Obrigacoes.tsx`** (Obrigações & Regras):
+
+- **Status de tarefas dos entregadores vinculados**: lista das tarefas em aberto (matrícula, termo, cadastro, acerto) com status/SLA — só leitura
+- **Notificações do líder**: assinaturas pendentes, SLAs estourando, novas entradas/desligamentos
+- **Obrigações operacionais** (página dedicada):
+  - Cards com regras: lançar faltas/diárias no dia, não operar sem cadastro+matrícula, atualizar escalas semanalmente, prazo 7 dias úteis para acerto pós-assinatura
+  - Fluxo operacional (diagrama em ASCII/blocos visuais)
+  - Organograma (Gestor → Líder → Entregadores)
+- Sidebar do líder ganha link "Obrigações"
+
+## 6. Notificações Inbox → Operação (deep-link)
+
+- Em `src/data/operacaoMock.ts` criar notificações com `tarefaId`
+- Na Inbox (se existir lista de notificações operacionais), clicar leva a `/operacao?tarefa={id}&perfil={p}`
+- `Operacao.tsx` lê query params e abre `TaskExecutionDialog` automaticamente
+
+(Como a Inbox real é de chats, vou criar um **NotificacoesPanel** dentro da Operação como ponto de entrada — manter escopo)
+
+## 7. Ícones premium em todo projeto
+
+- Mover `IconTile` para `src/components/IconTile.tsx`
+- Aplicar em headers das páginas principais: Dashboard, Inbox, Contatos, Farmácias, Entregadores, Lideres, Operação, Comercial/*, Financeiro, Automações, Campanhas, Configurações, Copiloto, Relatórios
+- Padrão: chip arredondado `bg-{cor}/12`, `text-{cor}`, stroke 1.75
+- Substituir ícones soltos nos cards de KPI/seção pelo `IconTile`
+
+## 8. Out of scope
+
+- Backend real / persistência
+- Inbox conversacional alterada (notificações vivem na Operação)
+- Mentions com autocomplete real (parse simples @nome)
+- Permissionamento real (switcher de perfil é mock visível)
+
+## 9. Arquivos
+
+**Criar:** `src/components/IconTile.tsx`, `src/components/operacao/TaskCard.tsx`, `src/components/operacao/TaskExecutionDialog.tsx`, `src/components/operacao/CycleEventsTable.tsx`, `src/components/operacao/TaskFilters.tsx`, `src/components/operacao/ProfileSwitcher.tsx`, `src/components/operacao/Spark.tsx`, `src/components/operacao/NotificacoesPanel.tsx`, `src/pages/lider/Obrigacoes.tsx`
+
+**Editar:** `src/data/operacaoMock.ts`, `src/lib/operacaoApi.ts`, `src/pages/Operacao.tsx`, `src/pages/lider/Dashboard.tsx`, `src/components/LiderShell.tsx` (link Obrigações), `src/App.tsx` (rota), `src/components/PageHeader.tsx` (suporte a IconTile opcional), e ~10 páginas para aplicar IconTile nos headers/KPIs.
+
+## 10. Diagrama de fluxo (resumo)
 
 ```text
-┌──────────────────────────────────────────────────────────────┐
-│ PageHeader · Operação                       [Período ▾] [⟳] │
-│ OperationContextBar · Acme Saúde › 4 farmácias · turno tarde │
-├──────────────────────────────────────────────────────────────┤
-│ Faixa de KPIs (6 cards compactos)                            │
-├──────────────────────────────────────────────────────────────┤
-│ [ Coluna A: Farmácias sob responsabilidade ]  [ Coluna B ]  │
-│  - cards de farmácia c/ líder, fila, SLA       Alertas/Hoje │
-│                                                Ações rápidas │
-├──────────────────────────────────────────────────────────────┤
-│ Linha 2: Líderes (tabela compacta)  |  Entregadores (mapa de │
-│ status + lista filtrável)                                    │
-├──────────────────────────────────────────────────────────────┤
-│ Linha 3: Gráficos — Volume por hora · SLA por farmácia ·     │
-│ Faltas/Diárias da semana (recharts)                          │
-└──────────────────────────────────────────────────────────────┘
+Líder cria/aprova entregador
+        |
+Atendente Geral: finalizar_cadastro -> gerar_matricula
+        | (assinatura matrícula)
+        v
+Atendente Financeiro: lancamento_cotas
+        |
+... operação ...
+        |
+Líder solicita desligamento
+        v
+Atendente Geral: gerar_termo_desligamento
+        | (assinatura termo)
+        v
+Atendente Financeiro: acerto_desligamento (prazo 7 dias úteis)
+        |
+Notificações: Líder acompanha, Gestor Financeiro supervisiona
 ```
-
-## Conteúdo por bloco
-
-### 1. Filtros de topo
-- Seletor de período: Hoje / 7d / 30d / Custom.
-- Seletor multi de farmácias (default: todas as do analista).
-- Botão "Atualizar" + timestamp da última sincronização.
-
-### 2. Faixa de KPIs (6 cards)
-Cada card: valor grande mono + label + delta vs período anterior + sparkline mini.
-- Farmácias ativas (X/Y)
-- Líderes online (com pulse verde)
-- Entregadores em rota / disponíveis / offline
-- SLA médio operacional (%)
-- Pedidos em atraso (alerta se > limiar)
-- Faltas no turno
-
-### 3. Coluna A — Farmácias sob responsabilidade
-Lista de cards (reaproveitar visual de `Lideres.tsx`):
-- Nome da farmácia + cidade
-- Líder responsável (avatar + StatusDot)
-- Entregadores ativos / total
-- Fila atual (chats abertos, pedidos pendentes)
-- SLA da farmácia (badge success/warning/danger)
-- CTA: "Abrir painel do líder" → `/lideres/:id`
-
-### 4. Coluna B — Alertas e ações rápidas
-- Stack de alertas: SLA estourado, líder offline > 15min, entregador sem check-in, fila > N.
-- Cada alerta: ícone, descrição, farmácia, timestamp, botão "Resolver" / "Abrir chat".
-- Bloco "Ações rápidas": Abrir chat operacional, Criar diária, Registrar falta, Pré-cadastro entregador (links para rotas `/lider/*` existentes adaptadas).
-
-### 5. Líderes (tabela compacta)
-Colunas: Líder · Farmácia · Status · Equipe · SLA · CSAT · Última atividade · Ação.
-Filtros: status, farmácia. Linha clicável → ficha do líder.
-
-### 6. Entregadores (split view)
-- Esquerda: contadores por status (Em rota, Disponível, Pausa, Offline) com chips filtráveis.
-- Direita: lista virtualizada com avatar, nome, farmácia, status, último ping, pedidos hoje.
-- Sem mapa real nesta versão (placeholder card "Mapa em breve").
-
-### 7. Gráficos (recharts)
-- Volume de pedidos por hora (linha).
-- SLA por farmácia (barras horizontais).
-- Faltas vs Diárias na semana (barras agrupadas).
-
-## Dados (mock primeiro)
-
-Criar `src/data/operacaoMock.ts` derivando de mocks existentes (`Lideres.tsx`, lider/* pages) com tipos:
-- `FarmaciaOperacional`, `LiderResumo`, `EntregadorStatus`, `AlertaOperacional`, `KpiOperacional`.
-
-Criar `src/lib/operacaoApi.ts` (async wrapper) pronto para troca por backend depois — mesmo padrão usado em `comercialApi.ts`.
-
-## Estados de UI obrigatórios
-- Loading: skeletons em KPIs, listas e gráficos.
-- Empty: "Nenhuma farmácia vinculada ao seu usuário" com CTA contato admin.
-- Erro: card de erro reusável com retry.
-- Sem permissão: bloco 403 placeholder.
-
-## Design system
-Tokens Aethera: `bg-surface`, `border-border`, `text-foreground`, `bg-primary/15 text-primary`, `bg-success/15 text-success`, `bg-warning/15 text-warning`, `bg-destructive/15 text-destructive`. Cards `rounded-xl border border-border bg-surface p-5`. Scrollbars 4px. Sem cores hardcoded.
-
-## Arquivos a criar / editar
-- criar `src/pages/Operacao.tsx`
-- criar `src/components/operacao/KpiStrip.tsx`
-- criar `src/components/operacao/FarmaciaCard.tsx`
-- criar `src/components/operacao/AlertaList.tsx`
-- criar `src/components/operacao/LideresTable.tsx`
-- criar `src/components/operacao/EntregadoresPanel.tsx`
-- criar `src/components/operacao/OperacaoCharts.tsx`
-- criar `src/data/operacaoMock.ts`
-- criar `src/lib/operacaoApi.ts`
-- editar `src/App.tsx` (rota `/operacao`)
-- editar `src/components/Sidebar.tsx` (item de menu)
-
-## Fora de escopo (próximas iterações)
-- Mapa real de entregadores (Mapbox).
-- Edição inline de escala/diária.
-- Notificações push de alertas.
-- Permissionamento real backend.
-
-## Pergunta antes de implementar
-Quer que o painel use **mocks novos dedicados** (recomendado, isolado) ou tente **reaproveitar os mocks de `lider/*`** já existentes para refletir os mesmos dados?

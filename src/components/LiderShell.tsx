@@ -10,6 +10,7 @@ import {
   LogOut,
   Settings,
   Bell,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./Logo";
@@ -17,6 +18,7 @@ import { StatusDot } from "./StatusDot";
 
 const nav = [
   { to: "/lider", label: "Visão geral", icon: LayoutDashboard, end: true },
+  { to: "/lider/obrigacoes", label: "Obrigações & regras", icon: ShieldCheck },
   { to: "/lider/farmacias", label: "Minhas farmácias", icon: Building2 },
   { to: "/lider/entregadores", label: "Meus entregadores", icon: Truck },
   { to: "/lider/diarias", label: "Lançar diárias", icon: CalendarCheck },
