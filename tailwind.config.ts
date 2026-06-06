@@ -12,9 +12,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Outfit', 'system-ui', 'sans-serif'],
-        ui: ['Outfit', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Open Sans', 'system-ui', 'sans-serif'],
+        ui: ['Open Sans', 'system-ui', 'sans-serif'],
+        serif: ['Georgia', 'serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'monospace'],
       },
       fontSize: {
         '2xs': ['10px', { lineHeight: '14px' }],
