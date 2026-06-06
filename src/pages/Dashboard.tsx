@@ -1,13 +1,15 @@
-import { ArrowDown, ArrowUp, MessageSquare, Clock, Users, CheckCircle2, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, MessageSquare, Clock, Users, CheckCircle2, TrendingUp, LayoutDashboard } from "lucide-react";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
+import { PageHeader } from "@/components/PageHeader";
+import { IconTile, type IconTileTone } from "@/components/IconTile";
 import { cn } from "@/lib/utils";
 
-const kpis = [
-  { label: "Conversas hoje", value: "247", delta: 12.4, up: true, icon: MessageSquare, accent: "text-primary" },
-  { label: "Tempo médio resposta", value: "1m 42s", delta: 8.1, up: false, icon: Clock, accent: "text-success" },
-  { label: "Taxa resolução", value: "94.2%", delta: 2.3, up: true, icon: CheckCircle2, accent: "text-channel-instagram" },
-  { label: "Agentes online", value: "18 / 24", delta: 0, up: true, icon: Users, accent: "text-warning" },
+const kpis: { label: string; value: string; delta: number; up: boolean; icon: typeof MessageSquare; tone: IconTileTone }[] = [
+  { label: "Conversas hoje", value: "247", delta: 12.4, up: true, icon: MessageSquare, tone: "primary" },
+  { label: "Tempo médio resposta", value: "1m 42s", delta: 8.1, up: false, icon: Clock, tone: "success" },
+  { label: "Taxa resolução", value: "94.2%", delta: 2.3, up: true, icon: CheckCircle2, tone: "info" },
+  { label: "Agentes online", value: "18 / 24", delta: 0, up: true, icon: Users, tone: "warning" },
 ];
 
 const channelStats: { ch: Channel; pct: number; count: number }[] = [
@@ -82,37 +84,32 @@ const VolumeChart = () => {
 
 const Dashboard = () => {
   return (
-    <div className="h-full overflow-y-auto bg-gradient-glow">
+    <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-7xl px-8 py-8">
-        {/* Header */}
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-wider text-subtle-foreground">Dashboard</div>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">Visão geral</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Acompanhe o desempenho do atendimento em tempo real.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse" />
-              <span className="text-muted-foreground">Ao vivo</span>
-            </div>
-            <button className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-hover transition-colors">
-              Hoje · 28 Abr
-            </button>
-            <button className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
-              Exportar
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          live
+          icon={LayoutDashboard}
+          eyebrow="Dashboard"
+          title="Visão geral"
+          description="Acompanhe o desempenho do atendimento em tempo real."
+          actions={
+            <>
+              <button className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium hover:bg-surface-hover transition-colors">
+                Hoje · 28 Abr
+              </button>
+              <button className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary-glow transition-colors">
+                Exportar
+              </button>
+            </>
+          }
+        />
 
         {/* KPI cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {kpis.map((k, i) => (
             <div key={k.label} className="group rounded-xl border border-border bg-surface p-5 transition-colors hover:bg-surface-elevated">
               <div className="flex items-start justify-between">
-                <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg bg-background/60", k.accent)}>
-                  <k.icon className="h-4 w-4" />
-                </div>
+                <IconTile icon={k.icon} tone={k.tone} size="md" />
                 {k.delta !== 0 && (
                   <span className={cn("inline-flex items-center gap-0.5 rounded font-mono text-[10px] font-medium px-1.5 py-0.5",
                     k.up ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive")}>
