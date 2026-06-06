@@ -1,13 +1,15 @@
-import { ArrowDown, ArrowUp, MessageSquare, Clock, Users, CheckCircle2, TrendingUp } from "lucide-react";
+import { ArrowDown, ArrowUp, MessageSquare, Clock, Users, CheckCircle2, TrendingUp, LayoutDashboard } from "lucide-react";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
+import { PageHeader } from "@/components/PageHeader";
+import { IconTile, type IconTileTone } from "@/components/IconTile";
 import { cn } from "@/lib/utils";
 
-const kpis = [
-  { label: "Conversas hoje", value: "247", delta: 12.4, up: true, icon: MessageSquare, accent: "text-primary" },
-  { label: "Tempo médio resposta", value: "1m 42s", delta: 8.1, up: false, icon: Clock, accent: "text-success" },
-  { label: "Taxa resolução", value: "94.2%", delta: 2.3, up: true, icon: CheckCircle2, accent: "text-channel-instagram" },
-  { label: "Agentes online", value: "18 / 24", delta: 0, up: true, icon: Users, accent: "text-warning" },
+const kpis: { label: string; value: string; delta: number; up: boolean; icon: typeof MessageSquare; tone: IconTileTone }[] = [
+  { label: "Conversas hoje", value: "247", delta: 12.4, up: true, icon: MessageSquare, tone: "primary" },
+  { label: "Tempo médio resposta", value: "1m 42s", delta: 8.1, up: false, icon: Clock, tone: "success" },
+  { label: "Taxa resolução", value: "94.2%", delta: 2.3, up: true, icon: CheckCircle2, tone: "info" },
+  { label: "Agentes online", value: "18 / 24", delta: 0, up: true, icon: Users, tone: "warning" },
 ];
 
 const channelStats: { ch: Channel; pct: number; count: number }[] = [
