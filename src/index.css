@@ -1,119 +1,143 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Aethera — Premium Operational Design System
-   Dark-first, deep navy base. Light emerges with intent. */
+/* ============================================================
+   Theme: tweakcn / Twitter
+   https://tweakcn.com/r/themes/twitter.json
+   Adapted to project HSL token structure.
+   ============================================================ */
 
 @layer base {
   :root {
-    /* ===== Surfaces — 6 levels of real depth ===== */
-    --bg-base:     222 23% 6%;   /* #080B12 */
-    --bg-surface:  222 26% 7%;   /* #0D1017 */
-    --bg-elevated: 222 30% 10%;  /* #111620 */
-    --bg-overlay:  222 28% 13%;  /* #161C29 */
-    --bg-inset:    226 32% 16%;  /* #1C2236 */
+    /* ===== Twitter Dark (default) ===== */
+    --bg-base:     0 0% 0%;        /* #000000 */
+    --bg-surface:  240 6% 10%;     /* sidebar/card surface */
+    --bg-elevated: 240 6% 13%;     /* cards */
+    --bg-overlay:  217 35% 14%;    /* hover/overlay (accent-ish) */
+    --bg-inset:    213 25% 21%;    /* inputs */
 
     --background: var(--bg-base);
     --surface: var(--bg-surface);
     --surface-elevated: var(--bg-elevated);
     --surface-hover: var(--bg-overlay);
 
-    /* ===== Text — 4 emphasis levels ===== */
-    --text-1: 225 100% 97%;  /* #F0F4FF main content */
-    --text-2: 222 19% 62%;   /* #8B95AF metadata */
-    --text-3: 224 18% 35%;   /* #4A526A placeholders */
-    --text-4: 226 31% 24%;   /* #2A3050 dividers */
+    --text-1: 210 17% 92%;  /* foreground */
+    --text-2: 215 14% 55%;  /* muted-foreground */
+    --text-3: 215 12% 40%;
+    --text-4: 215 14% 22%;
 
     --foreground: var(--text-1);
-    --muted: var(--bg-elevated);
+    --muted: 0 0% 13%;
     --muted-foreground: var(--text-2);
     --subtle-foreground: var(--text-3);
 
-    --card: var(--bg-elevated);
+    --card: 240 6% 13%;
     --card-foreground: var(--text-1);
-    --popover: var(--bg-elevated);
+    --popover: 0 0% 0%;
     --popover-foreground: var(--text-1);
 
-    /* ===== Brand — electric blue with depth ===== */
-    --accent-h: 217 91% 64%;     /* #4F8EF7 raw */
+    /* ===== Twitter blue ===== */
+    --accent-h: 203 89% 53%;       /* #1D9BF0 */
     --primary: var(--accent-h);
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 250 95% 76%; /* #A78BFA */
+    --primary-glow: 203 89% 65%;
 
-    --secondary: var(--bg-elevated);
-    --secondary-foreground: var(--text-1);
+    --secondary: 200 10% 96%;
+    --secondary-foreground: 210 25% 8%;
 
-    --accent: 217 91% 64%;       /* compatibility — same as primary */
-    --accent-foreground: 0 0% 100%;
+    --accent: 217 50% 12%;
+    --accent-foreground: 203 89% 53%;
 
     /* ===== Semantics ===== */
-    --success: 158 64% 52%;      /* #34D399 */
+    --success: 158 64% 52%;
     --success-foreground: 0 0% 100%;
-    --warning: 43 96% 56%;       /* #FBBF24 */
+    --warning: 43 96% 56%;
     --warning-foreground: 222 23% 6%;
-    --destructive: 0 91% 71%;    /* #F87171 */
+    --destructive: 0 84% 55%;
     --destructive-foreground: 0 0% 100%;
-    --info:    199 94% 68%;      /* #60C5FA */
-    --violet:  250 95% 76%;      /* #A78BFA — copilot, AI */
+    --info:    203 89% 60%;
+    --violet:  250 90% 72%;
 
     /* ===== Channels ===== */
     --channel-whatsapp: 158 64% 52%;
-    --channel-email:    217 91% 64%;
-    --channel-webchat:  250 95% 76%;
+    --channel-email:    203 89% 53%;
+    --channel-webchat:  250 90% 72%;
     --channel-instagram: 330 86% 71%;
     --channel-telegram: 199 94% 68%;
 
-    /* ===== Borders — hierarchy with light ===== */
-    --border:        0 0% 100% / 0.09;
-    --border-dim:    0 0% 100% / 0.05;
-    --border-mid:    0 0% 100% / 0.09;
-    --border-hi:     0 0% 100% / 0.15;
-    --border-strong: 217 91% 64% / 0.30;
-    --input: var(--bg-elevated);
-    --ring: 217 91% 64%;
+    /* ===== Borders ===== */
+    --border:        215 14% 19%;
+    --border-dim:    215 14% 16%;
+    --border-mid:    215 14% 19%;
+    --border-hi:     215 14% 26%;
+    --border-strong: 203 89% 53% / 0.45;
+    --input:         213 25% 21%;
+    --ring:          203 89% 53%;
 
-    --radius: 0.5rem;  /* 8px — radius-md ~7px area */
+    --radius: 1.3rem;
 
     /* ===== Gradients & shadows ===== */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 64%) 0%, hsl(250 95% 76%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(203 89% 53%) 0%, hsl(203 89% 65%) 100%);
     --gradient-brand: var(--gradient-primary);
-    --gradient-brand-glow: linear-gradient(135deg, hsl(217 91% 64% / 0.15) 0%, hsl(250 95% 76% / 0.15) 100%);
-    --gradient-glow: radial-gradient(800px circle at 20% 0%, hsl(217 91% 64% / 0.10), transparent 60%);
+    --gradient-brand-glow: linear-gradient(135deg, hsl(203 89% 53% / 0.18) 0%, hsl(203 89% 65% / 0.18) 100%);
+    --gradient-glow: radial-gradient(800px circle at 20% 0%, hsl(203 89% 53% / 0.12), transparent 60%);
 
-    --shadow-elevated: 0 8px 24px -8px hsl(0 0% 0% / 0.6), 0 2px 4px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 4px 14px hsl(217 91% 64% / 0.35);
-    --shadow-glow-lg: 0 6px 20px hsl(217 91% 64% / 0.50);
+    --shadow-elevated: 0 8px 24px -8px hsl(0 0% 0% / 0.55), 0 2px 4px hsl(0 0% 0% / 0.35);
+    --shadow-glow: 0 4px 14px hsl(203 89% 53% / 0.35);
+    --shadow-glow-lg: 0 6px 20px hsl(203 89% 53% / 0.50);
     --shadow-top-highlight: inset 0 1px 0 rgba(255,255,255,0.04);
 
     --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
     /* ===== Sidebar ===== */
-    --sidebar-background: var(--bg-surface);
-    --sidebar-foreground: var(--text-2);
-    --sidebar-primary: 217 91% 64%;
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 0 0% 88%;
+    --sidebar-primary: 203 89% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 28% 13%;
-    --sidebar-accent-foreground: var(--text-1);
-    --sidebar-border: 0 0% 100% / 0.05;
-    --sidebar-ring: 217 91% 64%;
+    --sidebar-accent: 217 50% 12%;
+    --sidebar-accent-foreground: 203 89% 53%;
+    --sidebar-border: 213 25% 24%;
+    --sidebar-ring: 203 89% 53%;
   }
 
   .theme-light {
-    --bg-base:     220 25% 97%;
-    --bg-surface:  220 20% 94%;
+    /* ===== Twitter Light ===== */
+    --bg-base:     0 0% 100%;
+    --bg-surface:  200 13% 96%;
     --bg-elevated: 0 0% 100%;
-    --bg-overlay:  220 15% 90%;
-    --bg-inset:    220 12% 86%;
-    --text-1: 220 30% 10%;
-    --text-2: 220 15% 42%;
-    --text-3: 220 10% 62%;
-    --text-4: 220 8% 78%;
-    --border-dim: 0 0% 0% / 0.06;
-    --border-mid: 0 0% 0% / 0.10;
-    --border-hi:  0 0% 0% / 0.16;
+    --bg-overlay:  210 60% 94%;
+    --bg-inset:    210 30% 97%;
+
+    --text-1: 210 25% 8%;     /* #0F1419 */
+    --text-2: 215 14% 38%;
+    --text-3: 215 14% 55%;
+    --text-4: 215 14% 78%;
+
+    --muted: 240 5% 91%;
+    --muted-foreground: 210 25% 8%;
+
+    --card: 200 13% 97%;
+    --popover: 0 0% 100%;
+
+    --secondary: 210 25% 8%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 210 60% 94%;
+    --accent-foreground: 203 89% 53%;
+
+    --border:     205 30% 88%;
+    --border-dim: 205 30% 92%;
+    --border-mid: 205 30% 88%;
+    --border-hi:  205 30% 78%;
+    --input:      210 30% 97%;
+
+    --sidebar-background: 200 13% 96%;
+    --sidebar-foreground: 210 25% 8%;
+    --sidebar-accent: 210 60% 94%;
+    --sidebar-accent-foreground: 203 89% 53%;
+    --sidebar-border: 205 30% 90%;
   }
 }
 
@@ -128,9 +152,10 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Outfit', system-ui, sans-serif;
+    font-family: 'Open Sans', system-ui, sans-serif;
     font-feature-settings: 'rlig' 1, 'calt' 1;
     font-weight: 400;
+    letter-spacing: 0em;
   }
 
   ::selection {
@@ -138,7 +163,6 @@
     color: hsl(var(--text-1));
   }
 
-  /* Focus — premium ring */
   :focus-visible {
     outline: 2px solid hsl(var(--primary));
     outline-offset: 2px;
@@ -152,30 +176,27 @@
     box-shadow: 0 0 0 3px hsl(var(--primary) / 0.20);
   }
 
-  /* Scrollbars — thin & combinant */
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
     background: hsl(0 0% 100% / 0.15);
-    border-radius: 2px;
+    border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover { background: hsl(var(--text-3)); }
   * { scrollbar-width: thin; scrollbar-color: hsl(0 0% 100% / 0.15) transparent; }
 }
 
 @layer utilities {
-  .font-mono { font-family: 'JetBrains Mono', monospace; }
-  .font-ui { font-family: 'Outfit', system-ui, sans-serif; }
+  .font-mono { font-family: 'JetBrains Mono', 'Menlo', monospace; }
+  .font-ui { font-family: 'Open Sans', system-ui, sans-serif; }
 
   .text-balance { text-wrap: balance; }
 
-  /* Text emphasis aliases */
   .text-1 { color: hsl(var(--text-1)); }
   .text-2 { color: hsl(var(--text-2)); }
   .text-3 { color: hsl(var(--text-3)); }
   .text-4 { color: hsl(var(--text-4)); }
 
-  /* Surface aliases */
   .bg-base     { background-color: hsl(var(--bg-base)); }
   .bg-surface  { background-color: hsl(var(--bg-surface)); }
   .bg-elevated { background-color: hsl(var(--bg-elevated)); }
@@ -201,14 +222,11 @@
   .ring-glow      { box-shadow: var(--shadow-glow); }
   .top-highlight  { box-shadow: var(--shadow-top-highlight); }
 
-  /* Premium logo glow */
   .glow-brand {
     box-shadow: 0 4px 16px hsl(var(--primary) / 0.40);
   }
 
-  .animate-pulse-dot {
-    animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
+  .animate-pulse-dot { animation: pulse-dot 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50%      { opacity: 0.6; transform: scale(0.85); }
@@ -238,12 +256,10 @@
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* Tracking helpers */
   .tracking-wider-2  { letter-spacing: 0.09em; }
   .tracking-widest-2 { letter-spacing: 0.14em; }
 }
 
-/* ===== Component primitives ===== */
 @layer components {
   .btn-elevate {
     transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -257,7 +273,6 @@
     box-shadow: none;
   }
 
-  /* Modal top highlight ornament */
   .modal-aethera {
     position: relative;
     background: hsl(var(--bg-surface));
