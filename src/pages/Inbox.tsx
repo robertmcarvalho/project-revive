@@ -18,7 +18,7 @@ type Conv = {
   phone?: string;
   email?: string;
   role?: "entregador" | "lider" | "farmacia" | "cliente";
-  pharmacy?: string;
+  pharmacies?: string[];
   leader?: string;
   customerSince?: string;
 };
@@ -40,14 +40,14 @@ const channels: { ch: Channel; count: number }[] = [
 ];
 
 const conversations: Conv[] = [
-  { id: "1", name: "Marina Costa", channel: "whatsapp", preview: "Boa tarde! Gostaria de saber sobre o status do meu pedido #4821", time: "agora", unread: 2, status: "online", tag: { label: "SLA 4min", tone: "warning" }, saved: true, phone: "+55 11 98765-4321", email: "marina.costa@gmail.com", role: "entregador", pharmacy: "Farmácia Central — Unidade Paulista", leader: "Roberto Almeida", customerSince: "Mar/2024" },
+  { id: "1", name: "Marina Costa", channel: "whatsapp", preview: "Boa tarde! Gostaria de saber sobre o status do meu pedido #4821", time: "agora", unread: 2, status: "online", tag: { label: "SLA 4min", tone: "warning" }, saved: true, phone: "+55 11 98765-4321", email: "marina.costa@gmail.com", role: "entregador", pharmacies: ["Farmácia Central — Unidade Paulista", "Farmácia Central — Unidade Jardins"], leader: "Roberto Almeida", customerSince: "Mar/2024" },
   { id: "2", name: "Pedro Henrique", channel: "instagram", preview: "Vocês têm essa peça em outras cores?", time: "2m", unread: 1, status: "online", saved: false, phone: "+55 21 99876-5432" },
-  { id: "3", name: "Juliana Alves", channel: "email", preview: "Re: Solicitação de orçamento — segue em anexo o briefing completo", time: "12m", status: "idle", tag: { label: "Vendas", tone: "primary" }, saved: true, email: "juliana@drogariasp.com.br", role: "farmacia", pharmacy: "Drogaria São Paulo — Matriz", leader: "Mariana Costa", customerSince: "Jan/2023" },
-  { id: "4", name: "Carlos Mendes", channel: "webchat", preview: "Obrigado, deu certo! 🎉", time: "28m", status: "offline", tag: { label: "Resolvido", tone: "success" }, saved: true, phone: "+55 31 98765-1234", role: "entregador", pharmacy: "Farmácia Popular", leader: "Fernando Ribeiro", customerSince: "Set/2024" },
-  { id: "5", name: "Fernanda Lima", channel: "whatsapp", preview: "Vou verificar e te respondo ainda hoje", time: "1h", status: "offline", saved: true, phone: "+55 11 91234-5678", role: "lider", pharmacy: "Farmácia Central", customerSince: "Jul/2023" },
+  { id: "3", name: "Juliana Alves", channel: "email", preview: "Re: Solicitação de orçamento — segue em anexo o briefing completo", time: "12m", status: "idle", tag: { label: "Vendas", tone: "primary" }, saved: true, email: "juliana@drogariasp.com.br", role: "farmacia", pharmacies: ["Drogaria São Paulo — Matriz"], leader: "Mariana Costa", customerSince: "Jan/2023" },
+  { id: "4", name: "Carlos Mendes", channel: "webchat", preview: "Obrigado, deu certo! 🎉", time: "28m", status: "offline", tag: { label: "Resolvido", tone: "success" }, saved: true, phone: "+55 31 98765-1234", role: "entregador", pharmacies: ["Farmácia Popular"], leader: "Fernando Ribeiro", customerSince: "Set/2024" },
+  { id: "5", name: "Fernanda Lima", channel: "whatsapp", preview: "Vou verificar e te respondo ainda hoje", time: "1h", status: "offline", saved: true, phone: "+55 11 91234-5678", role: "lider", pharmacies: ["Farmácia Central — Paulista", "Farmácia Central — Jardins", "Farmácia Central — Pinheiros"], customerSince: "Jul/2023" },
   { id: "6", name: "André Souza", channel: "telegram", preview: "Tem desconto pra pagamento à vista?", time: "1h", status: "idle", saved: false, phone: "+55 41 98888-7777" },
   { id: "7", name: "Beatriz Ramos", channel: "instagram", preview: "Quando vocês reabrem?", time: "2h", status: "offline", saved: false },
-  { id: "8", name: "Lucas Ferreira", channel: "email", preview: "Re: Proposta comercial — aprovada!", time: "3h", status: "offline", tag: { label: "Vendas", tone: "primary" }, saved: true, email: "lucas@farmaciapopular.com", role: "farmacia", pharmacy: "Farmácia Popular — Centro", leader: "Patrícia Ferreira", customerSince: "Fev/2024" },
+  { id: "8", name: "Lucas Ferreira", channel: "email", preview: "Re: Proposta comercial — aprovada!", time: "3h", status: "offline", tag: { label: "Vendas", tone: "primary" }, saved: true, email: "lucas@farmaciapopular.com", role: "farmacia", pharmacies: ["Farmácia Popular — Centro"], leader: "Patrícia Ferreira", customerSince: "Fev/2024" },
 ];
 
 const roleLabel: Record<NonNullable<Conv["role"]>, string> = {
@@ -211,10 +211,10 @@ const Inbox = () => {
                     <span className="inline-flex items-center gap-1 text-success"><BadgeCheck className="h-3 w-3" />{roleLabel[active.role]}</span>
                   </>
                 )}
-                {active.saved && active.pharmacy && (
+                {active.saved && active.pharmacies && active.pharmacies.length > 0 && (
                   <>
                     <span className="text-subtle-foreground">·</span>
-                    <span className="truncate">{active.pharmacy}</span>
+                    <span className="truncate">{active.pharmacies[0]}{active.pharmacies.length > 1 ? ` +${active.pharmacies.length - 1}` : ""}</span>
                   </>
                 )}
                 {active.saved && active.customerSince && (
@@ -358,34 +358,35 @@ const Inbox = () => {
         </div>
 
         {active.saved ? (
-          <div className="border-b border-border px-4 py-4">
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground mb-3">Vínculo</h4>
-            <div className="space-y-2.5 text-xs">
-              {active.pharmacy && (
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Building2 className="h-3 w-3" />Farmácia</span>
-                  <span className="font-medium text-right truncate">{active.pharmacy}</span>
+          <div className="border-b border-border px-4 py-4 space-y-3">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">Vínculo</h4>
+
+            {active.pharmacies && active.pharmacies.length > 0 && (
+              <div className="rounded-lg border border-primary/25 bg-primary/10 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  <Building2 className="h-3 w-3" />
+                  {active.pharmacies.length > 1 ? `Farmácias (${active.pharmacies.length})` : "Farmácia"}
                 </div>
-              )}
-              {active.leader && (
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><UserCog className="h-3 w-3" />Líder</span>
-                  <span className="font-medium text-right truncate">{active.leader}</span>
+                <ul className="mt-2 space-y-1">
+                  {active.pharmacies.map((p) => (
+                    <li key={p} className="flex items-start gap-1.5 text-xs font-medium text-foreground">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                      <span className="leading-snug">{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {active.leader && (
+              <div className="rounded-lg border border-channel-instagram/25 bg-channel-instagram/10 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-channel-instagram">
+                  <UserCog className="h-3 w-3" />
+                  Líder responsável
                 </div>
-              )}
-              {active.phone && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />Telefone</span>
-                  <span className="font-mono text-[11px]">{active.phone}</span>
-                </div>
-              )}
-              {active.customerSince && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Cliente desde</span>
-                  <span className="font-medium">{active.customerSince}</span>
-                </div>
-              )}
-            </div>
+                <div className="mt-2 text-xs font-medium text-foreground">{active.leader}</div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="border-b border-border px-4 py-4">
