@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
 import { CopilotoPanel } from "@/components/CopilotoPanel";
-import { Filter, Star, Paperclip, Smile, Send, Phone, Video, MoreHorizontal, CheckCheck, Tag, ChevronRight, Sparkles, Clock } from "lucide-react";
+import { Filter, Star, Paperclip, Smile, Send, Phone, Video, MoreHorizontal, CheckCheck, Tag, ChevronRight, Sparkles, Clock, Building2, UserCog, BadgeCheck, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Conv = {
@@ -14,6 +14,13 @@ type Conv = {
   unread?: number;
   status: "online" | "idle" | "offline" | "busy";
   tag?: { label: string; tone: "warning" | "success" | "primary" };
+  saved?: boolean;
+  phone?: string;
+  email?: string;
+  role?: "entregador" | "lider" | "farmacia" | "cliente";
+  pharmacy?: string;
+  leader?: string;
+  customerSince?: string;
 };
 
 const folders = [
@@ -33,15 +40,22 @@ const channels: { ch: Channel; count: number }[] = [
 ];
 
 const conversations: Conv[] = [
-  { id: "1", name: "Marina Costa", channel: "whatsapp", preview: "Boa tarde! Gostaria de saber sobre o status do meu pedido #4821", time: "agora", unread: 2, status: "online", tag: { label: "SLA 4min", tone: "warning" } },
-  { id: "2", name: "Pedro Henrique", channel: "instagram", preview: "Vocês têm essa peça em outras cores?", time: "2m", unread: 1, status: "online" },
-  { id: "3", name: "Juliana Alves", channel: "email", preview: "Re: Solicitação de orçamento — segue em anexo o briefing completo", time: "12m", status: "idle", tag: { label: "Vendas", tone: "primary" } },
-  { id: "4", name: "Carlos Mendes", channel: "webchat", preview: "Obrigado, deu certo! 🎉", time: "28m", status: "offline", tag: { label: "Resolvido", tone: "success" } },
-  { id: "5", name: "Fernanda Lima", channel: "whatsapp", preview: "Vou verificar e te respondo ainda hoje", time: "1h", status: "offline" },
-  { id: "6", name: "André Souza", channel: "telegram", preview: "Tem desconto pra pagamento à vista?", time: "1h", status: "idle" },
-  { id: "7", name: "Beatriz Ramos", channel: "instagram", preview: "Quando vocês reabrem?", time: "2h", status: "offline" },
-  { id: "8", name: "Lucas Ferreira", channel: "email", preview: "Re: Proposta comercial — aprovada!", time: "3h", status: "offline", tag: { label: "Vendas", tone: "primary" } },
+  { id: "1", name: "Marina Costa", channel: "whatsapp", preview: "Boa tarde! Gostaria de saber sobre o status do meu pedido #4821", time: "agora", unread: 2, status: "online", tag: { label: "SLA 4min", tone: "warning" }, saved: true, phone: "+55 11 98765-4321", email: "marina.costa@gmail.com", role: "entregador", pharmacy: "Farmácia Central — Unidade Paulista", leader: "Roberto Almeida", customerSince: "Mar/2024" },
+  { id: "2", name: "Pedro Henrique", channel: "instagram", preview: "Vocês têm essa peça em outras cores?", time: "2m", unread: 1, status: "online", saved: false, phone: "+55 21 99876-5432" },
+  { id: "3", name: "Juliana Alves", channel: "email", preview: "Re: Solicitação de orçamento — segue em anexo o briefing completo", time: "12m", status: "idle", tag: { label: "Vendas", tone: "primary" }, saved: true, email: "juliana@drogariasp.com.br", role: "farmacia", pharmacy: "Drogaria São Paulo — Matriz", leader: "Mariana Costa", customerSince: "Jan/2023" },
+  { id: "4", name: "Carlos Mendes", channel: "webchat", preview: "Obrigado, deu certo! 🎉", time: "28m", status: "offline", tag: { label: "Resolvido", tone: "success" }, saved: true, phone: "+55 31 98765-1234", role: "entregador", pharmacy: "Farmácia Popular", leader: "Fernando Ribeiro", customerSince: "Set/2024" },
+  { id: "5", name: "Fernanda Lima", channel: "whatsapp", preview: "Vou verificar e te respondo ainda hoje", time: "1h", status: "offline", saved: true, phone: "+55 11 91234-5678", role: "lider", pharmacy: "Farmácia Central", customerSince: "Jul/2023" },
+  { id: "6", name: "André Souza", channel: "telegram", preview: "Tem desconto pra pagamento à vista?", time: "1h", status: "idle", saved: false, phone: "+55 41 98888-7777" },
+  { id: "7", name: "Beatriz Ramos", channel: "instagram", preview: "Quando vocês reabrem?", time: "2h", status: "offline", saved: false },
+  { id: "8", name: "Lucas Ferreira", channel: "email", preview: "Re: Proposta comercial — aprovada!", time: "3h", status: "offline", tag: { label: "Vendas", tone: "primary" }, saved: true, email: "lucas@farmaciapopular.com", role: "farmacia", pharmacy: "Farmácia Popular — Centro", leader: "Patrícia Ferreira", customerSince: "Fev/2024" },
 ];
+
+const roleLabel: Record<NonNullable<Conv["role"]>, string> = {
+  entregador: "Entregador",
+  lider: "Líder",
+  farmacia: "Farmácia",
+  cliente: "Cliente",
+};
 
 const messages = [
   { from: "them", text: "Boa tarde! Gostaria de saber sobre o status do meu pedido #4821", time: "14:22" },
@@ -190,9 +204,25 @@ const Inbox = () => {
                 <ChannelBadge channel={active.channel} />
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span>+55 11 98765-4321</span>
-                <span className="text-subtle-foreground">·</span>
-                <span>Cliente desde Mar/2024</span>
+                <span>{active.phone ?? active.email ?? "Sem contato salvo"}</span>
+                {active.saved && active.role && (
+                  <>
+                    <span className="text-subtle-foreground">·</span>
+                    <span className="inline-flex items-center gap-1 text-success"><BadgeCheck className="h-3 w-3" />{roleLabel[active.role]}</span>
+                  </>
+                )}
+                {active.saved && active.pharmacy && (
+                  <>
+                    <span className="text-subtle-foreground">·</span>
+                    <span className="truncate">{active.pharmacy}</span>
+                  </>
+                )}
+                {active.saved && active.customerSince && (
+                  <>
+                    <span className="text-subtle-foreground">·</span>
+                    <span>Desde {active.customerSince}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -307,15 +337,66 @@ const Inbox = () => {
 
         <div className="flex flex-col items-center border-b border-border px-4 py-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-channel-whatsapp to-success text-base font-semibold">
-            MC
+            {active.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
           </div>
-          <div className="mt-3 text-sm font-semibold">{active.name}</div>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">marina.costa@gmail.com</div>
+          <div className="mt-3 flex items-center gap-1.5 text-sm font-semibold">
+            {active.name}
+            {active.saved && <BadgeCheck className="h-3.5 w-3.5 text-success" aria-label="Contato salvo" />}
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            {active.email ?? active.phone ?? "—"}
+          </div>
+          {active.saved && active.role && (
+            <span className="mt-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              {roleLabel[active.role]}
+            </span>
+          )}
           <div className="mt-3 flex gap-2">
             <button className="rounded-md border border-border bg-background/60 px-2.5 py-1 text-[10px] font-medium hover:bg-surface-hover transition-colors">Perfil</button>
             <button className="rounded-md border border-border bg-background/60 px-2.5 py-1 text-[10px] font-medium hover:bg-surface-hover transition-colors">Histórico</button>
           </div>
         </div>
+
+        {active.saved ? (
+          <div className="border-b border-border px-4 py-4">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground mb-3">Vínculo</h4>
+            <div className="space-y-2.5 text-xs">
+              {active.pharmacy && (
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Building2 className="h-3 w-3" />Farmácia</span>
+                  <span className="font-medium text-right truncate">{active.pharmacy}</span>
+                </div>
+              )}
+              {active.leader && (
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><UserCog className="h-3 w-3" />Líder</span>
+                  <span className="font-medium text-right truncate">{active.leader}</span>
+                </div>
+              )}
+              {active.phone && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />Telefone</span>
+                  <span className="font-mono text-[11px]">{active.phone}</span>
+                </div>
+              )}
+              {active.customerSince && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Cliente desde</span>
+                  <span className="font-medium">{active.customerSince}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="border-b border-border px-4 py-4">
+            <div className="rounded-lg border border-dashed border-border bg-background/40 p-3 text-center">
+              <div className="text-[11px] text-muted-foreground">Contato não cadastrado na plataforma.</div>
+              <button className="mt-2 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors">
+                <UserPlus className="h-3 w-3" /> Salvar contato
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="border-b border-border px-4 py-4">
           <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground mb-3">Atribuição</h4>
