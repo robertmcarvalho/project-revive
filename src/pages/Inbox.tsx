@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
 import { CopilotoPanel } from "@/components/CopilotoPanel";
-import { Filter, Star, Paperclip, Smile, Send, Phone, Video, MoreHorizontal, CheckCheck, Tag, ChevronRight, Sparkles, Clock } from "lucide-react";
+import { Filter, Star, Paperclip, Smile, Send, Phone, Video, MoreHorizontal, CheckCheck, Tag, ChevronRight, Sparkles, Clock, Building2, UserCog, BadgeCheck, UserPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Conv = {
