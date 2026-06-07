@@ -358,34 +358,35 @@ const Inbox = () => {
         </div>
 
         {active.saved ? (
-          <div className="border-b border-border px-4 py-4">
-            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground mb-3">Vínculo</h4>
-            <div className="space-y-2.5 text-xs">
-              {active.pharmacy && (
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Building2 className="h-3 w-3" />Farmácia</span>
-                  <span className="font-medium text-right truncate">{active.pharmacy}</span>
+          <div className="border-b border-border px-4 py-4 space-y-3">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">Vínculo</h4>
+
+            {active.pharmacies && active.pharmacies.length > 0 && (
+              <div className="rounded-lg border border-primary/25 bg-primary/10 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+                  <Building2 className="h-3 w-3" />
+                  {active.pharmacies.length > 1 ? `Farmácias (${active.pharmacies.length})` : "Farmácia"}
                 </div>
-              )}
-              {active.leader && (
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><UserCog className="h-3 w-3" />Líder</span>
-                  <span className="font-medium text-right truncate">{active.leader}</span>
+                <ul className="mt-2 space-y-1">
+                  {active.pharmacies.map((p) => (
+                    <li key={p} className="flex items-start gap-1.5 text-xs font-medium text-foreground">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                      <span className="leading-snug">{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {active.leader && (
+              <div className="rounded-lg border border-channel-instagram/25 bg-channel-instagram/10 p-3">
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-channel-instagram">
+                  <UserCog className="h-3 w-3" />
+                  Líder responsável
                 </div>
-              )}
-              {active.phone && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />Telefone</span>
-                  <span className="font-mono text-[11px]">{active.phone}</span>
-                </div>
-              )}
-              {active.customerSince && (
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Cliente desde</span>
-                  <span className="font-medium">{active.customerSince}</span>
-                </div>
-              )}
-            </div>
+                <div className="mt-2 text-xs font-medium text-foreground">{active.leader}</div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="border-b border-border px-4 py-4">
