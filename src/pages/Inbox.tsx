@@ -204,9 +204,25 @@ const Inbox = () => {
                 <ChannelBadge channel={active.channel} />
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span>+55 11 98765-4321</span>
-                <span className="text-subtle-foreground">·</span>
-                <span>Cliente desde Mar/2024</span>
+                <span>{active.phone ?? active.email ?? "Sem contato salvo"}</span>
+                {active.saved && active.role && (
+                  <>
+                    <span className="text-subtle-foreground">·</span>
+                    <span className="inline-flex items-center gap-1 text-success"><BadgeCheck className="h-3 w-3" />{roleLabel[active.role]}</span>
+                  </>
+                )}
+                {active.saved && active.pharmacy && (
+                  <>
+                    <span className="text-subtle-foreground">·</span>
+                    <span className="truncate">{active.pharmacy}</span>
+                  </>
+                )}
+                {active.saved && active.customerSince && (
+                  <>
+                    <span className="text-subtle-foreground">·</span>
+                    <span>Desde {active.customerSince}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
