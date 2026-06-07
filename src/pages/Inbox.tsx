@@ -337,15 +337,66 @@ const Inbox = () => {
 
         <div className="flex flex-col items-center border-b border-border px-4 py-5">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-channel-whatsapp to-success text-base font-semibold">
-            MC
+            {active.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
           </div>
-          <div className="mt-3 text-sm font-semibold">{active.name}</div>
-          <div className="mt-0.5 text-[11px] text-muted-foreground">marina.costa@gmail.com</div>
+          <div className="mt-3 flex items-center gap-1.5 text-sm font-semibold">
+            {active.name}
+            {active.saved && <BadgeCheck className="h-3.5 w-3.5 text-success" aria-label="Contato salvo" />}
+          </div>
+          <div className="mt-0.5 text-[11px] text-muted-foreground">
+            {active.email ?? active.phone ?? "—"}
+          </div>
+          {active.saved && active.role && (
+            <span className="mt-2 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              {roleLabel[active.role]}
+            </span>
+          )}
           <div className="mt-3 flex gap-2">
             <button className="rounded-md border border-border bg-background/60 px-2.5 py-1 text-[10px] font-medium hover:bg-surface-hover transition-colors">Perfil</button>
             <button className="rounded-md border border-border bg-background/60 px-2.5 py-1 text-[10px] font-medium hover:bg-surface-hover transition-colors">Histórico</button>
           </div>
         </div>
+
+        {active.saved ? (
+          <div className="border-b border-border px-4 py-4">
+            <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground mb-3">Vínculo</h4>
+            <div className="space-y-2.5 text-xs">
+              {active.pharmacy && (
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Building2 className="h-3 w-3" />Farmácia</span>
+                  <span className="font-medium text-right truncate">{active.pharmacy}</span>
+                </div>
+              )}
+              {active.leader && (
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><UserCog className="h-3 w-3" />Líder</span>
+                  <span className="font-medium text-right truncate">{active.leader}</span>
+                </div>
+              )}
+              {active.phone && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground inline-flex items-center gap-1.5"><Phone className="h-3 w-3" />Telefone</span>
+                  <span className="font-mono text-[11px]">{active.phone}</span>
+                </div>
+              )}
+              {active.customerSince && (
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Cliente desde</span>
+                  <span className="font-medium">{active.customerSince}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="border-b border-border px-4 py-4">
+            <div className="rounded-lg border border-dashed border-border bg-background/40 p-3 text-center">
+              <div className="text-[11px] text-muted-foreground">Contato não cadastrado na plataforma.</div>
+              <button className="mt-2 inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-medium text-primary hover:bg-primary/15 transition-colors">
+                <UserPlus className="h-3 w-3" /> Salvar contato
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="border-b border-border px-4 py-4">
           <h4 className="text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground mb-3">Atribuição</h4>
