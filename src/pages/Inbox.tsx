@@ -211,10 +211,10 @@ const Inbox = () => {
                     <span className="inline-flex items-center gap-1 text-success"><BadgeCheck className="h-3 w-3" />{roleLabel[active.role]}</span>
                   </>
                 )}
-                {active.saved && active.pharmacy && (
+                {active.saved && active.pharmacies && active.pharmacies.length > 0 && (
                   <>
                     <span className="text-subtle-foreground">·</span>
-                    <span className="truncate">{active.pharmacy}</span>
+                    <span className="truncate">{active.pharmacies[0]}{active.pharmacies.length > 1 ? ` +${active.pharmacies.length - 1}` : ""}</span>
                   </>
                 )}
                 {active.saved && active.customerSince && (
