@@ -18,7 +18,7 @@ type Conv = {
   phone?: string;
   email?: string;
   role?: "entregador" | "lider" | "farmacia" | "cliente";
-  pharmacy?: string;
+  pharmacies?: string[];
   leader?: string;
   customerSince?: string;
 };
