@@ -1,8 +1,15 @@
+import { useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowUp, MessageSquare, Clock, Users, CheckCircle2, TrendingUp, LayoutDashboard } from "lucide-react";
 import { ChannelBadge, type Channel } from "@/components/ChannelBadge";
 import { StatusDot } from "@/components/StatusDot";
 import { PageHeader } from "@/components/PageHeader";
 import { IconTile, type IconTileTone } from "@/components/IconTile";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PresencaKpis } from "@/components/dashboard/PresencaKpis";
+import { AtendentesStatusTable } from "@/components/dashboard/AtendentesStatusTable";
+import { LoginHistoryTable } from "@/components/dashboard/LoginHistoryTable";
+import { SessionProductivityTable } from "@/components/dashboard/SessionProductivityTable";
+import { useCurrentUser } from "@/lib/workspace";
 import { cn } from "@/lib/utils";
 
 const kpis: { label: string; value: string; delta: number; up: boolean; icon: typeof MessageSquare; tone: IconTileTone }[] = [
