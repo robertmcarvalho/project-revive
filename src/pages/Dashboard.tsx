@@ -269,6 +269,17 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
+          </TabsContent>
+
+          {canSeeTeam && (
+            <TabsContent value="equipe" className="mt-0 space-y-6">
+              <PresencaKpis />
+              <AtendentesStatusTable />
+              <LoginHistoryTable />
+              <SessionProductivityTable />
+            </TabsContent>
+          )}
+        </Tabs>
       </div>
     </div>
   );
