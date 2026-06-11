@@ -90,6 +90,12 @@ const VolumeChart = () => {
 };
 
 const Dashboard = () => {
+  const user = useCurrentUser();
+  const canSeeTeam = user.papel === "Admin" || user.papel === "Líder";
+  const [params, setParams] = useSearchParams();
+  const requested = params.get("tab") ?? "geral";
+  const tab = requested === "equipe" && !canSeeTeam ? "geral" : requested;
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-7xl px-8 py-8">
@@ -111,6 +117,13 @@ const Dashboard = () => {
           }
         />
 
+        <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="geral">Visão geral</TabsTrigger>
+            {canSeeTeam && <TabsTrigger value="equipe">Equipe</TabsTrigger>}
+          </TabsList>
+
+          <TabsContent value="geral" className="mt-0 space-y-6">
         {/* KPI cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {kpis.map((k, i) => (
