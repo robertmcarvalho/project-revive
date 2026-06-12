@@ -37,6 +37,16 @@ import LiderPreCadastro from "./pages/lider/PreCadastro.tsx";
 import LiderChat from "./pages/lider/Chat.tsx";
 import LiderObrigacoes from "./pages/lider/Obrigacoes.tsx";
 import Financeiro from "./pages/Financeiro.tsx";
+import FinVisaoGeral from "./pages/financeiro/VisaoGeral.tsx";
+import FinAcertos from "./pages/financeiro/Acertos.tsx";
+import FinAcertoDetalhe from "./pages/financeiro/AcertoDetalhe.tsx";
+import FinFaturamento from "./pages/financeiro/Faturamento.tsx";
+import FinAReceber from "./pages/financeiro/AReceber.tsx";
+import FinAPagar from "./pages/financeiro/APagar.tsx";
+import FinDespesas from "./pages/financeiro/Despesas.tsx";
+import FinConciliacao from "./pages/financeiro/Conciliacao.tsx";
+import FinDRE from "./pages/financeiro/DRE.tsx";
+import FinConfig from "./pages/financeiro/Configuracoes.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
 import Operacao from "./pages/Operacao.tsx";
 import Copiloto from "./pages/Copiloto.tsx";
@@ -82,7 +92,18 @@ const App = () => (
           <Route path="/automacoes/:id" element={<AppShell><AutomacaoDetalhe /></AppShell>} />
           <Route path="/flows" element={<AppShell><Flows /></AppShell>} />
           <Route path="/flows/:id" element={<AppShell><FlowEditor /></AppShell>} />
-          <Route path="/financeiro" element={<AppShell><Financeiro /></AppShell>} />
+          <Route path="/financeiro" element={<AppShell><Financeiro /></AppShell>}>
+            <Route index element={<FinVisaoGeral />} />
+            <Route path="acertos" element={<FinAcertos />} />
+            <Route path="acertos/:id" element={<FinAcertoDetalhe />} />
+            <Route path="faturamento" element={<FinFaturamento />} />
+            <Route path="a-receber" element={<FinAReceber />} />
+            <Route path="a-pagar" element={<FinAPagar />} />
+            <Route path="despesas" element={<FinDespesas />} />
+            <Route path="conciliacao" element={<FinConciliacao />} />
+            <Route path="dre" element={<FinDRE />} />
+            <Route path="configuracoes" element={<FinConfig />} />
+          </Route>
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />

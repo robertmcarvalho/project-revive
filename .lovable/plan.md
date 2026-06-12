@@ -1,52 +1,122 @@
-# Monitoramento de Atendentes — nova aba no Dashboard
+## Visão geral
 
-Adicionar uma aba **"Equipe"** dentro do Dashboard com visão de presença em tempo real, histórico de sessões e produtividade por sessão. Acesso restrito a admin/gestor.
+Financeiro completo com submenu, cobrindo: Acerto semanal (Cooperativa), faturamento dividido Coop + Flux Farma, contas a pagar (entregadores + operacional Coop/Flux), contas a receber, despesas fixas/variáveis com **rateio multi-vínculo**, **baixas de pagamento/recebimento** com conciliação, centros de custo e DRE.
 
-## Estrutura da página
+Frontend + camada `financeiroApi.ts` (mock async) para troca futura por backend real.
 
+## Submenu do Financeiro
+
+`/financeiro` vira layout com subnav + `<Outlet/>`:
+
+- **Visão geral** — KPIs + alertas (a vencer hoje, em atraso, baixas pendentes).
+- **Acertos** + `/acertos/:id`
+- **Faturamento** — faturas Coop + Flux por farmácia/CC.
+- **Contas a receber** — com fluxo de **baixa** (total/parcial).
+- **Contas a pagar** com abas: **Entregadores**, **Operacional — Coop**, **Operacional — Flux** — todas com fluxo de **baixa**.
+- **Despesas** — lançamento com **rateio** opcional.
+- **Baixas / Conciliação** — extrato consolidado de baixas, importação OFX/CSV (mock) e match com lançamentos.
+- **DRE**
+- **Configurações** — Centros de custo · Regras de vínculo · **Split Coop × Flux por CC** · Categorias · Fornecedores · Contas bancárias/cartões.
+
+## Modelo de dados (mock, `src/data/financeiroMock.ts`)
+
+```text
+# (modelos anteriores mantidos: Empresa, CentroCusto, Farmacia,
+#  RegraVinculo, SplitFaturamento, Entrega, Adiantamento, Diaria,
+#  Acerto, AcertoLinha, Fatura, Fornecedor, CategoriaDespesa,
+#  ContaBancaria, Cartao)
+
+# ── Rateio (NOVO) ──
+RateioItem        { centroCustoId, farmaciaId?, percentual, valor }
+                  # Σ percentual = 100, Σ valor = total do lançamento
+
+ContaPagar        { ...campos anteriores...,
+                    rateio?: RateioItem[],         # opcional
+                    valorPago: number,             # soma das baixas
+                    saldo: number }                # valor − valorPago
+
+ContaReceber      { ...campos anteriores...,
+                    valorRecebido, saldo,
+                    rateio?: RateioItem[] }        # raro mas suportado
+
+# ── Baixas (NOVO) ──
+Baixa             { id, tipo:'pagamento'|'recebimento',
+                    lancamentoId,                   # ContaPagar | ContaReceber
+                    data, valor, forma:'pix'|'ted'|'boleto'|'dinheiro'|'cartao'|'compensacao',
+                    contaBancariaId? | cartaoId?,
+                    juros?, desconto?, taxa?,       # ajustes do dia da baixa
+                    comprovanteUrl?, obs?,
+                    usuarioId, criadoEm,
+                    estornadaEm?, estornoMotivo? }
+
+# Despesas de entregador rateadas viram 1 ContaPagar mãe + N AcertoAjuste
+AcertoAjusteRateio { acertoId, entregadorId, contaPagarId,
+                     valor,                         # parte rateada nesse vínculo
+                     descricao, aplicarEm:'a_pagar'|'a_faturar'|'ambos' }
 ```
-Dashboard
-├── Visão geral   (atual)
-└── Equipe        (nova) ── visível só para admin/gestor
-    ├── [KPIs] Online · Ausentes · Ocupados · Offline · Tempo médio logado
-    ├── [Tabela] Status atual dos atendentes
-    ├── [Tabela] Histórico de login/logout
-    └── [Painel] Resumo de produtividade por sessão
-```
 
-## Conteúdo de cada bloco
+## Regras-chave (novas + revisadas)
 
-**1. KPIs de presença** — 5 cards no padrão `IconTile` já usado no Dashboard (Users/UserCheck/UserMinus/UserX/Clock), com contagem e variação vs. ontem.
+**1. Rateio de despesas**
+Ao lançar uma despesa (ex.: diária de R$ 100 do entregador X com vínculo em 3 farmácias):
 
-**2. Status atual dos atendentes**
-Colunas: Avatar+nome · Papel · Status (StatusDot + label) · Tempo no status atual · Chats ativos · Último heartbeat · Ação (ver perfil / forçar logout).
-Filtros: status, papel, busca por nome. Ordenação por tempo logado / chats.
+- Operador escolhe modo: **% igual** (33,3 / 33,3 / 33,4), **% manual**, **valor manual**, ou **proporcional às entregas no ciclo** (calculado a partir das `Entrega` de cada vínculo).
+- Sistema valida `Σ = 100%` / `Σ valor = total` (tolerância 1 centavo, ajuste no último item).
+- Se a despesa é vinculada a entregador, cada item do rateio gera um `AcertoAjusteRateio` que entra no acerto da farmácia/CC correspondente:
+  - `aplicarEm = 'a_pagar'` → desconta do `valorEntregador`.
+  - `aplicarEm = 'a_faturar'` → soma no `valorFaturadoFarmacia` (repasse para a farmácia pagar).
+  - `aplicarEm = 'ambos'` → soma na farmácia e não desconta do entregador (caso de auxílio bancado pela farmácia).
+- Para despesas operacionais (ex.: software rateado entre Coop e Flux, ou entre CCs), o rateio só afeta a **DRE** — cada parcela do rateio aparece no CC correspondente.
 
-**3. Histórico de login/logout**
-Colunas: Atendente · Evento (login / logout / timeout / forçado) · Data‑hora · Duração da sessão · Dispositivo (ícone Monitor/Smartphone) · Navegador · IP · Localização aproximada.
-Filtros: período (hoje / 7d / 30d / custom), atendente, tipo de evento. Botão **Exportar CSV**.
+**2. Baixas de pagamento/recebimento**
+- Drawer **Baixar lançamento** com: data, valor (default = saldo), forma, conta bancária/cartão, juros/desconto/taxa, comprovante.
+- Permite **baixa parcial** (gera várias `Baixa` até zerar `saldo`); status do lançamento: `aberta → parcial → paga/recebida → vencida`.
+- Permite **baixa em lote** (selecionar várias contas → uma baixa por linha, mesma conta bancária/data).
+- **Estorno** de baixa (gera contra-lançamento e devolve ao saldo, com motivo obrigatório e auditoria).
+- Cada baixa cria automaticamente o movimento na `ContaBancaria`/`Cartao` para alimentar a tela de Conciliação.
 
-**4. Produtividade por sessão**
-Por sessão encerrada: tempo total logado, tempo em pausa, tempo em atendimento, conversas atendidas, CSAT médio, primeira resposta média. Visual: tabela compacta + mini sparkline de atendimentos/hora reaproveitando `Spark`/`Sparkline`.
+**3. Conciliação (Baixas)**
+Tela única que lista baixas e movimentos importados (OFX/CSV mock) lado a lado, com sugestão de match por valor + data ± 2 dias. Ação **Conciliar** marca a baixa como `conciliada`.
 
-## Controle de acesso
+**4. Faturamento dividido Coop + Flux** — mantido, com `SplitFaturamento` por CC.
 
-- Tab "Equipe" só aparece se `useCurrentUser().papel` for admin/gestor.
-- Rota direta (`/dashboard?tab=equipe`) também checa e faz fallback para "Visão geral" se não autorizado.
+**5. Acerto** — mantido, com adição: agora consome também `AcertoAjusteRateio` da despesa rateada.
 
-## Detalhes técnicos
+## Impacto nas telas existentes / a criar
 
-- **UI**: nova página/seção em `src/pages/Dashboard.tsx` envolvida em `<Tabs>` (`tabs.tsx` já existe). Componentes novos em `src/components/dashboard/`:
-  - `PresencaKpis.tsx`
-  - `AtendentesStatusTable.tsx`
-  - `LoginHistoryTable.tsx`
-  - `SessionProductivityTable.tsx`
-- **Dados (mock nesta fase)**: novo `src/data/equipeMock.ts` com `atendentes`, `sessoes`, `eventosLogin` — segue o padrão de `operacaoMock.ts` / `relatoriosMock.ts`. API helpers em `src/lib/equipeApi.ts` (filtros, agregações, export CSV) para que a troca por backend real seja só substituir o módulo.
-- **Sem alterações de backend** nesta etapa. Quando o usuário quiser dados reais, plugamos via Lovable Cloud (tabela `auth_events` + presence via realtime) num passo seguinte.
-- **Reuso**: `PageHeader`, `IconTile`, `StatusDot`, `ChannelBadge`, `Tabs`, `Table`, `Select`, `Input`, `Button` — sem novas dependências.
-- **Tokens**: usar `bg-surface`, `border-border`, `text-muted-foreground`, `success/warning/destructive` — nada hardcoded.
+| Tela | Impacto |
+|---|---|
+| **Despesa (novo modal)** | Bloco **Rateio** com modo + tabela editável (CC/Farmácia · % · valor) e validação de soma. |
+| **AcertoDetalhe** | Coluna nova **Ajustes rateados** (link para despesa de origem). Tooltip mostra origem do desconto/acréscimo. |
+| **Contas a pagar / a receber** | Coluna **Saldo**, **% pago/recebido** (barra), botão **Baixar** por linha + ação em lote. Drawer de **histórico de baixas** por lançamento. |
+| **Visão geral** | KPIs: A receber hoje · A pagar hoje · Baixas pendentes de conciliação · Saldo previsto por conta bancária. |
+| **DRE** | Considera apenas valores efetivamente baixados (regime de caixa) **e** competência (regime de competência) — toggle. Rateios entram no CC correto. |
+| **Configurações › Rateio padrão** | Por entregador, permite salvar um rateio default usado nas despesas recorrentes (auxílio combustível, EPI, etc.). |
+| **Auditoria** | Toda baixa, estorno e rateio gravados em `historico[]`. |
 
-## Fora de escopo
+## Componentes a criar (delta)
 
-- Auditoria de segurança (tentativas falhas, novos dispositivos suspeitos) — fica para um passo futuro.
-- Integração real de presence/heartbeat — entra junto com a ativação do backend.
+`src/components/financeiro/`:
+- `RateioEditor.tsx` — tabela editável com modos % igual / % manual / valor / proporcional.
+- `BaixaDialog.tsx` — formulário de baixa individual.
+- `BaixaLoteDrawer.tsx` — baixa em lote.
+- `BaixasHistorico.tsx` — drawer com timeline das baixas + estorno.
+- `SaldoCell.tsx` — barra + % usada em A Pagar/A Receber.
+- `ConciliacaoMatch.tsx` — par baixa × movimento bancário.
+
+`src/lib/`:
+- `rateio.ts` — funções `dividirIgual`, `dividirProporcionalEntregas`, `validarSoma`, `aplicarAoAcerto`.
+- `baixas.ts` — `criarBaixa`, `estornar`, `recomputarSaldo`, `statusAtual`.
+- `conciliacao.ts` — `sugerirMatches`, `marcarConciliada`.
+
+## Permissões
+
+- **Lançar despesa / rateio**: gestor financeiro e analista.
+- **Baixar / estornar**: só gestor financeiro.
+- **Conciliar**: gestor financeiro.
+- **Aprovar acerto**: gestor financeiro (já no plano).
+
+## Fora deste escopo (próximas etapas)
+
+- Backend real (Lovable Cloud), RLS por empresa/CC, edge functions de geração de boleto/PIX, importação OFX real, NFS-e e Open Finance.
+- Notificações WhatsApp ao baixar fatura / aprovar acerto.
