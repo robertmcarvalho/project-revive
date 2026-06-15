@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
   ChevronRight, Edit3, FileText, Clock, MessageSquare, Headphones, Wallet, Wrench,
-  DollarSign, CalendarDays, PieChart, Layers, Link2, Hash,
+  DollarSign, CalendarDays, PieChart, Layers, Hash,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { financeiroApi } from "@/lib/financeiroApi";
 import type {
-  Farmacia as BillingFarmacia, CentroCusto, SplitFaturamento, RegraVinculo, Entregador,
+  Farmacia as BillingFarmacia, CentroCusto, SplitFaturamento,
 } from "@/data/financeiroMock";
-import { fmtBRL } from "@/lib/baixas";
 import { FarmaciaFaturamentoEditor } from "@/components/financeiro/FarmaciaFaturamentoEditor";
+
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -94,22 +94,19 @@ const FarmaciaFicha = () => {
   const [farmacias, setFarmacias] = useState<BillingFarmacia[]>([]);
   const [allCcs, setAllCcs] = useState<CentroCusto[]>([]);
   const [allSplits, setAllSplits] = useState<SplitFaturamento[]>([]);
-  const [allRegras, setAllRegras] = useState<RegraVinculo[]>([]);
-  const [billingEntregadores, setBillingEntregadores] = useState<Entregador[]>([]);
   const [editOpen, setEditOpen] = useState(false);
 
   const reload = async () => {
     const c = await financeiroApi.catalogos();
     setFarmacias(c.farmacias); setAllCcs(c.centrosCusto);
-    setAllSplits(c.splitFaturamento); setAllRegras(c.regrasVinculo);
-    setBillingEntregadores(c.entregadores);
+    setAllSplits(c.splitFaturamento);
   };
   useEffect(() => { reload(); }, []);
 
   const billing = farmacias.find((b) => b.nome === f.nome) ?? farmacias[0];
   const ccs = billing ? allCcs.filter((c) => c.farmaciaId === billing.id) : [];
   const splitsCC = allSplits.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
-  const vinculosCC = billing ? allRegras.filter((r) => r.farmaciaId === billing.id) : [];
+
 
   if (!billing) return null;
 
@@ -306,24 +303,6 @@ const FarmaciaFicha = () => {
                 </div>
               </div>
 
-              {/* Taxas default */}
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <div className="rounded-lg border border-border bg-background p-3">
-                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa de entrega default</div>
-                  <div className="mt-1 font-mono text-sm font-medium">
-                    {billing.taxaEntregaDefault != null ? fmtBRL(billing.taxaEntregaDefault) : "—"}
-                  </div>
-                </div>
-                <div className="rounded-lg border border-border bg-background p-3">
-                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa repasse default</div>
-                  <div className="mt-1 font-mono text-sm font-medium">
-                    {billing.taxaRepasseDefault != null ? fmtBRL(billing.taxaRepasseDefault) : "—"}
-                  </div>
-                </div>
-              </div>
-
-
-
               {billing.billingEmail && (
                 <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px]">
                   <Mail className="h-3 w-3 text-muted-foreground" />
@@ -359,43 +338,7 @@ const FarmaciaFicha = () => {
                       );
                     })}
                     {ccs.length === 0 && (
-                      <tr><td colSpan={4} className="px-3 py-4 text-center text-[11px] text-muted-foreground">Nenhum centro de custo cadastrado.</td></tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Regras de vínculo (entregador × CC) */}
-              <h4 className="mb-2 mt-5 inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">
-                <Link2 className="h-3 w-3" /> Regras de vínculo — entregadores
-              </h4>
-              <div className="overflow-hidden rounded-md border border-border">
-                <table className="w-full text-xs">
-                  <thead className="bg-background">
-                    <tr className="text-left text-[10px] uppercase tracking-wider text-subtle-foreground">
-                      <th className="px-3 py-2">Entregador</th>
-                      <th className="px-3 py-2">Centro de custo</th>
-                      <th className="px-3 py-2 text-right">Taxa/entrega</th>
-                      <th className="px-3 py-2 text-right">Mín. semanal</th>
-                      <th className="px-3 py-2 text-right">% Repasse</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {vinculosCC.map((r) => {
-                      const ent = billingEntregadores.find((e) => e.id === r.entregadorId);
-                      const cc = ccs.find((c) => c.id === r.centroCustoId);
-                      return (
-                        <tr key={r.id} className="border-t border-border/60">
-                          <td className="px-3 py-2 font-medium">{ent?.nome ?? r.entregadorId}</td>
-                          <td className="px-3 py-2 text-muted-foreground">{cc?.nome ?? r.centroCustoId}</td>
-                          <td className="px-3 py-2 text-right font-mono">{fmtBRL(r.taxaEntrega)}</td>
-                          <td className="px-3 py-2 text-right font-mono">{r.minimoGarantidoSemanal ? fmtBRL(r.minimoGarantidoSemanal) : "—"}</td>
-                          <td className="px-3 py-2 text-right font-mono">{r.pctRepasse}%</td>
-                        </tr>
-                      );
-                    })}
-                    {vinculosCC.length === 0 && (
-                      <tr><td colSpan={5} className="px-3 py-4 text-center text-[11px] text-muted-foreground">Sem regras de vínculo cadastradas.</td></tr>
+                      <tr><td colSpan={4} className="px-3 py-4 text-center text-[11px] text-muted-foreground">Nenhum centro de custo cadastrado. Use "Editar faturamento" para criar.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -405,10 +348,11 @@ const FarmaciaFicha = () => {
                 <Hash className="mt-0.5 h-3 w-3 shrink-0" />
                 <span>
                   Estas configurações são a fonte única de verdade para acertos, faturas Coop/Flux e relatórios.
-                  Alterações aqui refletem automaticamente no módulo Financeiro.
+                  Taxas e mínimo garantido ficam em <strong>Condições comerciais</strong>; vínculos individuais em <strong>Entregadores vinculados</strong>.
                 </span>
               </div>
             </section>
+
 
 
 
