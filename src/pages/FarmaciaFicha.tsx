@@ -594,6 +594,9 @@ const FarmaciaFicha = () => {
           </div>
         </div>
       </div>
+
+      <FarmaciaFaturamentoEditor open={editOpen} farmacia={billing}
+        onClose={() => setEditOpen(false)} onSaved={reload} />
     </div>
   );
 };
