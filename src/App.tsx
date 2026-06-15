@@ -47,6 +47,13 @@ import FinDespesas from "./pages/financeiro/Despesas.tsx";
 import FinConciliacao from "./pages/financeiro/Conciliacao.tsx";
 import FinDRE from "./pages/financeiro/DRE.tsx";
 import FinConfig from "./pages/financeiro/Configuracoes.tsx";
+import FinEntregas from "./pages/financeiro/Entregas.tsx";
+import FinCotas from "./pages/financeiro/Cotas.tsx";
+import FinRelatorios from "./pages/financeiro/Relatorios.tsx";
+import FinRelInss from "./pages/financeiro/RelatorioInss.tsx";
+import FinRelSeg from "./pages/financeiro/RelatorioSeguradora.tsx";
+import FinRelPix from "./pages/financeiro/RelatorioPixBatch.tsx";
+import FaturaPublica from "./pages/FaturaPublica.tsx";
 import Configuracoes from "./pages/Configuracoes.tsx";
 import Operacao from "./pages/Operacao.tsx";
 import Copiloto from "./pages/Copiloto.tsx";
@@ -100,10 +107,17 @@ const App = () => (
             <Route path="a-receber" element={<FinAReceber />} />
             <Route path="a-pagar" element={<FinAPagar />} />
             <Route path="despesas" element={<FinDespesas />} />
+            <Route path="entregas" element={<FinEntregas />} />
+            <Route path="cotas" element={<FinCotas />} />
             <Route path="conciliacao" element={<FinConciliacao />} />
+            <Route path="relatorios" element={<FinRelatorios />} />
+            <Route path="relatorios/inss-contabilidade" element={<FinRelInss />} />
+            <Route path="relatorios/seguradora" element={<FinRelSeg />} />
+            <Route path="relatorios/pagamento-pix" element={<FinRelPix />} />
             <Route path="dre" element={<FinDRE />} />
             <Route path="configuracoes" element={<FinConfig />} />
           </Route>
+          <Route path="/public/billing/:token" element={<FaturaPublica />} />
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
