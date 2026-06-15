@@ -123,9 +123,22 @@ export interface ExpenseType {
   recurrence?: "mensal" | "semanal" | "anual"; active: boolean;
 }
 
+export interface QuotaTemplate {
+  id: string; nome: string;
+  regra: "monthly_weekday";
+  diaSemana: number; ocorrenciaNoMes: number;
+}
+
 export interface QuotaSchedule {
-  id: string; entregadorId: string; valor: number;
-  regra: "monthly_weekday"; diaSemana: number; ocorrenciaNoMes: number;
+  id: string; entregadorId: string;
+  /** valor por parcela */
+  valor: number;
+  /** modelo de agenda (regra/dia da semana/ocorrência) */
+  templateId: string;
+  /** quantidade total de parcelas (undefined = recorrente sem fim) */
+  parcelas?: number;
+  /** quantas já foram lançadas/pagas */
+  parcelasPagas?: number;
   ativa: boolean; inicioEm: string; fimEm?: string;
 }
 
