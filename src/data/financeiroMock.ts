@@ -328,10 +328,15 @@ export const legalEntities: LegalEntity[] = [
     invoiceFooterNotes: "Pagamento via PIX/TED na conta indicada." },
 ];
 
+export const quotaTemplates: QuotaTemplate[] = [
+  { id: "qt-2qui", nome: "2ª quinta do mês", regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2 },
+  { id: "qt-1seg", nome: "1ª segunda do mês", regra: "monthly_weekday", diaSemana: 1, ocorrenciaNoMes: 1 },
+];
+
 export const quotasIniciais: QuotaSchedule[] = [
-  { id: "q1", entregadorId: "e1", valor: 80, regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2, ativa: true, inicioEm: "2025-01-01" },
-  { id: "q2", entregadorId: "e2", valor: 80, regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2, ativa: true, inicioEm: "2025-01-01" },
-  { id: "q3", entregadorId: "e3", valor: 80, regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2, ativa: true, inicioEm: "2025-04-01" },
+  { id: "q1", entregadorId: "e1", valor: 80, templateId: "qt-2qui", parcelas: 12, parcelasPagas: 5, ativa: true, inicioEm: "2025-01-01" },
+  { id: "q2", entregadorId: "e2", valor: 80, templateId: "qt-2qui", parcelas: 6, parcelasPagas: 2, ativa: true, inicioEm: "2025-01-01" },
+  { id: "q3", entregadorId: "e3", valor: 80, templateId: "qt-2qui", ativa: true, inicioEm: "2025-04-01" },
 ];
 
 export const paymentBatchExportsIniciais: PaymentBatchExport[] = [
