@@ -89,6 +89,14 @@ const FarmaciaFicha = () => {
   const { id = "1" } = useParams();
   const f = FARMACIAS_DB[id] ?? FARMACIAS_DB["1"];
 
+  // Dados do módulo Financeiro (mock) — centraliza tudo no cadastro da farmácia.
+  const billing = billingFarmacias.find((b) => b.nome === f.nome) ?? billingFarmacias[0];
+  const ccs = billingCC.filter((c) => c.farmaciaId === billing.id);
+  const splitsCC = billingSplit.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
+  const vinculosCC = billingRegras.filter((r) => r.farmaciaId === billing.id);
+
+
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-6xl px-8 py-8">
