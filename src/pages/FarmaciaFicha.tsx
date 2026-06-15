@@ -2,12 +2,18 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
   ChevronRight, Edit3, FileText, Clock, MessageSquare, Headphones, Wallet, Wrench,
-  DollarSign, CalendarDays,
+  DollarSign, CalendarDays, PieChart, Layers, Link2, Hash,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  farmacias as billingFarmacias, centrosCusto as billingCC,
+  splitFaturamento as billingSplit, regrasVinculo as billingRegras,
+  entregadores as billingEntregadores,
+} from "@/data/financeiroMock";
+import { fmtBRL } from "@/lib/baixas";
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
