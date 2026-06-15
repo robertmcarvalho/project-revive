@@ -270,8 +270,8 @@ const FarmaciaFicha = () => {
                 <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold">
                   <PieChart className="h-3.5 w-3.5" /> Faturamento & vínculos
                 </h3>
-                <Button asChild variant="ghost" size="sm" className="h-7 gap-1.5 text-[11px]">
-                  <Link to="/financeiro/configuracoes"><Edit3 className="h-3 w-3" /> Editar no Financeiro</Link>
+                <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px]" onClick={() => setEditOpen(true)}>
+                  <Edit3 className="h-3 w-3" /> Editar faturamento
                 </Button>
               </div>
 
