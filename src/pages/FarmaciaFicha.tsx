@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
   ChevronRight, Edit3, FileText, Clock, MessageSquare, Headphones, Wallet, Wrench,
-  DollarSign, CalendarDays, PieChart, Layers, Link2, Hash,
+  DollarSign, CalendarDays, PieChart, Layers, Hash,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { financeiroApi } from "@/lib/financeiroApi";
 import type {
-  Farmacia as BillingFarmacia, CentroCusto, SplitFaturamento, RegraVinculo, Entregador,
+  Farmacia as BillingFarmacia, CentroCusto, SplitFaturamento,
 } from "@/data/financeiroMock";
-import { fmtBRL } from "@/lib/baixas";
 import { FarmaciaFaturamentoEditor } from "@/components/financeiro/FarmaciaFaturamentoEditor";
+
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
