@@ -1,15 +1,21 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutGrid, Receipt, FileText, ArrowDownToLine, ArrowUpFromLine, Coins, Banknote, BarChart3, Settings } from "lucide-react";
+import {
+  LayoutGrid, Receipt, FileText, ArrowDownToLine, ArrowUpFromLine, Coins,
+  Banknote, BarChart3, Settings, Truck, Wallet, ClipboardList,
+} from "lucide-react";
 
 const items = [
   { to: "/financeiro", label: "Visão geral", icon: LayoutGrid, end: true },
   { to: "/financeiro/acertos", label: "Acertos", icon: Receipt },
+  { to: "/financeiro/entregas", label: "Entregas", icon: Truck },
   { to: "/financeiro/faturamento", label: "Faturamento", icon: FileText },
   { to: "/financeiro/a-receber", label: "A receber", icon: ArrowDownToLine },
   { to: "/financeiro/a-pagar", label: "A pagar", icon: ArrowUpFromLine },
   { to: "/financeiro/despesas", label: "Despesas", icon: Coins },
+  { to: "/financeiro/cotas", label: "Cotas", icon: Wallet },
   { to: "/financeiro/conciliacao", label: "Conciliação", icon: Banknote },
+  { to: "/financeiro/relatorios", label: "Relatórios", icon: ClipboardList },
   { to: "/financeiro/dre", label: "DRE", icon: BarChart3 },
   { to: "/financeiro/configuracoes", label: "Configurações", icon: Settings },
 ];
