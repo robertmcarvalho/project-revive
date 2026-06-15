@@ -18,7 +18,13 @@ export interface CentroCusto { id: string; nome: string; farmaciaId: string; cnp
 export interface Farmacia {
   id: string; nome: string; centrosCusto: string[]; cicloDia: "segunda";
   contractScope: ContractScope; splitCoopPct: number; splitFluxPct: number;
-  mgEnabled: boolean; minimumDeliveriesCount?: number;
+  mgEnabled: boolean;
+  /** Mínimo garantido — número de entregas/semana */
+  minimumDeliveriesCount?: number;
+  /** Taxa de entrega default cobrada da farmácia (sobrescreve a do vínculo se ausente) */
+  taxaEntregaDefault?: number;
+  /** Taxa repassada ao entregador default */
+  taxaRepasseDefault?: number;
   billingEmail?: string; fluxCodpes?: number; fluxCodloc?: number;
 }
 
