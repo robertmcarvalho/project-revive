@@ -1,122 +1,154 @@
-## Visão geral
+## Objetivo
 
-Financeiro completo com submenu, cobrindo: Acerto semanal (Cooperativa), faturamento dividido Coop + Flux Farma, contas a pagar (entregadores + operacional Coop/Flux), contas a receber, despesas fixas/variáveis com **rateio multi-vínculo**, **baixas de pagamento/recebimento** com conciliação, centros de custo e DRE.
+Refatorar o módulo `Financeiro` existente para refletir o **documento mestre de Billing** (Aethera Flux Farma / CoopMob). Mantemos o que já foi construído (acertos, faturamento, A pagar/receber, despesas, conciliação, DRE, configurações) e **adicionamos** o que falta para virar o módulo definitivo.
 
-Frontend + camada `financeiroApi.ts` (mock async) para troca futura por backend real.
+> Mantemos rota de UI em `/financeiro` (mais natural em PT) mas alinhamos toda a nomenclatura interna, modelos e telas ao mestre.
 
-## Submenu do Financeiro
+## 1. Ajustes em telas existentes
 
-`/financeiro` vira layout com subnav + `<Outlet/>`:
+| Tela atual | Ajuste |
+|---|---|
+| **Visão geral** | KPIs em **regime de caixa** (A vencer hoje · A pagar hoje · Baixas pendentes · Saldo previsto por conta). Toggle global **Competência / Caixa**. Alertas de ciclos abertos + entregadores sem PIX. |
+| **Acertos** | Granularidade reforçada `entregador × farmácia × ciclo` (já temos). Adicionar coluna **Origem entregas** (Flux API / Manual / CSV). Recalcular puxa contagem de `delivery_records`. |
+| **Acerto detalhe** | Lógica de **falta sem diarista** = desconto `MG ÷ 6` (semana operacional 6 dias) — implementar em `lib/acerto.ts`. Tooltip de origem nos ajustes rateados (já temos). |
+| **Faturamento** | Confirmado: 2 faturas por farmácia/ciclo (Coop + Flux) — já implementado. Adicionar **link público HTML** (`/public/billing/:token`) gerado na aprovação. Botão **Reenviar e-mail** (mock). |
+| **A receber / A pagar** | Sem mudança estrutural; já temos baixas + saldo. A Pagar ganha aba "INSS (despesa Coop)" dentro de Operacional Coop. |
+| **Despesas** | Tipos de despesa virarem **cadastráveis** (fixo/variável) em Configurações; modal de despesa passa a usar select de `expenseTypes`. Rateio permanece. |
+| **Conciliação** | Mantém. |
+| **DRE** | Toggle **Competência / Caixa** já planejado. INSS aparece como linha de despesa Coop. |
+| **Configurações** | Reorganizar em sub-abas: Entidades · Centros de custo · Split Coop×Flux · Regras de vínculo · Tipos de despesa · Fornecedores · Contas bancárias/cartões · Cotas. |
 
-- **Visão geral** — KPIs + alertas (a vencer hoje, em atraso, baixas pendentes).
-- **Acertos** + `/acertos/:id`
-- **Faturamento** — faturas Coop + Flux por farmácia/CC.
-- **Contas a receber** — com fluxo de **baixa** (total/parcial).
-- **Contas a pagar** com abas: **Entregadores**, **Operacional — Coop**, **Operacional — Flux** — todas com fluxo de **baixa**.
-- **Despesas** — lançamento com **rateio** opcional.
-- **Baixas / Conciliação** — extrato consolidado de baixas, importação OFX/CSV (mock) e match com lançamentos.
-- **DRE**
-- **Configurações** — Centros de custo · Regras de vínculo · **Split Coop × Flux por CC** · Categorias · Fornecedores · Contas bancárias/cartões.
+## 2. Telas novas
 
-## Modelo de dados (mock, `src/data/financeiroMock.ts`)
+| Rota | Função |
+|---|---|
+| `/financeiro/entregas` | Lista de `delivery_records` por ciclo · filtros farmácia/entregador/origem · ações Importar CSV, Lançar manual, Sync Flux (mock). Mostra `verified`, `cancelled`, `document_number`. |
+| `/financeiro/cotas` | CRUD de cotas cooperativas (regra `monthly_weekday`, valor, entregador). Calendário de vencimentos. Integra como desconto no AP do entregador (separado de INSS). |
+| `/financeiro/relatorios` | Hub com 3 cards: INSS Contabilidade · Seguradora · Pagamento PIX em lote. |
+| `/financeiro/relatorios/inss-contabilidade` | Seleciona mês competência → lista Nome · CPF · Valor faturado no mês (soma remuneração bruta Coop). Export CSV/HTML. Marca "enviado". |
+| `/financeiro/relatorios/seguradora` | Abas **Ativos** (na data corte) e **Desligados no mês** (usa `inactive_at`). Campos: nome, CPF, nascimento, telefone, data vínculo, líder, farmácias (+ data desligamento/motivo na aba Desligados). Export CSV/HTML. |
+| `/financeiro/relatorios/pagamento-pix` | Seleciona ciclo aprovado → prévia 1 linha por entregador (nome, CPF, tipo chave, chave PIX, valor líquido). Bloqueia/avisa entregadores sem PIX. Export CSV genérico. Registra em `paymentBatchExports`. |
+| `/financeiro/configuracoes/entidades` | CRUD `legalEntities` (CoopMob e Flux Farma): identificação, endereço, contato, dados bancários, parâmetros comerciais (split default, margem Flux, header/footer fatura, logo). |
+| `/financeiro/configuracoes/despesas` | CRUD `expenseTypes` (kind fixo/variável, CC padrão, entidade padrão, allocation_mode, recorrência). |
+| `/public/billing/:token` | Página pública (sem auth) com HTML da fatura: cabeçalho da entidade + linhas + detalhe de entregas. |
+
+## 3. Modelo de dados (delta no `financeiroMock.ts`)
 
 ```text
-# (modelos anteriores mantidos: Empresa, CentroCusto, Farmacia,
-#  RegraVinculo, SplitFaturamento, Entrega, Adiantamento, Diaria,
-#  Acerto, AcertoLinha, Fatura, Fornecedor, CategoriaDespesa,
-#  ContaBancaria, Cartao)
+# Novos
+LegalEntity        { id, entityType:'coop'|'flux', legalName, tradeName, cnpj,
+                     stateReg?, municipalReg?, taxRegime?,
+                     address:{cep,logradouro,numero,bairro,cidade,uf},
+                     financialEmail, commercialEmail, phone,
+                     bank:{code,name,branch,account,digit,type},
+                     pixKey?, pixKeyType?,
+                     defaultSplitCoopPct, defaultSplitFluxPct,
+                     fluxServiceMarginPct?,
+                     invoiceHeaderNotes?, invoiceFooterNotes?, logoUrl? }
 
-# ── Rateio (NOVO) ──
-RateioItem        { centroCustoId, farmaciaId?, percentual, valor }
-                  # Σ percentual = 100, Σ valor = total do lançamento
+DeliveryRecord     { id, source:'flux_api'|'flux_db'|'manual'|'csv'|'external_app',
+                     externalId, fluxCodpes?, fluxCodloc?,
+                     farmaciaId, entregadorId, deliveredAt,
+                     documentNumber?, routeId?, cancelled, verified,
+                     cicloId? }
 
-ContaPagar        { ...campos anteriores...,
-                    rateio?: RateioItem[],         # opcional
-                    valorPago: number,             # soma das baixas
-                    saldo: number }                # valor − valorPago
+ExpenseType        { id, name, kind:'fixa'|'variavel',
+                     defaultCentroCustoId?, defaultEntity:'coop'|'flux'|'ambos',
+                     allocationMode:'none'|'per_pharmacy'|'per_driver'|'per_delivery',
+                     recurrence?:'mensal'|'semanal'|'anual', active }
 
-ContaReceber      { ...campos anteriores...,
-                    valorRecebido, saldo,
-                    rateio?: RateioItem[] }        # raro mas suportado
+QuotaSchedule      { id, entregadorId, valor, regra:'monthly_weekday',
+                     diaSemana, ocorrenciaNoMes, ativa, inicioEm, fimEm? }
 
-# ── Baixas (NOVO) ──
-Baixa             { id, tipo:'pagamento'|'recebimento',
-                    lancamentoId,                   # ContaPagar | ContaReceber
-                    data, valor, forma:'pix'|'ted'|'boleto'|'dinheiro'|'cartao'|'compensacao',
-                    contaBancariaId? | cartaoId?,
-                    juros?, desconto?, taxa?,       # ajustes do dia da baixa
-                    comprovanteUrl?, obs?,
-                    usuarioId, criadoEm,
-                    estornadaEm?, estornoMotivo? }
+PaymentBatchExport { id, cicloId, geradoEm, geradoPor,
+                     totalEntregadores, totalValor, contaOrigemId,
+                     formato:'csv_generico'|'banco_x',
+                     status:'gerado'|'enviado_banco'|'conciliado' }
 
-# Despesas de entregador rateadas viram 1 ContaPagar mãe + N AcertoAjuste
-AcertoAjusteRateio { acertoId, entregadorId, contaPagarId,
-                     valor,                         # parte rateada nesse vínculo
-                     descricao, aplicarEm:'a_pagar'|'a_faturar'|'ambos' }
+MonthlyReportRun   { id, tipo:'inss'|'seguradora_ativos'|'seguradora_desligados',
+                     competencia, geradoEm, geradoPor, enviadoEm?, totais }
+
+# Alterações
+Farmacia (extensão): centroCustoId, contractScope:'flux_only'|'coop_only'|'both',
+                     splitCoopPct, splitFluxPct, mgEnabled,
+                     minimumDeliveriesCount?, billingEmail,
+                     fluxCodpes?, fluxCodloc?
+
+Entregador (extensão): pixKey?, pixKeyType?, cpf, dataNascimento?,
+                       inactiveAt?, terminationReason?
+
+Acerto/AcertoLinha: adicionar campo `descontoFaltaSemDiarista` (= MG/6 × dias)
+                    e `origemEntregas` (contagem por source).
 ```
 
-## Regras-chave (novas + revisadas)
+## 4. Regras de negócio (lib)
 
-**1. Rateio de despesas**
-Ao lançar uma despesa (ex.: diária de R$ 100 do entregador X com vínculo em 3 farmácias):
+- `lib/acerto.ts` — adicionar `descontoFaltaSemDiarista(mg, dias) = (mg/6)*dias` aplicado tanto em `valorEntregador` quanto em `valorFaturadoFarmacia` (lados independentes, conforme item 4.3 do mestre).
+- `lib/billing/entregas.ts` (novo) — `agruparPorCiclo`, `dedupe(source+externalId)`, `marcarVerificada`, `importarCSV(mock)`.
+- `lib/billing/inssReport.ts` (novo) — soma remuneração bruta Coop por entregador no mês civil; **não desconta** do entregador.
+- `lib/billing/seguradora.ts` (novo) — `listarAtivos(dataCorte)`, `listarDesligadosNoMes(mes)`.
+- `lib/billing/pixBatch.ts` (novo) — `gerarPrevia(cicloId)`, valida `pixKey`, exporta CSV (Blob download).
+- `lib/billing/cotas.ts` (novo) — `proximosVencimentos`, `aplicarNoAP(entregadorId, cicloId)`.
+- `lib/financeiroApi.ts` — endpoints mock novos: `listEntregas`, `importarEntregasCSV`, `listCotas/criarCota`, `listLegalEntities/saveLegalEntity`, `listExpenseTypes/saveExpenseType`, `relatorioInss`, `relatorioSeguradora`, `gerarPixBatch`, `registrarExportPixBatch`.
 
-- Operador escolhe modo: **% igual** (33,3 / 33,3 / 33,4), **% manual**, **valor manual**, ou **proporcional às entregas no ciclo** (calculado a partir das `Entrega` de cada vínculo).
-- Sistema valida `Σ = 100%` / `Σ valor = total` (tolerância 1 centavo, ajuste no último item).
-- Se a despesa é vinculada a entregador, cada item do rateio gera um `AcertoAjusteRateio` que entra no acerto da farmácia/CC correspondente:
-  - `aplicarEm = 'a_pagar'` → desconta do `valorEntregador`.
-  - `aplicarEm = 'a_faturar'` → soma no `valorFaturadoFarmacia` (repasse para a farmácia pagar).
-  - `aplicarEm = 'ambos'` → soma na farmácia e não desconta do entregador (caso de auxílio bancado pela farmácia).
-- Para despesas operacionais (ex.: software rateado entre Coop e Flux, ou entre CCs), o rateio só afeta a **DRE** — cada parcela do rateio aparece no CC correspondente.
+## 5. Componentes novos
 
-**2. Baixas de pagamento/recebimento**
-- Drawer **Baixar lançamento** com: data, valor (default = saldo), forma, conta bancária/cartão, juros/desconto/taxa, comprovante.
-- Permite **baixa parcial** (gera várias `Baixa` até zerar `saldo`); status do lançamento: `aberta → parcial → paga/recebida → vencida`.
-- Permite **baixa em lote** (selecionar várias contas → uma baixa por linha, mesma conta bancária/data).
-- **Estorno** de baixa (gera contra-lançamento e devolve ao saldo, com motivo obrigatório e auditoria).
-- Cada baixa cria automaticamente o movimento na `ContaBancaria`/`Cartao` para alimentar a tela de Conciliação.
+`src/components/financeiro/`
+- `EntregasTable.tsx`, `ImportCsvDialog.tsx`, `EntregaManualDialog.tsx`
+- `CotaForm.tsx`, `CotasCalendar.tsx`
+- `LegalEntityForm.tsx` (abas Identificação · Endereço · Bancário · Comercial)
+- `ExpenseTypeForm.tsx`
+- `RelatorioInssTable.tsx`, `RelatorioSeguradoraTable.tsx`
+- `PixBatchPreview.tsx` (com warnings de PIX faltando) + `PixBatchExportButton.tsx`
+- `CompetenciaCaixaToggle.tsx` (compartilhado entre Visão geral / DRE / Relatórios)
+- `FaturaPublicaView.tsx` (renderiza a página pública)
 
-**3. Conciliação (Baixas)**
-Tela única que lista baixas e movimentos importados (OFX/CSV mock) lado a lado, com sugestão de match por valor + data ± 2 dias. Ação **Conciliar** marca a baixa como `conciliada`.
+## 6. Roteamento (`src/App.tsx`)
 
-**4. Faturamento dividido Coop + Flux** — mantido, com `SplitFaturamento` por CC.
+Adicionar sob `/financeiro`:
+```
+entregas, cotas, relatorios (+ inss-contabilidade, seguradora, pagamento-pix),
+configuracoes/entidades, configuracoes/despesas
+```
+Adicionar rota top-level pública: `/public/billing/:token` (sem AppShell).
 
-**5. Acerto** — mantido, com adição: agora consome também `AcertoAjusteRateio` da despesa rateada.
+## 7. SubNav
 
-## Impacto nas telas existentes / a criar
+Reordenar para refletir o mestre: **Visão geral · Acertos · Entregas · Faturamento · A receber · A pagar · Despesas · Cotas · Conciliação · Relatórios · DRE · Configurações**. (12 itens — usar wrap, já é flex-wrap.)
 
-| Tela | Impacto |
-|---|---|
-| **Despesa (novo modal)** | Bloco **Rateio** com modo + tabela editável (CC/Farmácia · % · valor) e validação de soma. |
-| **AcertoDetalhe** | Coluna nova **Ajustes rateados** (link para despesa de origem). Tooltip mostra origem do desconto/acréscimo. |
-| **Contas a pagar / a receber** | Coluna **Saldo**, **% pago/recebido** (barra), botão **Baixar** por linha + ação em lote. Drawer de **histórico de baixas** por lançamento. |
-| **Visão geral** | KPIs: A receber hoje · A pagar hoje · Baixas pendentes de conciliação · Saldo previsto por conta bancária. |
-| **DRE** | Considera apenas valores efetivamente baixados (regime de caixa) **e** competência (regime de competência) — toggle. Rateios entram no CC correto. |
-| **Configurações › Rateio padrão** | Por entregador, permite salvar um rateio default usado nas despesas recorrentes (auxílio combustível, EPI, etc.). |
-| **Auditoria** | Toda baixa, estorno e rateio gravados em `historico[]`. |
+## 8. Mocks
 
-## Componentes a criar (delta)
+Em `financeiroMock.ts`:
+- 2 `LegalEntity` (CoopMob + Flux Farma) com dados realistas fictícios.
+- ~30 `DeliveryRecord` distribuídos entre farmácias do ciclo atual, mix de sources.
+- ~8 `ExpenseType` (Aluguel, Software gestão, Salários, Convênio médico, Auxílio combustível, Despesas bancárias, Comissões, Eventos).
+- 3 `QuotaSchedule`.
+- 1 `PaymentBatchExport` histórico + 2 `MonthlyReportRun`.
+- Estender `Entregador` com `pixKey`, `pixKeyType`, `cpf`, `inactiveAt` (alguns desligados no mês).
+- Estender `Farmacia` com `contractScope`, `billingEmail`, `fluxCodpes/Loc`.
 
-`src/components/financeiro/`:
-- `RateioEditor.tsx` — tabela editável com modos % igual / % manual / valor / proporcional.
-- `BaixaDialog.tsx` — formulário de baixa individual.
-- `BaixaLoteDrawer.tsx` — baixa em lote.
-- `BaixasHistorico.tsx` — drawer com timeline das baixas + estorno.
-- `SaldoCell.tsx` — barra + % usada em A Pagar/A Receber.
-- `ConciliacaoMatch.tsx` — par baixa × movimento bancário.
+## 9. Permissões (UI mock)
 
-`src/lib/`:
-- `rateio.ts` — funções `dividirIgual`, `dividirProporcionalEntregas`, `validarSoma`, `aplicarAoAcerto`.
-- `baixas.ts` — `criarBaixa`, `estornar`, `recomputarSaldo`, `statusAtual`.
-- `conciliacao.ts` — `sugerirMatches`, `marcarConciliada`.
+- **Operador financeiro**: pode criar entregas/despesas/cotas, gerar rascunhos de relatórios e prévia PIX.
+- **Gestor financeiro**: aprova faturas, baixa, exporta PIX batch, edita splits/CC/entidades.
+- Renderizar botões protegidos com prop `role` lida de `localStorage` (mock simples) — não é segurança real.
 
-## Permissões
+## 10. Fora deste escopo
 
-- **Lançar despesa / rateio**: gestor financeiro e analista.
-- **Baixar / estornar**: só gestor financeiro.
-- **Conciliar**: gestor financeiro.
-- **Aprovar acerto**: gestor financeiro (já no plano).
+- Backend real (Lovable Cloud) — toda a camada continua mock em `financeiroApi.ts`.
+- Sync real Flux API/MySQL, OFX real, e-mail real, geração de NF-e/boleto.
+- Templates de PIX batch por banco específico (só CSV genérico na v1).
+- Conciliação automática de retorno bancário.
 
-## Fora deste escopo (próximas etapas)
+## Sequência de implementação
 
-- Backend real (Lovable Cloud), RLS por empresa/CC, edge functions de geração de boleto/PIX, importação OFX real, NFS-e e Open Finance.
-- Notificações WhatsApp ao baixar fatura / aprovar acerto.
+1. Extensões de modelo + mocks (`financeiroMock.ts`).
+2. `LegalEntity` + tela `configuracoes/entidades` (usado no header das faturas).
+3. `ExpenseType` + tela `configuracoes/despesas`; refator do modal de despesa.
+4. Tela `entregas` + lógica `lib/billing/entregas.ts`.
+5. Regra falta-sem-diarista em `lib/acerto.ts`.
+6. Tela `cotas` + integração no AP entregador.
+7. Hub `relatorios` + 3 sub-relatórios (INSS, Seguradora, PIX batch).
+8. Página pública `/public/billing/:token`.
+9. SubNav reordenado + Toggle Competência/Caixa global.
+10. Ajustes finais Visão geral (KPIs + alertas).
