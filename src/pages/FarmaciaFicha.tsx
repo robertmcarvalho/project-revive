@@ -2,12 +2,18 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
   ChevronRight, Edit3, FileText, Clock, MessageSquare, Headphones, Wallet, Wrench,
-  DollarSign, CalendarDays,
+  DollarSign, CalendarDays, PieChart, Layers, Link2, Hash,
 } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  farmacias as billingFarmacias, centrosCusto as billingCC,
+  splitFaturamento as billingSplit, regrasVinculo as billingRegras,
+  entregadores as billingEntregadores,
+} from "@/data/financeiroMock";
+import { fmtBRL } from "@/lib/baixas";
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -82,6 +88,14 @@ const SETOR_ICONS = {
 const FarmaciaFicha = () => {
   const { id = "1" } = useParams();
   const f = FARMACIAS_DB[id] ?? FARMACIAS_DB["1"];
+
+  // Dados do módulo Financeiro (mock) — centraliza tudo no cadastro da farmácia.
+  const billing = billingFarmacias.find((b) => b.nome === f.nome) ?? billingFarmacias[0];
+  const ccs = billingCC.filter((c) => c.farmaciaId === billing.id);
+  const splitsCC = billingSplit.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
+  const vinculosCC = billingRegras.filter((r) => r.farmaciaId === billing.id);
+
+
 
   return (
     <div className="h-full overflow-y-auto">
@@ -231,6 +245,136 @@ const FarmaciaFicha = () => {
                 Valores em reais (BRL). O repasse ao entregador não pode exceder o valor cobrado da farmácia.
               </div>
             </section>
+
+            {/* Faturamento & vínculos — espelha o cadastro no módulo Financeiro */}
+            <section className="rounded-xl border border-border bg-surface p-5">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold">
+                  <PieChart className="h-3.5 w-3.5" /> Faturamento & vínculos
+                </h3>
+                <Button asChild variant="ghost" size="sm" className="h-7 gap-1.5 text-[11px]">
+                  <Link to="/financeiro/configuracoes"><Edit3 className="h-3 w-3" /> Editar no Financeiro</Link>
+                </Button>
+              </div>
+
+              {/* Resumo contratual */}
+              <div className="grid gap-3 md:grid-cols-4">
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Escopo de contrato</div>
+                  <div className="mt-1 text-sm font-medium">
+                    {billing.contractScope === "both" ? "Coop + Flux" : billing.contractScope === "coop_only" ? "Somente Coop" : "Somente Flux"}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Split padrão</div>
+                  <div className="mt-1 font-mono text-sm font-medium">
+                    {billing.splitCoopPct}% Coop · {billing.splitFluxPct}% Flux
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Mínimo garantido</div>
+                  <div className="mt-1 text-sm font-medium">
+                    {billing.mgEnabled ? "Ativo" : "Desativado"}
+                    {billing.minimumDeliveriesCount ? (
+                      <span className="ml-1 font-mono text-[11px] text-muted-foreground">· {billing.minimumDeliveriesCount} entr./sem</span>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Integração Flux</div>
+                  <div className="mt-1 font-mono text-xs">
+                    codpes <span className="text-foreground">{billing.fluxCodpes ?? "—"}</span> · codloc <span className="text-foreground">{billing.fluxCodloc ?? "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {billing.billingEmail && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px]">
+                  <Mail className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-muted-foreground">E-mail de faturamento:</span>
+                  <span className="font-mono">{billing.billingEmail}</span>
+                </div>
+              )}
+
+              {/* Centros de custo + split por CC */}
+              <h4 className="mb-2 mt-5 inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">
+                <Layers className="h-3 w-3" /> Centros de custo & split por CC
+              </h4>
+              <div className="overflow-hidden rounded-md border border-border">
+                <table className="w-full text-xs">
+                  <thead className="bg-background">
+                    <tr className="text-left text-[10px] uppercase tracking-wider text-subtle-foreground">
+                      <th className="px-3 py-2">Centro de custo</th>
+                      <th className="px-3 py-2">CNPJ</th>
+                      <th className="px-3 py-2 text-right">% Cooperativa</th>
+                      <th className="px-3 py-2 text-right">% Flux Farma</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ccs.map((c) => {
+                      const sp = splitsCC.find((s) => s.centroCustoId === c.id);
+                      return (
+                        <tr key={c.id} className="border-t border-border/60">
+                          <td className="px-3 py-2 font-medium">{c.nome}</td>
+                          <td className="px-3 py-2 font-mono text-muted-foreground">{c.cnpj ?? "—"}</td>
+                          <td className="px-3 py-2 text-right font-mono">{sp ? `${sp.pctCooperativa}%` : "—"}</td>
+                          <td className="px-3 py-2 text-right font-mono">{sp ? `${sp.pctFlux}%` : "—"}</td>
+                        </tr>
+                      );
+                    })}
+                    {ccs.length === 0 && (
+                      <tr><td colSpan={4} className="px-3 py-4 text-center text-[11px] text-muted-foreground">Nenhum centro de custo cadastrado.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Regras de vínculo (entregador × CC) */}
+              <h4 className="mb-2 mt-5 inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">
+                <Link2 className="h-3 w-3" /> Regras de vínculo — entregadores
+              </h4>
+              <div className="overflow-hidden rounded-md border border-border">
+                <table className="w-full text-xs">
+                  <thead className="bg-background">
+                    <tr className="text-left text-[10px] uppercase tracking-wider text-subtle-foreground">
+                      <th className="px-3 py-2">Entregador</th>
+                      <th className="px-3 py-2">Centro de custo</th>
+                      <th className="px-3 py-2 text-right">Taxa/entrega</th>
+                      <th className="px-3 py-2 text-right">Mín. semanal</th>
+                      <th className="px-3 py-2 text-right">% Repasse</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vinculosCC.map((r) => {
+                      const ent = billingEntregadores.find((e) => e.id === r.entregadorId);
+                      const cc = ccs.find((c) => c.id === r.centroCustoId);
+                      return (
+                        <tr key={r.id} className="border-t border-border/60">
+                          <td className="px-3 py-2 font-medium">{ent?.nome ?? r.entregadorId}</td>
+                          <td className="px-3 py-2 text-muted-foreground">{cc?.nome ?? r.centroCustoId}</td>
+                          <td className="px-3 py-2 text-right font-mono">{fmtBRL(r.taxaEntrega)}</td>
+                          <td className="px-3 py-2 text-right font-mono">{r.minimoGarantidoSemanal ? fmtBRL(r.minimoGarantidoSemanal) : "—"}</td>
+                          <td className="px-3 py-2 text-right font-mono">{r.pctRepasse}%</td>
+                        </tr>
+                      );
+                    })}
+                    {vinculosCC.length === 0 && (
+                      <tr><td colSpan={5} className="px-3 py-4 text-center text-[11px] text-muted-foreground">Sem regras de vínculo cadastradas.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-3 flex items-start gap-2 rounded-md border border-dashed border-border bg-background/40 p-3 text-[11px] text-muted-foreground">
+                <Hash className="mt-0.5 h-3 w-3 shrink-0" />
+                <span>
+                  Estas configurações são a fonte única de verdade para acertos, faturas Coop/Flux e relatórios.
+                  Alterações aqui refletem automaticamente no módulo Financeiro.
+                </span>
+              </div>
+            </section>
+
+
 
             {/* Horário de funcionamento do delivery */}
             <section className="rounded-xl border border-border bg-surface p-5">
