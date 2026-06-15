@@ -82,7 +82,7 @@ export const financeiroApi = {
     venc.setDate(venc.getDate() + 7);
     const vencStr = venc.toISOString().slice(0, 10);
     const baseNum = String(_faturas.length + 1).padStart(4, "0");
-    const novas: Fatura[] = [
+    const candidatos: Fatura[] = [
       { id: `ft-${baseNum}-c`, numero: `F-COOP-${baseNum}`, farmaciaId: a.farmaciaId, centroCustoId: a.centroCustoId,
         empresa: "coop", cicloInicio: a.cicloInicio, cicloFim: a.cicloFim,
         valor: +(a.totalFaturado * split.pctCooperativa / 100).toFixed(2),
@@ -91,7 +91,8 @@ export const financeiroApi = {
         empresa: "flux", cicloInicio: a.cicloInicio, cicloFim: a.cicloFim,
         valor: +(a.totalFaturado * split.pctFlux / 100).toFixed(2),
         status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken() },
-    ].filter((f) => f.valor > 0);
+    ];
+    const novas: Fatura[] = candidatos.filter((f) => f.valor > 0);
     _faturas.push(...novas);
     novas.forEach((f) => {
       _contasReceber.push({
