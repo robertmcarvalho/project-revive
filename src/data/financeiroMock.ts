@@ -18,7 +18,13 @@ export interface CentroCusto { id: string; nome: string; farmaciaId: string; cnp
 export interface Farmacia {
   id: string; nome: string; centrosCusto: string[]; cicloDia: "segunda";
   contractScope: ContractScope; splitCoopPct: number; splitFluxPct: number;
-  mgEnabled: boolean; minimumDeliveriesCount?: number;
+  mgEnabled: boolean;
+  /** Mínimo garantido — número de entregas/semana */
+  minimumDeliveriesCount?: number;
+  /** Taxa de entrega default cobrada da farmácia (sobrescreve a do vínculo se ausente) */
+  taxaEntregaDefault?: number;
+  /** Taxa repassada ao entregador default */
+  taxaRepasseDefault?: number;
   billingEmail?: string; fluxCodpes?: number; fluxCodloc?: number;
 }
 
@@ -117,9 +123,22 @@ export interface ExpenseType {
   recurrence?: "mensal" | "semanal" | "anual"; active: boolean;
 }
 
+export interface QuotaTemplate {
+  id: string; nome: string;
+  regra: "monthly_weekday";
+  diaSemana: number; ocorrenciaNoMes: number;
+}
+
 export interface QuotaSchedule {
-  id: string; entregadorId: string; valor: number;
-  regra: "monthly_weekday"; diaSemana: number; ocorrenciaNoMes: number;
+  id: string; entregadorId: string;
+  /** valor por parcela */
+  valor: number;
+  /** modelo de agenda (regra/dia da semana/ocorrência) */
+  templateId: string;
+  /** quantidade total de parcelas (undefined = recorrente sem fim) */
+  parcelas?: number;
+  /** quantas já foram lançadas/pagas */
+  parcelasPagas?: number;
   ativa: boolean; inicioEm: string; fimEm?: string;
 }
 
@@ -309,10 +328,15 @@ export const legalEntities: LegalEntity[] = [
     invoiceFooterNotes: "Pagamento via PIX/TED na conta indicada." },
 ];
 
+export const quotaTemplates: QuotaTemplate[] = [
+  { id: "qt-2qui", nome: "2ª quinta do mês", regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2 },
+  { id: "qt-1seg", nome: "1ª segunda do mês", regra: "monthly_weekday", diaSemana: 1, ocorrenciaNoMes: 1 },
+];
+
 export const quotasIniciais: QuotaSchedule[] = [
-  { id: "q1", entregadorId: "e1", valor: 80, regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2, ativa: true, inicioEm: "2025-01-01" },
-  { id: "q2", entregadorId: "e2", valor: 80, regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2, ativa: true, inicioEm: "2025-01-01" },
-  { id: "q3", entregadorId: "e3", valor: 80, regra: "monthly_weekday", diaSemana: 4, ocorrenciaNoMes: 2, ativa: true, inicioEm: "2025-04-01" },
+  { id: "q1", entregadorId: "e1", valor: 80, templateId: "qt-2qui", parcelas: 12, parcelasPagas: 5, ativa: true, inicioEm: "2025-01-01" },
+  { id: "q2", entregadorId: "e2", valor: 80, templateId: "qt-2qui", parcelas: 6, parcelasPagas: 2, ativa: true, inicioEm: "2025-01-01" },
+  { id: "q3", entregadorId: "e3", valor: 80, templateId: "qt-2qui", ativa: true, inicioEm: "2025-04-01" },
 ];
 
 export const paymentBatchExportsIniciais: PaymentBatchExport[] = [

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft, Building2, MapPin, Phone, Mail, Users, Truck, Crown,
@@ -8,12 +9,12 @@ import { PageHeader } from "@/components/PageHeader";
 import { StatusDot } from "@/components/StatusDot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  farmacias as billingFarmacias, centrosCusto as billingCC,
-  splitFaturamento as billingSplit, regrasVinculo as billingRegras,
-  entregadores as billingEntregadores,
+import { financeiroApi } from "@/lib/financeiroApi";
+import type {
+  Farmacia as BillingFarmacia, CentroCusto, SplitFaturamento, RegraVinculo, Entregador,
 } from "@/data/financeiroMock";
 import { fmtBRL } from "@/lib/baixas";
+import { FarmaciaFaturamentoEditor } from "@/components/financeiro/FarmaciaFaturamentoEditor";
 
 const formatBRL = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -89,11 +90,28 @@ const FarmaciaFicha = () => {
   const { id = "1" } = useParams();
   const f = FARMACIAS_DB[id] ?? FARMACIAS_DB["1"];
 
-  // Dados do módulo Financeiro (mock) — centraliza tudo no cadastro da farmácia.
-  const billing = billingFarmacias.find((b) => b.nome === f.nome) ?? billingFarmacias[0];
-  const ccs = billingCC.filter((c) => c.farmaciaId === billing.id);
-  const splitsCC = billingSplit.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
-  const vinculosCC = billingRegras.filter((r) => r.farmaciaId === billing.id);
+  // Dados do módulo Financeiro (mock) — fonte única de verdade.
+  const [farmacias, setFarmacias] = useState<BillingFarmacia[]>([]);
+  const [allCcs, setAllCcs] = useState<CentroCusto[]>([]);
+  const [allSplits, setAllSplits] = useState<SplitFaturamento[]>([]);
+  const [allRegras, setAllRegras] = useState<RegraVinculo[]>([]);
+  const [billingEntregadores, setBillingEntregadores] = useState<Entregador[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const reload = async () => {
+    const c = await financeiroApi.catalogos();
+    setFarmacias(c.farmacias); setAllCcs(c.centrosCusto);
+    setAllSplits(c.splitFaturamento); setAllRegras(c.regrasVinculo);
+    setBillingEntregadores(c.entregadores);
+  };
+  useEffect(() => { reload(); }, []);
+
+  const billing = farmacias.find((b) => b.nome === f.nome) ?? farmacias[0];
+  const ccs = billing ? allCcs.filter((c) => c.farmaciaId === billing.id) : [];
+  const splitsCC = allSplits.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
+  const vinculosCC = billing ? allRegras.filter((r) => r.farmaciaId === billing.id) : [];
+
+  if (!billing) return null;
 
 
 
@@ -252,8 +270,8 @@ const FarmaciaFicha = () => {
                 <h3 className="inline-flex items-center gap-1.5 text-sm font-semibold">
                   <PieChart className="h-3.5 w-3.5" /> Faturamento & vínculos
                 </h3>
-                <Button asChild variant="ghost" size="sm" className="h-7 gap-1.5 text-[11px]">
-                  <Link to="/financeiro/configuracoes"><Edit3 className="h-3 w-3" /> Editar no Financeiro</Link>
+                <Button variant="outline" size="sm" className="h-7 gap-1.5 text-[11px]" onClick={() => setEditOpen(true)}>
+                  <Edit3 className="h-3 w-3" /> Editar faturamento
                 </Button>
               </div>
 
@@ -287,6 +305,24 @@ const FarmaciaFicha = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Taxas default */}
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa de entrega default</div>
+                  <div className="mt-1 font-mono text-sm font-medium">
+                    {billing.taxaEntregaDefault != null ? fmtBRL(billing.taxaEntregaDefault) : "—"}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa repasse default</div>
+                  <div className="mt-1 font-mono text-sm font-medium">
+                    {billing.taxaRepasseDefault != null ? fmtBRL(billing.taxaRepasseDefault) : "—"}
+                  </div>
+                </div>
+              </div>
+
+
 
               {billing.billingEmail && (
                 <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px]">
@@ -558,6 +594,9 @@ const FarmaciaFicha = () => {
           </div>
         </div>
       </div>
+
+      <FarmaciaFaturamentoEditor open={editOpen} farmacia={billing}
+        onClose={() => setEditOpen(false)} onSaved={reload} />
     </div>
   );
 };

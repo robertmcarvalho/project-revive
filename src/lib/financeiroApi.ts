@@ -3,11 +3,12 @@ import {
   farmacias, centrosCusto, entregadores, regrasVinculo, splitFaturamento,
   entregas, categoriasDespesa, fornecedores, contasBancarias, cartoes,
   despesasIniciais, baixasIniciais, movimentosBancarios, cicloAtual,
-  deliveryRecords, expenseTypes, quotasIniciais, legalEntities,
+  deliveryRecords, expenseTypes, quotasIniciais, quotaTemplates, legalEntities,
   paymentBatchExportsIniciais, monthlyReportRunsIniciais,
   type ContaPagar, type ContaReceber, type Baixa, type Acerto, type Fatura,
   type RateioItem, type Empresa, type DeliveryRecord, type ExpenseType,
-  type QuotaSchedule, type LegalEntity, type PaymentBatchExport, type MonthlyReportRun,
+  type QuotaSchedule, type QuotaTemplate, type LegalEntity, type PaymentBatchExport, type MonthlyReportRun,
+  type Farmacia, type CentroCusto, type SplitFaturamento, type RegraVinculo,
 } from "@/data/financeiroMock";
 import { calcularAcerto } from "./acerto";
 import { aplicarBaixa, estornarBaixa } from "./baixas";
@@ -15,6 +16,10 @@ import { aplicarBaixa, estornarBaixa } from "./baixas";
 const wait = <T,>(v: T, ms = 60) => new Promise<T>((r) => setTimeout(() => r(v), ms));
 
 // estado em memória
+let _farmacias: Farmacia[] = [...farmacias];
+let _ccs: CentroCusto[] = [...centrosCusto];
+let _splits: SplitFaturamento[] = [...splitFaturamento];
+let _regras: RegraVinculo[] = [...regrasVinculo];
 let _contasPagar: ContaPagar[] = [...despesasIniciais];
 let _baixas: Baixa[] = [...baixasIniciais];
 let _contasReceber: ContaReceber[] = [];
@@ -23,6 +28,7 @@ let _acertos: Acerto[] = [];
 let _delivery: DeliveryRecord[] = [...deliveryRecords];
 let _expenseTypes: ExpenseType[] = [...expenseTypes];
 let _quotas: QuotaSchedule[] = [...quotasIniciais];
+let _quotaTemplates: QuotaTemplate[] = [...quotaTemplates];
 let _entities: LegalEntity[] = [...legalEntities];
 let _pixBatches: PaymentBatchExport[] = [...paymentBatchExportsIniciais];
 let _monthlyRuns: MonthlyReportRun[] = [...monthlyReportRunsIniciais];
@@ -45,7 +51,7 @@ function bootstrapAcertos() {
 bootstrapAcertos();
 
 function recalcAcerto(a: Acerto): Acerto {
-  const regrasGrp = regrasVinculo.filter((r) => r.farmaciaId === a.farmaciaId && r.centroCustoId === a.centroCustoId);
+  const regrasGrp = _regras.filter((r) => r.farmaciaId === a.farmaciaId && r.centroCustoId === a.centroCustoId);
   const r = calcularAcerto(regrasGrp, entregas);
   return { ...a, linhas: r.linhas, totalRepasse: r.totalRepasse, totalFaturado: r.totalFaturado };
 }
@@ -54,10 +60,59 @@ function randomToken() { return Math.random().toString(36).slice(2, 10) + Math.r
 
 export const financeiroApi = {
   catalogos: () => wait({
-    farmacias, centrosCusto, entregadores, regrasVinculo, splitFaturamento,
+    farmacias: _farmacias, centrosCusto: _ccs, entregadores,
+    regrasVinculo: _regras, splitFaturamento: _splits,
     categoriasDespesa, fornecedores, contasBancarias, cartoes, cicloAtual,
     expenseTypes: _expenseTypes, legalEntities: _entities,
+    quotaTemplates: _quotaTemplates,
   }),
+
+  // Farmácia + vínculos (centralizados no cadastro da farmácia)
+  saveFarmacia: (f: Farmacia) => {
+    const idx = _farmacias.findIndex((x) => x.id === f.id);
+    if (idx >= 0) _farmacias[idx] = f; else _farmacias.push({ ...f, id: f.id || `f-n${_farmacias.length + 1}` });
+    return wait(f);
+  },
+  saveCentroCusto: (c: CentroCusto) => {
+    const idx = _ccs.findIndex((x) => x.id === c.id);
+    if (idx >= 0) _ccs[idx] = c; else {
+      const novo = { ...c, id: c.id || `cc-n${_ccs.length + 1}` };
+      _ccs.push(novo);
+      _farmacias = _farmacias.map((f) => f.id === novo.farmaciaId && !f.centrosCusto.includes(novo.id)
+        ? { ...f, centrosCusto: [...f.centrosCusto, novo.id] } : f);
+      return wait(novo);
+    }
+    return wait(c);
+  },
+  removeCentroCusto: (id: string) => {
+    _ccs = _ccs.filter((c) => c.id !== id);
+    _splits = _splits.filter((s) => s.centroCustoId !== id);
+    _regras = _regras.filter((r) => r.centroCustoId !== id);
+    _farmacias = _farmacias.map((f) => ({ ...f, centrosCusto: f.centrosCusto.filter((x) => x !== id) }));
+    return wait(true);
+  },
+  saveSplitFaturamento: (s: SplitFaturamento) => {
+    const idx = _splits.findIndex((x) => x.centroCustoId === s.centroCustoId);
+    if (idx >= 0) _splits[idx] = s; else _splits.push(s);
+    return wait(s);
+  },
+  saveRegraVinculo: (r: RegraVinculo) => {
+    const idx = _regras.findIndex((x) => x.id === r.id);
+    if (idx >= 0) _regras[idx] = r; else _regras.push({ ...r, id: r.id || `r-n${_regras.length + 1}` });
+    return wait(r);
+  },
+  removeRegraVinculo: (id: string) => {
+    _regras = _regras.filter((r) => r.id !== id);
+    return wait(true);
+  },
+
+  // Quota templates (agenda de cotas)
+  listQuotaTemplates: () => wait(_quotaTemplates),
+  saveQuotaTemplate: (t: QuotaTemplate) => {
+    const idx = _quotaTemplates.findIndex((x) => x.id === t.id);
+    if (idx >= 0) _quotaTemplates[idx] = t; else _quotaTemplates.push({ ...t, id: t.id || `qt-n${_quotaTemplates.length + 1}` });
+    return wait(t);
+  },
 
   // acertos
   listAcertos: () => wait(_acertos),
