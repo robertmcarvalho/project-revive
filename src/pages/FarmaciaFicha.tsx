@@ -306,6 +306,21 @@ const FarmaciaFicha = () => {
                 </div>
               </div>
 
+              {/* Taxas default */}
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa de entrega default</div>
+                  <div className="mt-1 font-mono text-sm font-medium">
+                    {billing.taxaEntregaDefault != null ? fmtBRL(billing.taxaEntregaDefault) : "—"}
+                  </div>
+                </div>
+                <div className="rounded-lg border border-border bg-background p-3">
+                  <div className="text-[10px] uppercase tracking-wider text-subtle-foreground">Taxa repasse default</div>
+                  <div className="mt-1 font-mono text-sm font-medium">
+                    {billing.taxaRepasseDefault != null ? fmtBRL(billing.taxaRepasseDefault) : "—"}
+                  </div>
+                </div>
+
               {billing.billingEmail && (
                 <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px]">
                   <Mail className="h-3 w-3 text-muted-foreground" />
