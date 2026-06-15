@@ -90,11 +90,28 @@ const FarmaciaFicha = () => {
   const { id = "1" } = useParams();
   const f = FARMACIAS_DB[id] ?? FARMACIAS_DB["1"];
 
-  // Dados do módulo Financeiro (mock) — centraliza tudo no cadastro da farmácia.
-  const billing = billingFarmacias.find((b) => b.nome === f.nome) ?? billingFarmacias[0];
-  const ccs = billingCC.filter((c) => c.farmaciaId === billing.id);
-  const splitsCC = billingSplit.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
-  const vinculosCC = billingRegras.filter((r) => r.farmaciaId === billing.id);
+  // Dados do módulo Financeiro (mock) — fonte única de verdade.
+  const [farmacias, setFarmacias] = useState<BillingFarmacia[]>([]);
+  const [allCcs, setAllCcs] = useState<CentroCusto[]>([]);
+  const [allSplits, setAllSplits] = useState<SplitFaturamento[]>([]);
+  const [allRegras, setAllRegras] = useState<RegraVinculo[]>([]);
+  const [billingEntregadores, setBillingEntregadores] = useState<Entregador[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const reload = async () => {
+    const c = await financeiroApi.catalogos();
+    setFarmacias(c.farmacias); setAllCcs(c.centrosCusto);
+    setAllSplits(c.splitFaturamento); setAllRegras(c.regrasVinculo);
+    setBillingEntregadores(c.entregadores);
+  };
+  useEffect(() => { reload(); }, []);
+
+  const billing = farmacias.find((b) => b.nome === f.nome) ?? farmacias[0];
+  const ccs = billing ? allCcs.filter((c) => c.farmaciaId === billing.id) : [];
+  const splitsCC = allSplits.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
+  const vinculosCC = billing ? allRegras.filter((r) => r.farmaciaId === billing.id) : [];
+
+  if (!billing) return null;
 
 
 
