@@ -320,6 +320,9 @@ const FarmaciaFicha = () => {
                     {billing.taxaRepasseDefault != null ? fmtBRL(billing.taxaRepasseDefault) : "—"}
                   </div>
                 </div>
+              </div>
+
+
 
               {billing.billingEmail && (
                 <div className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-background px-2.5 py-1.5 text-[11px]">
