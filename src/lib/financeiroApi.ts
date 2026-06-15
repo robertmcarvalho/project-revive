@@ -3,11 +3,12 @@ import {
   farmacias, centrosCusto, entregadores, regrasVinculo, splitFaturamento,
   entregas, categoriasDespesa, fornecedores, contasBancarias, cartoes,
   despesasIniciais, baixasIniciais, movimentosBancarios, cicloAtual,
-  deliveryRecords, expenseTypes, quotasIniciais, legalEntities,
+  deliveryRecords, expenseTypes, quotasIniciais, quotaTemplates, legalEntities,
   paymentBatchExportsIniciais, monthlyReportRunsIniciais,
   type ContaPagar, type ContaReceber, type Baixa, type Acerto, type Fatura,
   type RateioItem, type Empresa, type DeliveryRecord, type ExpenseType,
-  type QuotaSchedule, type LegalEntity, type PaymentBatchExport, type MonthlyReportRun,
+  type QuotaSchedule, type QuotaTemplate, type LegalEntity, type PaymentBatchExport, type MonthlyReportRun,
+  type Farmacia, type CentroCusto, type SplitFaturamento, type RegraVinculo,
 } from "@/data/financeiroMock";
 import { calcularAcerto } from "./acerto";
 import { aplicarBaixa, estornarBaixa } from "./baixas";
@@ -15,6 +16,10 @@ import { aplicarBaixa, estornarBaixa } from "./baixas";
 const wait = <T,>(v: T, ms = 60) => new Promise<T>((r) => setTimeout(() => r(v), ms));
 
 // estado em memória
+let _farmacias: Farmacia[] = [...farmacias];
+let _ccs: CentroCusto[] = [...centrosCusto];
+let _splits: SplitFaturamento[] = [...splitFaturamento];
+let _regras: RegraVinculo[] = [...regrasVinculo];
 let _contasPagar: ContaPagar[] = [...despesasIniciais];
 let _baixas: Baixa[] = [...baixasIniciais];
 let _contasReceber: ContaReceber[] = [];
@@ -23,6 +28,7 @@ let _acertos: Acerto[] = [];
 let _delivery: DeliveryRecord[] = [...deliveryRecords];
 let _expenseTypes: ExpenseType[] = [...expenseTypes];
 let _quotas: QuotaSchedule[] = [...quotasIniciais];
+let _quotaTemplates: QuotaTemplate[] = [...quotaTemplates];
 let _entities: LegalEntity[] = [...legalEntities];
 let _pixBatches: PaymentBatchExport[] = [...paymentBatchExportsIniciais];
 let _monthlyRuns: MonthlyReportRun[] = [...monthlyReportRunsIniciais];
