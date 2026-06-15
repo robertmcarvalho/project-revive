@@ -1,15 +1,18 @@
-// API mock async para o módulo Financeiro. Trocar por fetch quando subir backend.
+// API mock async para o módulo Financeiro / Billing.
 import {
   farmacias, centrosCusto, entregadores, regrasVinculo, splitFaturamento,
   entregas, categoriasDespesa, fornecedores, contasBancarias, cartoes,
   despesasIniciais, baixasIniciais, movimentosBancarios, cicloAtual,
+  deliveryRecords, expenseTypes, quotasIniciais, legalEntities,
+  paymentBatchExportsIniciais, monthlyReportRunsIniciais,
   type ContaPagar, type ContaReceber, type Baixa, type Acerto, type Fatura,
-  type RateioItem, type Empresa,
+  type RateioItem, type Empresa, type DeliveryRecord, type ExpenseType,
+  type QuotaSchedule, type LegalEntity, type PaymentBatchExport, type MonthlyReportRun,
 } from "@/data/financeiroMock";
 import { calcularAcerto } from "./acerto";
 import { aplicarBaixa, estornarBaixa } from "./baixas";
 
-const wait = <T,>(v: T, ms = 80) => new Promise<T>((r) => setTimeout(() => r(v), ms));
+const wait = <T,>(v: T, ms = 60) => new Promise<T>((r) => setTimeout(() => r(v), ms));
 
 // estado em memória
 let _contasPagar: ContaPagar[] = [...despesasIniciais];
@@ -17,8 +20,13 @@ let _baixas: Baixa[] = [...baixasIniciais];
 let _contasReceber: ContaReceber[] = [];
 let _faturas: Fatura[] = [];
 let _acertos: Acerto[] = [];
+let _delivery: DeliveryRecord[] = [...deliveryRecords];
+let _expenseTypes: ExpenseType[] = [...expenseTypes];
+let _quotas: QuotaSchedule[] = [...quotasIniciais];
+let _entities: LegalEntity[] = [...legalEntities];
+let _pixBatches: PaymentBatchExport[] = [...paymentBatchExportsIniciais];
+let _monthlyRuns: MonthlyReportRun[] = [...monthlyReportRunsIniciais];
 
-// Gera acertos iniciais (1 por farmácia/CC com entregas no ciclo)
 function bootstrapAcertos() {
   const grupos = new Map<string, { farmaciaId: string; centroCustoId: string }>();
   regrasVinculo.forEach((r) => grupos.set(`${r.farmaciaId}/${r.centroCustoId}`, { farmaciaId: r.farmaciaId, centroCustoId: r.centroCustoId }));
@@ -28,8 +36,7 @@ function bootstrapAcertos() {
     const { linhas, totalRepasse, totalFaturado } = calcularAcerto(regrasGrp, entregas);
     if (!linhas.some((l) => l.qtdEntregas > 0)) continue;
     _acertos.push({
-      id: `ac-${i++}`,
-      farmaciaId: g.farmaciaId, centroCustoId: g.centroCustoId,
+      id: `ac-${i++}`, farmaciaId: g.farmaciaId, centroCustoId: g.centroCustoId,
       cicloInicio: cicloAtual.inicio, cicloFim: cicloAtual.fim,
       status: "aberto", totalRepasse, totalFaturado, linhas,
     });
@@ -37,18 +44,19 @@ function bootstrapAcertos() {
 }
 bootstrapAcertos();
 
-// Recalcula um acerto a partir das entregas atuais (não persistidas por enquanto)
 function recalcAcerto(a: Acerto): Acerto {
   const regrasGrp = regrasVinculo.filter((r) => r.farmaciaId === a.farmaciaId && r.centroCustoId === a.centroCustoId);
   const r = calcularAcerto(regrasGrp, entregas);
   return { ...a, linhas: r.linhas, totalRepasse: r.totalRepasse, totalFaturado: r.totalFaturado };
 }
 
+function randomToken() { return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); }
+
 export const financeiroApi = {
-  // catálogos
   catalogos: () => wait({
     farmacias, centrosCusto, entregadores, regrasVinculo, splitFaturamento,
     categoriasDespesa, fornecedores, contasBancarias, cartoes, cicloAtual,
+    expenseTypes: _expenseTypes, legalEntities: _entities,
   }),
 
   // acertos
@@ -68,25 +76,24 @@ export const financeiroApi = {
     a.status = "aprovado";
     a.aprovadoPor = aprovadoPor;
     a.aprovadoEm = new Date().toISOString();
-    // Gera 2 faturas (Coop/Flux) por CC
     const split = splitFaturamento.find((s) => s.centroCustoId === a.centroCustoId)
       ?? { centroCustoId: a.centroCustoId, pctCooperativa: 70, pctFlux: 30 };
     const venc = new Date(a.cicloFim);
     venc.setDate(venc.getDate() + 7);
     const vencStr = venc.toISOString().slice(0, 10);
     const baseNum = String(_faturas.length + 1).padStart(4, "0");
-    const novas: Fatura[] = [
+    const candidatos: Fatura[] = [
       { id: `ft-${baseNum}-c`, numero: `F-COOP-${baseNum}`, farmaciaId: a.farmaciaId, centroCustoId: a.centroCustoId,
         empresa: "coop", cicloInicio: a.cicloInicio, cicloFim: a.cicloFim,
         valor: +(a.totalFaturado * split.pctCooperativa / 100).toFixed(2),
-        status: "aberta", vencimento: vencStr, origemAcertoId: a.id },
+        status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken() },
       { id: `ft-${baseNum}-f`, numero: `F-FLUX-${baseNum}`, farmaciaId: a.farmaciaId, centroCustoId: a.centroCustoId,
         empresa: "flux", cicloInicio: a.cicloInicio, cicloFim: a.cicloFim,
         valor: +(a.totalFaturado * split.pctFlux / 100).toFixed(2),
-        status: "aberta", vencimento: vencStr, origemAcertoId: a.id },
+        status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken() },
     ];
+    const novas: Fatura[] = candidatos.filter((f) => f.valor > 0);
     _faturas.push(...novas);
-    // Contas a receber espelham as faturas
     novas.forEach((f) => {
       _contasReceber.push({
         id: `cr-${f.id}`, faturaId: f.id, farmaciaId: f.farmaciaId, centroCustoId: f.centroCustoId,
@@ -94,7 +101,6 @@ export const financeiroApi = {
         vencimento: f.vencimento, status: "aberta",
       });
     });
-    // Contas a pagar dos entregadores (1 por linha, empresa coop)
     a.linhas.forEach((l, idx) => {
       if (l.valorEntregador <= 0) return;
       const ent = entregadores.find((e) => e.id === l.entregadorId)!;
@@ -105,7 +111,7 @@ export const financeiroApi = {
         descricao: `Repasse ${ent.nome} — ciclo ${a.cicloInicio}/${a.cicloFim}`,
         valor: l.valorEntregador, valorPago: 0, saldo: l.valorEntregador,
         vencimento: vencStr, recorrencia: "unica", classificacao: "variavel",
-        formaPagamento: "pix", status: "aberta",
+        formaPagamento: "pix", status: "aberta", origem: "acerto",
       });
     });
     return wait(a);
@@ -113,6 +119,7 @@ export const financeiroApi = {
 
   // faturas / a receber
   listFaturas: () => wait(_faturas),
+  getFaturaByToken: (token: string) => wait(_faturas.find((f) => f.publicToken === token) || null),
   marcarFaturaEnviada: (id: string) => {
     _faturas = _faturas.map((f) => (f.id === id && f.status === "aberta" ? { ...f, status: "enviada" } : f));
     return wait(_faturas.find((f) => f.id === id)!);
@@ -140,7 +147,6 @@ export const financeiroApi = {
       _contasPagar = _contasPagar.map((c) => (c.id === b.lancamentoId ? aplicarBaixa(c, b) : c));
     } else {
       _contasReceber = _contasReceber.map((c) => (c.id === b.lancamentoId ? aplicarBaixa(c, b) : c));
-      // se receber bate fatura, marca paga
       const cr = _contasReceber.find((c) => c.id === b.lancamentoId);
       if (cr && cr.status === "paga") _faturas = _faturas.map((f) => (f.id === cr.faturaId ? { ...f, status: "paga" } : f));
     }
@@ -190,9 +196,82 @@ export const financeiroApi = {
     return wait({ mes, receitas, repasseEntregadores, fixas, variaveis, resultado });
   },
 
-  // rateio aplicado a despesas (apenas calcula projeção; persiste em criarDespesa)
   aplicarRateioNaDespesa: (despesaId: string, rateio: RateioItem[]) => {
     _contasPagar = _contasPagar.map((c) => (c.id === despesaId ? { ...c, rateio } : c));
     return wait(_contasPagar.find((c) => c.id === despesaId)!);
+  },
+
+  // ── billing extensions ──
+  listDeliveryRecords: (filtro?: { cicloId?: string; farmaciaId?: string; entregadorId?: string }) =>
+    wait(_delivery.filter((d) =>
+      (!filtro?.cicloId || d.cicloId === filtro.cicloId) &&
+      (!filtro?.farmaciaId || d.farmaciaId === filtro.farmaciaId) &&
+      (!filtro?.entregadorId || d.entregadorId === filtro.entregadorId))),
+
+  importarEntregasCSV: (records: Omit<DeliveryRecord, "id" | "source" | "cancelled" | "verified">[]) => {
+    const novos = records.map((r, i) => ({
+      ...r, id: `dr-csv-${_delivery.length + i + 1}`, source: "csv" as const,
+      cancelled: false, verified: true,
+    }));
+    _delivery = [..._delivery, ...novos];
+    return wait(novos);
+  },
+
+  lancarEntregaManual: (d: Omit<DeliveryRecord, "id" | "source" | "cancelled" | "verified" | "externalId">) => {
+    const novo: DeliveryRecord = {
+      ...d, id: `dr-m-${_delivery.length + 1}`, source: "manual",
+      externalId: `manual-${Date.now()}`, cancelled: false, verified: false,
+    };
+    _delivery = [..._delivery, novo];
+    return wait(novo);
+  },
+
+  verificarEntrega: (id: string) => {
+    _delivery = _delivery.map((d) => (d.id === id ? { ...d, verified: true } : d));
+    return wait(_delivery.find((d) => d.id === id)!);
+  },
+
+  // ExpenseType
+  listExpenseTypes: () => wait(_expenseTypes),
+  saveExpenseType: (e: ExpenseType) => {
+    const idx = _expenseTypes.findIndex((x) => x.id === e.id);
+    if (idx >= 0) _expenseTypes[idx] = e; else _expenseTypes.push({ ...e, id: e.id || `et-n${_expenseTypes.length + 1}` });
+    return wait(e);
+  },
+
+  // Cotas
+  listCotas: () => wait(_quotas),
+  saveCota: (q: QuotaSchedule) => {
+    const idx = _quotas.findIndex((x) => x.id === q.id);
+    if (idx >= 0) _quotas[idx] = q; else _quotas.push({ ...q, id: q.id || `q-n${_quotas.length + 1}` });
+    return wait(q);
+  },
+  toggleCota: (id: string, ativa: boolean) => {
+    _quotas = _quotas.map((q) => (q.id === id ? { ...q, ativa } : q));
+    return wait(_quotas.find((q) => q.id === id)!);
+  },
+
+  // LegalEntities
+  listLegalEntities: () => wait(_entities),
+  saveLegalEntity: (e: LegalEntity) => {
+    const idx = _entities.findIndex((x) => x.id === e.id);
+    if (idx >= 0) _entities[idx] = e; else _entities.push({ ...e, id: e.id || `le-n${_entities.length + 1}` });
+    return wait(e);
+  },
+
+  // Payment batches
+  listPaymentBatches: () => wait(_pixBatches),
+  registrarPixBatch: (b: Omit<PaymentBatchExport, "id" | "geradoEm">) => {
+    const novo: PaymentBatchExport = { ...b, id: `pbx-${_pixBatches.length + 1}`, geradoEm: new Date().toISOString() };
+    _pixBatches.unshift(novo);
+    return wait(novo);
+  },
+
+  // Monthly report runs
+  listMonthlyReports: () => wait(_monthlyRuns),
+  registrarMonthlyReport: (r: Omit<MonthlyReportRun, "id" | "geradoEm">) => {
+    const novo: MonthlyReportRun = { ...r, id: `mr-${_monthlyRuns.length + 1}`, geradoEm: new Date().toISOString() };
+    _monthlyRuns.unshift(novo);
+    return wait(novo);
   },
 };

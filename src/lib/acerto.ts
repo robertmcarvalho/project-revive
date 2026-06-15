@@ -9,8 +9,16 @@ export interface AjusteEntrada {
   adicionais?: number;
   descontos?: number;
   adiantamentos?: number;
-  ajustesRateio?: number; // soma de AcertoAjusteRateio que descontam do entregador
-  ajustesFaturar?: number; // soma que adiciona à farmácia
+  ajustesRateio?: number;
+  ajustesFaturar?: number;
+  diasFaltaSemDiarista?: number; // descontos MG/6 por dia
+}
+
+const DIAS_SEMANA_OPERACIONAL = 6;
+
+export function descontoFaltaSemDiarista(mg: number, dias: number): number {
+  if (!mg || dias <= 0) return 0;
+  return +((mg / DIAS_SEMANA_OPERACIONAL) * dias).toFixed(2);
 }
 
 export function calcularLinha(
@@ -31,20 +39,25 @@ export function calcularLinha(
   const adiantamentos = ajuste.adiantamentos ?? 0;
   const ajustesRateio = ajuste.ajustesRateio ?? 0;
   const ajustesFaturar = ajuste.ajustesFaturar ?? 0;
+  const diasFalta = ajuste.diasFaltaSemDiarista ?? 0;
+  const descFalta = descontoFaltaSemDiarista(regra.minimoGarantidoSemanal ?? 0, diasFalta);
 
   const valorEntregador = +(
-    baseRepasse + diarias + adicionais - descontos - adiantamentos - ajustesRateio
+    baseRepasse + diarias + adicionais - descontos - adiantamentos - ajustesRateio - descFalta
   ).toFixed(2);
 
   const valorFaturadoFarmacia = +(
-    somaPorTaxa + diarias + adicionais + ajustesFaturar
+    somaPorTaxa + diarias + adicionais + ajustesFaturar - descFalta
   ).toFixed(2);
 
   return {
     entregadorId: regra.entregadorId,
     qtdEntregas, somaPorTaxa, minimoAplicado: aplicaMinimo,
     baseRepasse, diarias, adicionais, descontos, adiantamentos,
-    ajustesRateio, valorEntregador, valorFaturadoFarmacia,
+    ajustesRateio,
+    descontoFaltaSemDiarista: descFalta,
+    diasFaltaSemDiarista: diasFalta,
+    valorEntregador, valorFaturadoFarmacia,
   };
 }
 
