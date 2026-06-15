@@ -94,22 +94,19 @@ const FarmaciaFicha = () => {
   const [farmacias, setFarmacias] = useState<BillingFarmacia[]>([]);
   const [allCcs, setAllCcs] = useState<CentroCusto[]>([]);
   const [allSplits, setAllSplits] = useState<SplitFaturamento[]>([]);
-  const [allRegras, setAllRegras] = useState<RegraVinculo[]>([]);
-  const [billingEntregadores, setBillingEntregadores] = useState<Entregador[]>([]);
   const [editOpen, setEditOpen] = useState(false);
 
   const reload = async () => {
     const c = await financeiroApi.catalogos();
     setFarmacias(c.farmacias); setAllCcs(c.centrosCusto);
-    setAllSplits(c.splitFaturamento); setAllRegras(c.regrasVinculo);
-    setBillingEntregadores(c.entregadores);
+    setAllSplits(c.splitFaturamento);
   };
   useEffect(() => { reload(); }, []);
 
   const billing = farmacias.find((b) => b.nome === f.nome) ?? farmacias[0];
   const ccs = billing ? allCcs.filter((c) => c.farmaciaId === billing.id) : [];
   const splitsCC = allSplits.filter((s) => ccs.some((c) => c.id === s.centroCustoId));
-  const vinculosCC = billing ? allRegras.filter((r) => r.farmaciaId === billing.id) : [];
+
 
   if (!billing) return null;
 
