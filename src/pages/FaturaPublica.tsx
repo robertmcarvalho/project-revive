@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  LineChart, Line, ReferenceLine,
+  LineChart, Line, ReferenceLine, Cell,
 } from "recharts";
 import {
   FileText, Receipt, CalendarDays, TrendingUp, TrendingDown, Users, Package,
@@ -210,7 +210,7 @@ const FaturaPublica = () => {
                   <ReferenceLine y={media3m} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" />
                   <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
                     {historico.map((h, i) => (
-                      <RectFillCell key={i} isAtual={!!h.isAtual} />
+                      <Cell key={i} fill={h.isAtual ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.35)"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -334,14 +334,5 @@ const KpiCard = ({ icon: Icon, label, value, tone }: { icon: typeof FileText; la
     <div className={`mt-2 text-xl font-semibold tracking-tight ${tone}`}>{value}</div>
   </div>
 );
-
-// Cell wrapper — recharts Cell precisa de import nomeado para tipagem; usamos rect raw via fill.
-const RectFillCell = ({ isAtual }: { isAtual: boolean }) => (
-  // recharts aceita componentes filhos como <Cell />; reaproveitamos para colorir destaque
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  <Cell fill={isAtual ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.35)"} />
-);
-
-import { Cell } from "recharts";
 
 export default FaturaPublica;
