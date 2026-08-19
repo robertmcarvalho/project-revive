@@ -58,6 +58,19 @@ function recalcAcerto(a: Acerto): Acerto {
 
 function randomToken() { return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); }
 
+/** Token público do demonstrativo do cooperado (acerto + entregador). */
+export function holeriteToken(acertoId: string, entregadorId: string) {
+  return btoa(`${acertoId}~${entregadorId}`).replace(/=+$/, "");
+}
+function decodeHoleriteToken(token: string): [string, string] {
+  try {
+    const raw = atob(token.replace(/-/g, "+").replace(/_/g, "/"));
+    const [a, e] = raw.split("~");
+    return [a ?? "", e ?? ""];
+  } catch { return ["", ""]; }
+}
+
+
 export const financeiroApi = {
   catalogos: () => wait({
     farmacias: _farmacias, centrosCusto: _ccs, entregadores,
