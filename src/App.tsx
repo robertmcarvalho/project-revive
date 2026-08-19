@@ -118,6 +118,8 @@ const App = () => (
             <Route path="configuracoes" element={<FinConfig />} />
           </Route>
           <Route path="/public/billing/:token" element={<FaturaPublica />} />
+          <Route path="/public/holerite/:token" element={<HoleritePublico />} />
+
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
