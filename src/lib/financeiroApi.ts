@@ -58,6 +58,19 @@ function recalcAcerto(a: Acerto): Acerto {
 
 function randomToken() { return Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10); }
 
+/** Token público do demonstrativo do cooperado (acerto + entregador). */
+export function holeriteToken(acertoId: string, entregadorId: string) {
+  return btoa(`${acertoId}~${entregadorId}`).replace(/=+$/, "");
+}
+function decodeHoleriteToken(token: string): [string, string] {
+  try {
+    const raw = atob(token.replace(/-/g, "+").replace(/_/g, "/"));
+    const [a, e] = raw.split("~");
+    return [a ?? "", e ?? ""];
+  } catch { return ["", ""]; }
+}
+
+
 export const financeiroApi = {
   catalogos: () => wait({
     farmacias: _farmacias, centrosCusto: _ccs, entregadores,
@@ -175,6 +188,28 @@ export const financeiroApi = {
   // faturas / a receber
   listFaturas: () => wait(_faturas),
   getFaturaByToken: (token: string) => wait(_faturas.find((f) => f.publicToken === token) || null),
+
+  // Demonstrativo do cooperado (holerite CoopMob) — link público por linha de acerto
+  getHoleriteByToken: (token: string) => {
+    const [acertoId, entregadorId] = decodeHoleriteToken(token);
+    const acerto = _acertos.find((a) => a.id === acertoId) || null;
+    const linha = acerto?.linhas.find((l) => l.entregadorId === entregadorId) || null;
+    if (!acerto || !linha) return wait(null);
+    const entregador = entregadores.find((e) => e.id === entregadorId) || null;
+    const farmacia = _farmacias.find((f) => f.id === acerto.farmaciaId) || null;
+    const coop = _entities.find((e) => e.entityType === "coop") || null;
+    // demais vínculos do mesmo cooperado no mesmo ciclo
+    const outros = _acertos
+      .filter((a) => a.id !== acerto.id && a.cicloInicio === acerto.cicloInicio && a.cicloFim === acerto.cicloFim)
+      .flatMap((a) => a.linhas
+        .filter((l) => l.entregadorId === entregadorId)
+        .map((l) => ({
+          farmacia: _farmacias.find((f) => f.id === a.farmaciaId)?.nome ?? a.farmaciaId,
+          entregas: l.qtdEntregas, valor: l.valorEntregador,
+        })));
+    return wait({ acerto, linha, entregador, farmacia, coop, outros });
+  },
+
   marcarFaturaEnviada: (id: string) => {
     _faturas = _faturas.map((f) => (f.id === id && f.status === "aberta" ? { ...f, status: "enviada" } : f));
     return wait(_faturas.find((f) => f.id === id)!);

@@ -54,6 +54,8 @@ import FinRelInss from "./pages/financeiro/RelatorioInss.tsx";
 import FinRelSeg from "./pages/financeiro/RelatorioSeguradora.tsx";
 import FinRelPix from "./pages/financeiro/RelatorioPixBatch.tsx";
 import FaturaPublica from "./pages/FaturaPublica.tsx";
+import HoleritePublico from "./pages/HoleritePublico.tsx";
+
 import Configuracoes from "./pages/Configuracoes.tsx";
 import Operacao from "./pages/Operacao.tsx";
 import Copiloto from "./pages/Copiloto.tsx";
@@ -118,6 +120,8 @@ const App = () => (
             <Route path="configuracoes" element={<FinConfig />} />
           </Route>
           <Route path="/public/billing/:token" element={<FaturaPublica />} />
+          <Route path="/public/holerite/:token" element={<HoleritePublico />} />
+
           <Route path="/relatorios" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/relatorios/atendimento" element={<AppShell><RelatorioAtendimento /></AppShell>} />
           <Route path="/configuracoes" element={<AppShell><Configuracoes /></AppShell>} />
