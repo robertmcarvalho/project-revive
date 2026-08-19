@@ -89,6 +89,16 @@ const AcertoDetalhe = () => {
                 <td className="px-4 py-3 text-right font-mono">{fmtBRL(l.ajustesRateio)}</td>
                 <td className="px-4 py-3 text-right font-mono font-semibold">{fmtBRL(l.valorEntregador)}</td>
                 <td className="px-4 py-3 text-right font-mono font-semibold text-success">{fmtBRL(l.valorFaturadoFarmacia)}</td>
+                <td className="px-4 py-3 text-right">
+                  <a
+                    href={`/public/holerite/${holeriteToken(a.id, l.entregadorId)}`}
+                    target="_blank" rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> ver
+                  </a>
+                </td>
+
               </tr>
             ))}
           </tbody>
