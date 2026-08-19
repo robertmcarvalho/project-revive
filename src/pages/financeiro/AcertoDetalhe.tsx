@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, RotateCw, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ExternalLink, RotateCw, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { financeiroApi } from "@/lib/financeiroApi";
+import { financeiroApi, holeriteToken } from "@/lib/financeiroApi";
 import { fmtBRL, fmtDate } from "@/lib/baixas";
 import type { Acerto, Entregador, Farmacia, CentroCusto } from "@/data/financeiroMock";
 import { toast } from "@/hooks/use-toast";
