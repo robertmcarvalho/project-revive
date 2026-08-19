@@ -69,6 +69,8 @@ const AcertoDetalhe = () => {
               <th className="px-4 py-3 text-right">Rateio</th>
               <th className="px-4 py-3 text-right">A pagar</th>
               <th className="px-4 py-3 text-right">A faturar</th>
+              <th className="px-4 py-3 text-right">Demonstrativo</th>
+
             </tr>
           </thead>
           <tbody>
