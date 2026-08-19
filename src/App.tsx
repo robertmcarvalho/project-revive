@@ -54,6 +54,8 @@ import FinRelInss from "./pages/financeiro/RelatorioInss.tsx";
 import FinRelSeg from "./pages/financeiro/RelatorioSeguradora.tsx";
 import FinRelPix from "./pages/financeiro/RelatorioPixBatch.tsx";
 import FaturaPublica from "./pages/FaturaPublica.tsx";
+import HoleritePublico from "./pages/HoleritePublico.tsx";
+
 import Configuracoes from "./pages/Configuracoes.tsx";
 import Operacao from "./pages/Operacao.tsx";
 import Copiloto from "./pages/Copiloto.tsx";
