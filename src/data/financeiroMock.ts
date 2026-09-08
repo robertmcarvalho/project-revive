@@ -4,6 +4,8 @@
 export type Empresa = "coop" | "flux";
 export type StatusAcerto = "aberto" | "em_revisao" | "aprovado" | "pago";
 export type StatusFatura = "aberta" | "enviada" | "paga" | "vencida";
+export type StatusNfse = "pendente" | "emitida" | "erro" | "cancelada";
+export type StatusBoleto = "pendente" | "gerado" | "pago" | "vencido" | "cancelado";
 export type StatusConta = "aberta" | "parcial" | "paga" | "vencida" | "agendada";
 export type TipoConta = "entregador" | "operacional";
 export type Classificacao = "fixa" | "variavel";
@@ -74,6 +76,8 @@ export interface Fatura {
   id: string; numero: string; farmaciaId: string; centroCustoId: string; empresa: Empresa;
   cicloInicio: string; cicloFim: string; valor: number; status: StatusFatura;
   vencimento: string; origemAcertoId: string; publicToken?: string;
+  nfseStatus?: StatusNfse; nfseNumero?: string;
+  boletoStatus?: StatusBoleto; boletoLinhaDigitavel?: string;
 }
 
 export interface AcertoLinha {
@@ -223,6 +227,18 @@ export const splitFaturamento: SplitFaturamento[] = [
 
 const cicloIni = "2026-06-02";
 const cicloFim = "2026-06-08";
+
+/** Faturas demonstrativas para validar a operação antes da integração com a API. */
+export const faturasIniciais: Fatura[] = [
+  { id: "ft-demo-01", numero: "F-COOP-0148", farmaciaId: "f1", centroCustoId: "cc1", empresa: "coop", cicloInicio: "2026-08-25", cicloFim: "2026-08-31", valor: 18472.60, status: "enviada", vencimento: "2026-09-10", origemAcertoId: "AC-0148", publicToken: "demo-coop-0148", nfseStatus: "emitida", nfseNumero: "202600184", boletoStatus: "gerado", boletoLinhaDigitavel: "34191.79001 01043.510047 91020.150008 8 98760001847260" },
+  { id: "ft-demo-02", numero: "F-FLUX-0149", farmaciaId: "f1", centroCustoId: "cc1", empresa: "flux", cicloInicio: "2026-08-25", cicloFim: "2026-08-31", valor: 7916.83, status: "paga", vencimento: "2026-09-10", origemAcertoId: "AC-0148", publicToken: "demo-flux-0149", nfseStatus: "emitida", nfseNumero: "202600185", boletoStatus: "pago", boletoLinhaDigitavel: "34191.79001 01043.510047 91020.150008 1 98760000791683" },
+  { id: "ft-demo-03", numero: "F-COOP-0150", farmaciaId: "f2", centroCustoId: "cc3", empresa: "coop", cicloInicio: "2026-08-25", cicloFim: "2026-08-31", valor: 22308.40, status: "aberta", vencimento: "2026-09-12", origemAcertoId: "AC-0149", publicToken: "demo-coop-0150", nfseStatus: "pendente", boletoStatus: "pendente" },
+  { id: "ft-demo-04", numero: "F-FLUX-0151", farmaciaId: "f2", centroCustoId: "cc3", empresa: "flux", cicloInicio: "2026-08-25", cicloFim: "2026-08-31", valor: 12012.22, status: "enviada", vencimento: "2026-09-12", origemAcertoId: "AC-0149", publicToken: "demo-flux-0151", nfseStatus: "erro", boletoStatus: "gerado", boletoLinhaDigitavel: "34191.79001 01043.510047 91020.150008 3 98760001201222" },
+  { id: "ft-demo-05", numero: "F-COOP-0152", farmaciaId: "f3", centroCustoId: "cc4", empresa: "coop", cicloInicio: "2026-08-18", cicloFim: "2026-08-24", valor: 15644.90, status: "vencida", vencimento: "2026-09-03", origemAcertoId: "AC-0145", publicToken: "demo-coop-0152", nfseStatus: "emitida", nfseNumero: "202600179", boletoStatus: "vencido", boletoLinhaDigitavel: "34191.79001 01043.510047 91020.150008 9 98760001564490" },
+  { id: "ft-demo-06", numero: "F-COOP-0153", farmaciaId: "f1", centroCustoId: "cc2", empresa: "coop", cicloInicio: "2026-09-01", cicloFim: "2026-09-07", valor: 19840.00, status: "aberta", vencimento: "2026-09-17", origemAcertoId: "AC-0152", publicToken: "demo-coop-0153", nfseStatus: "pendente", boletoStatus: "pendente" },
+  { id: "ft-demo-07", numero: "F-FLUX-0154", farmaciaId: "f1", centroCustoId: "cc2", empresa: "flux", cicloInicio: "2026-09-01", cicloFim: "2026-09-07", valor: 8502.86, status: "enviada", vencimento: "2026-09-17", origemAcertoId: "AC-0152", publicToken: "demo-flux-0154", nfseStatus: "emitida", nfseNumero: "202600191", boletoStatus: "gerado", boletoLinhaDigitavel: "34191.79001 01043.510047 91020.150008 4 98760000850286" },
+  { id: "ft-demo-08", numero: "F-COOP-0155", farmaciaId: "f2", centroCustoId: "cc3", empresa: "coop", cicloInicio: "2026-09-01", cicloFim: "2026-09-07", valor: 24791.35, status: "paga", vencimento: "2026-09-17", origemAcertoId: "AC-0153", publicToken: "demo-coop-0155", nfseStatus: "emitida", nfseNumero: "202600192", boletoStatus: "pago", boletoLinhaDigitavel: "34191.79001 01043.510047 91020.150008 6 98760002479135" },
+];
 
 function geraEntregas(): Entrega[] {
   const out: Entrega[] = [];
