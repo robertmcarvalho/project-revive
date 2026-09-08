@@ -4,7 +4,7 @@ import {
   entregas, categoriasDespesa, fornecedores, contasBancarias, cartoes,
   despesasIniciais, baixasIniciais, movimentosBancarios, cicloAtual,
   deliveryRecords, expenseTypes, quotasIniciais, quotaTemplates, legalEntities,
-  paymentBatchExportsIniciais, monthlyReportRunsIniciais,
+  paymentBatchExportsIniciais, monthlyReportRunsIniciais, faturasIniciais,
   type ContaPagar, type ContaReceber, type Baixa, type Acerto, type Fatura,
   type RateioItem, type Empresa, type DeliveryRecord, type ExpenseType,
   type QuotaSchedule, type QuotaTemplate, type LegalEntity, type PaymentBatchExport, type MonthlyReportRun,
@@ -22,8 +22,15 @@ let _splits: SplitFaturamento[] = [...splitFaturamento];
 let _regras: RegraVinculo[] = [...regrasVinculo];
 let _contasPagar: ContaPagar[] = [...despesasIniciais];
 let _baixas: Baixa[] = [...baixasIniciais];
-let _contasReceber: ContaReceber[] = [];
-let _faturas: Fatura[] = [];
+let _faturas: Fatura[] = [...faturasIniciais];
+let _contasReceber: ContaReceber[] = faturasIniciais.map((fatura) => ({
+  id: `cr-${fatura.id}`, faturaId: fatura.id, farmaciaId: fatura.farmaciaId,
+  centroCustoId: fatura.centroCustoId, empresa: fatura.empresa, valor: fatura.valor,
+  valorRecebido: fatura.status === "paga" ? fatura.valor : 0,
+  saldo: fatura.status === "paga" ? 0 : fatura.valor,
+  vencimento: fatura.vencimento,
+  status: fatura.status === "paga" ? "paga" : fatura.status === "vencida" ? "vencida" : "aberta",
+}));
 let _acertos: Acerto[] = [];
 let _delivery: DeliveryRecord[] = [...deliveryRecords];
 let _expenseTypes: ExpenseType[] = [...expenseTypes];
@@ -154,11 +161,11 @@ export const financeiroApi = {
       { id: `ft-${baseNum}-c`, numero: `F-COOP-${baseNum}`, farmaciaId: a.farmaciaId, centroCustoId: a.centroCustoId,
         empresa: "coop", cicloInicio: a.cicloInicio, cicloFim: a.cicloFim,
         valor: +(a.totalFaturado * split.pctCooperativa / 100).toFixed(2),
-        status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken() },
+         status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken(), nfseStatus: "pendente", boletoStatus: "pendente" },
       { id: `ft-${baseNum}-f`, numero: `F-FLUX-${baseNum}`, farmaciaId: a.farmaciaId, centroCustoId: a.centroCustoId,
         empresa: "flux", cicloInicio: a.cicloInicio, cicloFim: a.cicloFim,
         valor: +(a.totalFaturado * split.pctFlux / 100).toFixed(2),
-        status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken() },
+         status: "aberta", vencimento: vencStr, origemAcertoId: a.id, publicToken: randomToken(), nfseStatus: "pendente", boletoStatus: "pendente" },
     ];
     const novas: Fatura[] = candidatos.filter((f) => f.valor > 0);
     _faturas.push(...novas);

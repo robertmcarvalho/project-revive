@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertTriangle,
+  Barcode,
   Building2,
   CalendarRange,
   CircleDollarSign,
@@ -9,6 +10,7 @@ import {
   Download,
   Eye,
   FileText,
+  FileCheck2,
   MoreHorizontal,
   Search,
   Send,
@@ -28,7 +30,7 @@ import { financeiroApi } from "@/lib/financeiroApi";
 import { fmtBRL, fmtDate } from "@/lib/baixas";
 import { EmpresaBadge } from "@/components/financeiro/EmpresaBadge";
 import { cn } from "@/lib/utils";
-import type { Fatura, Farmacia, CentroCusto, StatusFatura } from "@/data/financeiroMock";
+import type { Fatura, Farmacia, CentroCusto, StatusFatura, StatusNfse, StatusBoleto } from "@/data/financeiroMock";
 import { toast } from "@/hooks/use-toast";
 
 const statusLabel: Record<StatusFatura, string> = {
@@ -46,6 +48,19 @@ const statusStyle: Record<StatusFatura, string> = {
 };
 
 type StatusFiltro = "todas" | StatusFatura;
+
+const nfseLabel: Record<StatusNfse, string> = { pendente: "Pendente", emitida: "Emitida", erro: "Com erro", cancelada: "Cancelada" };
+const boletoLabel: Record<StatusBoleto, string> = { pendente: "Pendente", gerado: "Gerado", pago: "Pago", vencido: "Vencido", cancelado: "Cancelado" };
+const documentoStyle: Record<StatusNfse | StatusBoleto, string> = {
+  pendente: "border-border bg-muted/40 text-muted-foreground",
+  emitida: "border-success/25 bg-success/10 text-success",
+  erro: "border-destructive/25 bg-destructive/10 text-destructive",
+  cancelada: "border-border bg-muted/40 text-subtle-foreground",
+  gerado: "border-primary/25 bg-primary/10 text-primary",
+  pago: "border-success/25 bg-success/10 text-success",
+  vencido: "border-destructive/25 bg-destructive/10 text-destructive",
+  cancelado: "border-border bg-muted/40 text-subtle-foreground",
+};
 
 const Faturamento = () => {
   const [faturas, setFaturas] = useState<Fatura[]>([]);
@@ -179,7 +194,7 @@ const Faturamento = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] text-left text-sm">
+            <table className="w-full min-w-[1220px] text-left text-sm">
               <thead className="border-b border-border bg-background/35 text-[10px] font-semibold uppercase tracking-wider text-subtle-foreground">
                 <tr>
                   <th className="px-5 py-3.5">Fatura</th>
@@ -189,6 +204,8 @@ const Faturamento = () => {
                   <th className="px-5 py-3.5">Vencimento</th>
                   <th className="px-5 py-3.5 text-right">Valor</th>
                   <th className="px-5 py-3.5">Status</th>
+                  <th className="px-5 py-3.5">NFS-e</th>
+                  <th className="px-5 py-3.5">Boleto</th>
                   <th className="w-16 px-5 py-3.5 text-center">Ações</th>
                 </tr>
               </thead>
@@ -218,6 +235,25 @@ const Faturamento = () => {
                         {statusLabel[fatura.status]}
                       </span>
                     </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <FileCheck2 className="h-4 w-4 text-subtle-foreground" />
+                        <div>
+                          <span className={cn("inline-flex rounded-md border px-2 py-1 text-[11px] font-medium", documentoStyle[fatura.nfseStatus ?? "pendente"])}>
+                            {nfseLabel[fatura.nfseStatus ?? "pendente"]}
+                          </span>
+                          {fatura.nfseNumero && <p className="mt-1 font-mono text-[10px] text-subtle-foreground">Nº {fatura.nfseNumero}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <Barcode className="h-4 w-4 text-subtle-foreground" />
+                        <span className={cn("inline-flex rounded-md border px-2 py-1 text-[11px] font-medium", documentoStyle[fatura.boletoStatus ?? "pendente"])}>
+                          {boletoLabel[fatura.boletoStatus ?? "pendente"]}
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-5 py-4 text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -236,6 +272,16 @@ const Faturamento = () => {
                           <DropdownMenuItem onSelect={() => toast({ title: "Exportação preparada", description: `PDF da fatura ${fatura.numero}.` })}>
                             <Download className="mr-2 h-4 w-4" /> Baixar PDF
                           </DropdownMenuItem>
+                           {fatura.nfseStatus === "emitida" && (
+                             <DropdownMenuItem onSelect={() => toast({ title: "XML preparado", description: `NFS-e ${fatura.nfseNumero}.` })}>
+                               <FileCheck2 className="mr-2 h-4 w-4" /> Baixar XML da NFS-e
+                             </DropdownMenuItem>
+                           )}
+                           {fatura.boletoStatus && fatura.boletoStatus !== "pendente" && fatura.boletoStatus !== "cancelado" && (
+                             <DropdownMenuItem onSelect={() => toast({ title: "Boleto preparado", description: `Cobrança da fatura ${fatura.numero}.` })}>
+                               <Barcode className="mr-2 h-4 w-4" /> Baixar boleto
+                             </DropdownMenuItem>
+                           )}
                           {fatura.status === "aberta" && (
                             <>
                               <DropdownMenuSeparator />
