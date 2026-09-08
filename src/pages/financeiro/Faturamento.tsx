@@ -73,6 +73,10 @@ const Faturamento = () => {
   const [busca, setBusca] = useState("");
   const [status, setStatus] = useState<StatusFiltro>("todas");
   const [farmaciaId, setFarmaciaId] = useState("todas");
+  const [centroCustoId, setCentroCustoId] = useState("todos");
+  const [empresa, setEmpresa] = useState("todas");
+  const [cicloKey, setCicloKey] = useState("todos");
+
 
   const load = () => financeiroApi.listFaturas().then(setFaturas);
   useEffect(() => {
