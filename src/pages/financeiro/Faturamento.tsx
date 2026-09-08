@@ -161,20 +161,61 @@ const Faturamento = () => {
       </section>
 
       <section className="overflow-hidden rounded-lg border border-border bg-surface shadow-sm">
-        <div className="flex flex-col gap-4 border-b border-border p-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="relative w-full lg:max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle-foreground" />
-            <Input
-              value={busca}
-              onChange={(event) => setBusca(event.target.value)}
-              placeholder="Buscar por número, farmácia ou centro..."
-              className="h-10 pl-9"
-              aria-label="Buscar faturas"
-            />
+        <div className="grid gap-3 border-b border-border p-4 lg:grid-cols-5">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground">Filtrar por ciclo</label>
+            <Select value={cicloKey} onValueChange={setCicloKey}>
+              <SelectTrigger className="h-10 w-full" aria-label="Filtrar por ciclo">
+                <CalendarRange className="mr-2 h-4 w-4 text-muted-foreground" />
+                <SelectValue placeholder="Todos os ciclos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos os ciclos</SelectItem>
+                {ciclos.map((c) => <SelectItem key={c.key} value={c.key}>{c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground">Farmácia</label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle-foreground" />
+              <Input
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Buscar farmácia..."
+                className="h-10 pl-9"
+                aria-label="Buscar faturas"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground">Centro de custo</label>
+            <Select value={centroCustoId} onValueChange={setCentroCustoId}>
+              <SelectTrigger className="h-10 w-full" aria-label="Filtrar por centro de custo">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {ccs.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-subtle-foreground">Entidade</label>
+            <Select value={empresa} onValueChange={setEmpresa}>
+              <SelectTrigger className="h-10 w-full" aria-label="Filtrar por entidade">
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                <SelectItem value="coop">CoopMob</SelectItem>
+                <SelectItem value="flux">Flux Farma</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end gap-2">
             <Select value={farmaciaId} onValueChange={setFarmaciaId}>
-              <SelectTrigger className="h-10 w-full sm:w-52" aria-label="Filtrar por farmácia">
+              <SelectTrigger className="h-10 w-full" aria-label="Filtrar por farmácia">
                 <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
                 <SelectValue placeholder="Todas as farmácias" />
               </SelectTrigger>
@@ -183,17 +224,24 @@ const Faturamento = () => {
                 {farmacias.map((farmacia) => <SelectItem key={farmacia.id} value={farmacia.id}>{farmacia.nome}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={status} onValueChange={(value) => setStatus(value as StatusFiltro)}>
-              <SelectTrigger className="h-10 w-full sm:w-40" aria-label="Filtrar por status">
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todos os status</SelectItem>
-                {Object.entries(statusLabel).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
-              </SelectContent>
-            </Select>
           </div>
         </div>
+
+        <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <Select value={status} onValueChange={(value) => setStatus(value as StatusFiltro)}>
+            <SelectTrigger className="h-10 w-full sm:w-48" aria-label="Filtrar por status">
+              <SelectValue placeholder="Todos os status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todos os status</SelectItem>
+              {Object.entries(statusLabel).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" className="h-10" onClick={() => toast({ title: "Faturas do ciclo", description: "Geração solicitada para o ciclo selecionado." })}>
+            <RefreshCw className="mr-2 h-4 w-4" /> Gerar faturas do ciclo
+          </Button>
+        </div>
+
 
         {faturas.length === 0 ? (
           <div className="px-6 py-16 text-center">
