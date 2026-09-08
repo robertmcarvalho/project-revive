@@ -261,7 +261,7 @@ const Faturamento = () => {
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuContent align="end" className="w-56">
                           {fatura.publicToken && (
                             <DropdownMenuItem asChild>
                               <Link to={`/public/billing/${fatura.publicToken}`} target="_blank">
@@ -270,18 +270,47 @@ const Faturamento = () => {
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onSelect={() => toast({ title: "Exportação preparada", description: `PDF da fatura ${fatura.numero}.` })}>
-                            <Download className="mr-2 h-4 w-4" /> Baixar PDF
+                            <Download className="mr-2 h-4 w-4" /> Baixar PDF da fatura
                           </DropdownMenuItem>
-                           {fatura.nfseStatus === "emitida" && (
-                             <DropdownMenuItem onSelect={() => toast({ title: "XML preparado", description: `NFS-e ${fatura.nfseNumero}.` })}>
-                               <FileCheck2 className="mr-2 h-4 w-4" /> Baixar XML da NFS-e
-                             </DropdownMenuItem>
-                           )}
-                           {fatura.boletoStatus && fatura.boletoStatus !== "pendente" && fatura.boletoStatus !== "cancelado" && (
-                             <DropdownMenuItem onSelect={() => toast({ title: "Boleto preparado", description: `Cobrança da fatura ${fatura.numero}.` })}>
-                               <Barcode className="mr-2 h-4 w-4" /> Baixar boleto
-                             </DropdownMenuItem>
-                           )}
+
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-subtle-foreground">Boleto</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            disabled={!fatura.boletoStatus || fatura.boletoStatus === "pendente" || fatura.boletoStatus === "cancelado"}
+                            onSelect={() => toast({ title: "Boleto preparado", description: `PDF do boleto da fatura ${fatura.numero}.` })}
+                          >
+                            <Barcode className="mr-2 h-4 w-4" /> PDF do boleto
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={!fatura.boletoStatus || fatura.boletoStatus === "pendente" || fatura.boletoStatus === "cancelado" || fatura.boletoStatus === "pago"}
+                            onSelect={() => cancelarBoleto(fatura.id, fatura.numero)}
+                          >
+                            <Ban className="mr-2 h-4 w-4" /> Cancelar boleto
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel className="text-[11px] uppercase tracking-wide text-subtle-foreground">NFS-e</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            disabled={fatura.nfseStatus !== "emitida"}
+                            onSelect={() => toast({ title: "PDF preparado", description: `NFS-e ${fatura.nfseNumero ?? fatura.numero}.` })}
+                          >
+                            <FileText className="mr-2 h-4 w-4" /> PDF da NFS-e
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            disabled={fatura.nfseStatus !== "emitida"}
+                            onSelect={() => toast({ title: "XML preparado", description: `NFS-e ${fatura.nfseNumero ?? fatura.numero}.` })}
+                          >
+                            <FileCheck2 className="mr-2 h-4 w-4" /> XML da NFS-e
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={fatura.nfseStatus !== "emitida"}
+                            onSelect={() => cancelarNfse(fatura.id, fatura.numero)}
+                          >
+                            <Ban className="mr-2 h-4 w-4" /> Cancelar NFS-e
+                          </DropdownMenuItem>
+
                           {fatura.status === "aberta" && (
                             <>
                               <DropdownMenuSeparator />
@@ -291,6 +320,7 @@ const Faturamento = () => {
                             </>
                           )}
                         </DropdownMenuContent>
+
                       </DropdownMenu>
                     </td>
                   </tr>
