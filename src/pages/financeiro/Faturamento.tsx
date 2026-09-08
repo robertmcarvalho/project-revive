@@ -117,15 +117,28 @@ const Faturamento = () => {
     };
   }, [faturas]);
 
+  const ciclos = useMemo(() => {
+    const map = new Map<string, string>();
+    faturas.forEach((f) => {
+      const key = `${f.cicloInicio}~${f.cicloFim}`;
+      if (!map.has(key)) map.set(key, `${fmtDate(f.cicloInicio)} – ${fmtDate(f.cicloFim)}`);
+    });
+    return [...map.entries()].map(([key, label]) => ({ key, label })).sort((a, b) => b.key.localeCompare(a.key));
+  }, [faturas]);
+
   const filtradas = useMemo(() => {
     const termo = busca.trim().toLocaleLowerCase("pt-BR");
     return faturas.filter((fatura) => {
       const correspondeStatus = status === "todas" || fatura.status === status;
       const correspondeFarmacia = farmaciaId === "todas" || fatura.farmaciaId === farmaciaId;
+      const correspondeCc = centroCustoId === "todos" || fatura.centroCustoId === centroCustoId;
+      const correspondeEmpresa = empresa === "todas" || fatura.empresa === empresa;
+      const correspondeCiclo = cicloKey === "todos" || `${fatura.cicloInicio}~${fatura.cicloFim}` === cicloKey;
       const texto = `${fatura.numero} ${farm(fatura.farmaciaId)} ${cc(fatura.centroCustoId)}`.toLocaleLowerCase("pt-BR");
-      return correspondeStatus && correspondeFarmacia && (!termo || texto.includes(termo));
+      return correspondeStatus && correspondeFarmacia && correspondeCc && correspondeEmpresa && correspondeCiclo && (!termo || texto.includes(termo));
     });
-  }, [busca, cc, farmaciaId, farm, faturas, status]);
+  }, [busca, cc, centroCustoId, cicloKey, empresa, farmaciaId, farm, faturas, status]);
+
 
   return (
     <div className="space-y-5 pb-8">
