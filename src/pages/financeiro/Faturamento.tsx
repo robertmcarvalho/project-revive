@@ -82,6 +82,17 @@ const Faturamento = () => {
     toast({ title: "Fatura enviada" });
   };
 
+  const cancelarBoleto = (id: string, numero: string) => {
+    setFaturas((prev) => prev.map((f) => (f.id === id ? { ...f, boletoStatus: "cancelado" } : f)));
+    toast({ title: "Boleto cancelado", description: `Fatura ${numero}.` });
+  };
+
+  const cancelarNfse = (id: string, numero: string) => {
+    setFaturas((prev) => prev.map((f) => (f.id === id ? { ...f, nfseStatus: "cancelada" } : f)));
+    toast({ title: "NFS-e cancelada", description: `Fatura ${numero}.` });
+  };
+
+
   const farm = (id: string) => farmacias.find((f) => f.id === id)?.nome ?? id;
   const cc = (id: string) => ccs.find((c) => c.id === id)?.nome ?? id;
 
