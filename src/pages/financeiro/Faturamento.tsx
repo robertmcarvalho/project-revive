@@ -125,7 +125,7 @@ const Faturamento = () => {
                 {resumo.vencidas ? `${resumo.vencidas} ${resumo.vencidas === 1 ? "fatura exige" : "faturas exigem"} atenção` : "Nenhuma pendência vencida"}
               </p>
             </div>
-            <IconTile icon={AlertTriangle} tone="danger" size="lg" />
+            <IconTile icon={AlertTriangle} tone="destructive" size="lg" />
           </div>
         </div>
       </section>
